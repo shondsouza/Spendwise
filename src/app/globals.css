@@ -1,0 +1,448 @@
+@import url("https://fonts.cdnfonts.com/css/sf-pro-display");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   APPLE HIG - CSS VARIABLES & COLOR SYSTEM
+   ============================================ */
+
+:root {
+  /* Backgrounds - layered like macOS */
+  --bg-primary: #f5f5f7;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f2f2f7;
+  --bg-card: rgba(255, 255, 255, 0.72);
+
+  /* Text */
+  --text-primary: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --text-tertiary: #aeaeb2;
+
+  /* Apple System Colors */
+  --apple-blue: #007aff;
+  --apple-green: #34c759;
+  --apple-red: #ff3b30;
+  --apple-orange: #ff9500;
+  --apple-yellow: #ffcc00;
+  --apple-purple: #af52de;
+  --apple-pink: #ff2d55;
+  --apple-teal: #5ac8fa;
+  --apple-indigo: #5856d6;
+
+  /* Borders & Separators */
+  --separator: rgba(60, 60, 67, 0.12);
+  --border: rgba(60, 60, 67, 0.18);
+
+  /* Vibrancy / Glass */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.5);
+
+  /* Easing Functions */
+  --ease-spring: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark {
+  --bg-primary: #000000;
+  --bg-secondary: #1c1c1e;
+  --bg-tertiary: #2c2c2e;
+  --bg-card: rgba(28, 28, 30, 0.85);
+
+  --text-primary: #f5f5f7;
+  --text-secondary: #ebebf5cc;
+  --text-tertiary: #ebebf599;
+
+  --separator: rgba(84, 84, 88, 0.55);
+  --border: rgba(84, 84, 88, 0.65);
+
+  --glass-bg: rgba(28, 28, 30, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+/* ============================================
+   TYPOGRAPHY - SF PRO
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+  border-color: var(--border);
+  font-family:
+    "SF Pro Text",
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family:
+    "SF Pro Display",
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    sans-serif;
+  color: var(--text-primary);
+}
+
+/* Typography Scale */
+h1 {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+h2 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+h3 {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+p,
+body {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0px;
+}
+
+caption,
+.caption {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.1px;
+}
+
+.label,
+.badge {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Monospace for currency/amounts */
+.amount,
+.currency,
+.font-mono {
+  font-family: "SF Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* ============================================
+   GLASSMORPHISM CARDS
+   ============================================ */
+
+.apple-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition:
+    transform 0.3s var(--ease-spring),
+    box-shadow 0.3s var(--ease-spring),
+    background-color 0.3s ease;
+}
+
+.dark .apple-card {
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.apple-card:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 16px 40px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* ============================================
+   BUTTONS - APPLE STYLE
+   ============================================ */
+
+.btn-primary,
+.btn-secondary,
+.btn-destructive {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 980px;
+  padding: 10px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  border: none;
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--apple-blue);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0071f0;
+  filter: brightness(1.05);
+}
+
+.btn-primary:active,
+.btn-secondary:active,
+.btn-destructive:active {
+  transform: scale(0.97);
+}
+
+.btn-secondary {
+  background: rgba(120, 120, 128, 0.12);
+  color: var(--apple-blue);
+}
+
+.btn-destructive {
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--apple-red);
+}
+
+/* ============================================
+   ANIMATIONS - APPLE SPRING PHYSICS
+   ============================================ */
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: fadeSlideUp 0.4s var(--ease-spring);
+}
+
+.card {
+  animation: fadeSlideUp 0.4s var(--ease-spring);
+}
+
+.card:nth-child(1) {
+  animation-delay: 0ms;
+}
+.card:nth-child(2) {
+  animation-delay: 60ms;
+}
+.card:nth-child(3) {
+  animation-delay: 120ms;
+}
+.card:nth-child(4) {
+  animation-delay: 180ms;
+}
+.card:nth-child(5) {
+  animation-delay: 240ms;
+}
+.card:nth-child(6) {
+  animation-delay: 300ms;
+}
+
+/* Pulse for loading */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s var(--ease-smooth) infinite;
+}
+
+/* ============================================
+   INPUTS & FORMS - APPLE STYLE
+   ============================================ */
+
+input,
+textarea,
+select {
+  background: rgba(120, 120, 128, 0.08);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  color: var(--text-primary);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  background: var(--bg-secondary);
+  border-color: var(--apple-blue);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+  outline: none;
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  background: rgba(120, 120, 128, 0.12);
+  color: var(--text-primary);
+}
+
+/* ============================================
+   DIALOG / MODAL - APPLE SHEET
+   ============================================ */
+
+.dialog {
+  border-radius: 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  padding: 28px;
+}
+
+.dialog-title {
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+/* ============================================
+   TABLES - iOS LIST STYLE
+   ============================================ */
+
+.ios-list-table {
+  border-collapse: collapse;
+}
+
+.ios-list-table tr {
+  border-bottom: 1px solid var(--separator);
+}
+
+.ios-list-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.ios-list-table tbody tr:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.dark .ios-list-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ============================================
+   SCROLLBAR - macOS STYLE
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+  background-clip: content-box;
+}
+
+.dark::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.container {
+  @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Glass effect */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Separator lines */
+.separator-horizontal {
+  @apply h-px w-full bg-[var(--separator)];
+}
+
+.separator-vertical {
+  @apply h-full w-px bg-[var(--separator)];
+}
