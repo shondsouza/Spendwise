@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
@@ -30,12 +30,18 @@ const bottomNav = [
 
 export function Sidebar({ currentPath, userName, onLogout }: SidebarProps) {
   const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const isActive = (href: string) => {
     if (href === "/dashboard") return currentPath === "/dashboard" || currentPath === "/";
     return currentPath.startsWith(href);
   };
 
-  const isDark = resolvedTheme === "dark" || theme === "dark";
+  const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");
 
   return (
     <aside className="hidden border-r border-[var(--separator)] bg-[rgba(246,246,248,0.85)] backdrop-blur-xl dark:bg-[rgba(28,28,30,0.82)] md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:w-64 md:flex-col">
@@ -45,7 +51,7 @@ export function Sidebar({ currentPath, userName, onLogout }: SidebarProps) {
         style={{ borderBottom: "1px solid var(--separator)" }}
       >
         <Image
-          src={isDark ? "/spendwise-light.png" : "/spendwise-dark.png"}
+          src={mounted ? (isDark ? "/spendwise-light.png" : "/spendwise-dark.png") : "/spendwise-dark.png"}
           alt="SpendWise"
           width={36}
           height={36}

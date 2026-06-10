@@ -38,6 +38,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [userName, setUserName] = useState<string>("User");
   const [isLoading, setIsLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -78,7 +83,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return pathname.startsWith(href);
   };
 
-  const isDark = resolvedTheme === "dark" || theme === "dark";
+  const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");
 
   if (isLoading) {
     return (
@@ -115,7 +120,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <div className="flex items-center gap-3">
                 <Image
-                  src={isDark ? "/spendwise-light.png" : "/spendwise-dark.png"}
+                  src={mounted ? (isDark ? "/spendwise-light.png" : "/spendwise-dark.png") : "/spendwise-dark.png"}
                   alt="SpendWise"
                   width={36}
                   height={36}
@@ -221,7 +226,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </button>
           <div className="flex items-center gap-2">
             <Image
-              src={isDark ? "/spendwise-light.png" : "/spendwise-dark.png"}
+              src={mounted ? (isDark ? "/spendwise-light.png" : "/spendwise-dark.png") : "/spendwise-dark.png"}
               alt="SpendWise"
               width={28}
               height={28}

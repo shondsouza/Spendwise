@@ -182,13 +182,8 @@ function CategoryCard({
               {category.emoji}
             </span>
             <div>
-              <CardTitle className="text-[17px] flex items-center gap-2">
+              <CardTitle className="text-[17px]">
                 {category.name}
-                {category.isCustom && (
-                  <span className="text-xs px-2 py-0.5 bg-[rgba(0,122,255,0.12)] text-[var(--apple-blue)] rounded-full">
-                    Custom
-                  </span>
-                )}
               </CardTitle>
               <p className="text-[13px] text-[var(--text-secondary)] capitalize">
                 {category.type}
