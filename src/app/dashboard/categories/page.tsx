@@ -14,6 +14,7 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants/config";
 
 interface DisplayCategory {
   id: string;
+  routeId: string;
   name: string;
   type: "expense" | "income" | "both";
   emoji: string;
@@ -63,6 +64,7 @@ export default function CategoriesPage() {
   const allCategories: DisplayCategory[] = [
     ...EXPENSE_CATEGORIES.map((cat) => ({
       id: `expense-default-${cat.value}`,
+      routeId: `default::expense::${cat.value}`,
       name: cat.label,
       type: "expense" as const,
       emoji: cat.emoji,
@@ -71,6 +73,7 @@ export default function CategoriesPage() {
     })),
     ...INCOME_CATEGORIES.map((cat) => ({
       id: `income-default-${cat.value}`,
+      routeId: `default::income::${cat.value}`,
       name: cat.label,
       type: "income" as const,
       emoji: cat.emoji,
@@ -79,6 +82,7 @@ export default function CategoriesPage() {
     })),
     ...customCategories.map((cat) => ({
       id: cat.id,
+      routeId: `custom::${cat.id}`,
       name: cat.name,
       type: cat.type,
       emoji: cat.emoji,
@@ -114,13 +118,15 @@ export default function CategoriesPage() {
               💳 Expense Categories
             </h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {expenseCategories.filter(c => c.type === "expense" || c.type === "both").map((category) => (
-                <CategoryCard
-                  key={category.id}
-                  category={category}
-                  onDelete={category.isCustom ? handleDelete : undefined}
-                />
-              ))}
+              {expenseCategories
+                .filter((c) => c.type === "expense" || c.type === "both")
+                .map((category) => (
+                  <CategoryCard
+                    key={category.id}
+                    category={category}
+                    onDelete={category.isCustom ? handleDelete : undefined}
+                  />
+                ))}
             </div>
           </div>
 
@@ -130,13 +136,15 @@ export default function CategoriesPage() {
               💰 Income Categories
             </h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {incomeCategories.filter(c => c.type === "income").map((category) => (
-                <CategoryCard
-                  key={category.id}
-                  category={category}
-                  onDelete={category.isCustom ? handleDelete : undefined}
-                />
-              ))}
+              {incomeCategories
+                .filter((c) => c.type === "income")
+                .map((category) => (
+                  <CategoryCard
+                    key={category.id}
+                    category={category}
+                    onDelete={category.isCustom ? handleDelete : undefined}
+                  />
+                ))}
             </div>
           </div>
 
@@ -182,12 +190,8 @@ function CategoryCard({
               {category.emoji}
             </span>
             <div>
-              <CardTitle className="text-[17px]">
-                {category.name}
-              </CardTitle>
-              <p className="text-[13px] text-[var(--text-secondary)] capitalize">
-                {category.type}
-              </p>
+              <CardTitle className="text-[17px]">{category.name}</CardTitle>
+              <p className="text-[13px] text-[var(--text-secondary)] capitalize">{category.type}</p>
             </div>
           </div>
           {onDelete && (
@@ -203,7 +207,7 @@ function CategoryCard({
         </div>
       </CardHeader>
       <CardContent>
-        <Link href={`/dashboard/categories/${encodeURIComponent(category.name)}`}>
+        <Link href={`/dashboard/categories/${encodeURIComponent(category.routeId)}`}>
           <Button variant="ghost" className="w-full justify-start gap-2">
             <ExternalLink className="h-4 w-4" />
             View Transactions

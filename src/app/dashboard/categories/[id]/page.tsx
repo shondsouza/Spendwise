@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Expense, Income } from "@/types";
+import { Expense, Income, Category } from "@/types";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,60 +22,195 @@ import { ArrowLeft, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants/config";
 
+interface CategoryInfo {
+  name: string;
+  emoji: string;
+  type: "expense" | "income" | "both";
+}
+
+const parseCategoryParam = (rawParam: string) => {
+  if (rawParam.startsWith("default::")) {
+    const [, type, ...valueParts] = rawParam.split("::");
+    const value = valueParts.join("::");
+
+    if (type === "expense") {
+      const category = EXPENSE_CATEGORIES.find((item) => item.value === value);
+      if (category) {
+        return {
+          kind: "default" as const,
+          name: category.label,
+          emoji: category.emoji,
+          type: "expense" as const,
+          queryValues: [category.value, category.label],
+        };
+      }
+    }
+
+    if (type === "income") {
+      const category = INCOME_CATEGORIES.find((item) => item.value === value);
+      if (category) {
+        return {
+          kind: "default" as const,
+          name: category.label,
+          emoji: category.emoji,
+          type: "income" as const,
+          queryValues: [category.value, category.label],
+        };
+      }
+    }
+  }
+
+  if (rawParam.startsWith("custom::")) {
+    return {
+      kind: "custom" as const,
+      id: rawParam.slice("custom::".length),
+    };
+  }
+
+  const legacyExpense = EXPENSE_CATEGORIES.find(
+    (item) => item.value === rawParam || item.label === rawParam
+  );
+  if (legacyExpense) {
+    return {
+      kind: "default" as const,
+      name: legacyExpense.label,
+      emoji: legacyExpense.emoji,
+      type: "expense" as const,
+      queryValues: [legacyExpense.value, legacyExpense.label],
+    };
+  }
+
+  const legacyIncome = INCOME_CATEGORIES.find(
+    (item) => item.value === rawParam || item.label === rawParam
+  );
+  if (legacyIncome) {
+    return {
+      kind: "default" as const,
+      name: legacyIncome.label,
+      emoji: legacyIncome.emoji,
+      type: "income" as const,
+      queryValues: [legacyIncome.value, legacyIncome.label],
+    };
+  }
+
+  return {
+    kind: "legacy-custom-name" as const,
+    name: rawParam,
+  };
+};
+
 export default function CategoryDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [income, setIncome] = useState<Income[]>([]);
+  const [categoryInfo, setCategoryInfo] = useState<CategoryInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const categoryName = decodeURIComponent(params.id as string);
+  const categoryParam = decodeURIComponent(params.id as string);
 
-  // Find category info from defaults
-  const defaultExpenseCat = EXPENSE_CATEGORIES.find(c => c.label === categoryName);
-  const defaultIncomeCat = INCOME_CATEGORIES.find(c => c.label === categoryName);
-  const categoryEmoji = defaultExpenseCat?.emoji || defaultIncomeCat?.emoji || "📂";
+  const fetchData = useCallback(
+    async (rawParam: string) => {
+      setLoading(true);
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-  const fetchData = useCallback(async (name: string) => {
-    setLoading(true);
-    try {
-      const supabase = createClient();
-      
-      const { data: expensesData, error: expensesError } = await supabase
-        .from("expenses")
-        .select("*")
-        .eq("category", name)
-        .order("date", { ascending: false });
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-      if (expensesError) throw expensesError;
+        const resolvedCategory = parseCategoryParam(rawParam);
 
-      const { data: incomeData, error: incomeError } = await supabase
-        .from("income")
-        .select("*")
-        .eq("category", name)
-        .order("date", { ascending: false });
+        let nextCategoryInfo: CategoryInfo;
+        let categoryValues: string[] = [];
+        let fetchExpenses = true;
+        let fetchIncome = true;
 
-      if (incomeError) throw incomeError;
+        if (resolvedCategory.kind === "default") {
+          nextCategoryInfo = {
+            name: resolvedCategory.name,
+            emoji: resolvedCategory.emoji,
+            type: resolvedCategory.type,
+          };
+          categoryValues = resolvedCategory.queryValues;
+          fetchExpenses = resolvedCategory.type !== "income";
+          fetchIncome = resolvedCategory.type !== "expense";
+        } else if (resolvedCategory.kind === "custom") {
+          const { data: category, error: categoryError } = await supabase
+            .from("categories")
+            .select("*")
+            .eq("id", resolvedCategory.id)
+            .eq("user_id", user.id)
+            .single<Category>();
 
-      setExpenses(expensesData || []);
-      setIncome(incomeData || []);
-    } catch {
-      toast.error("Failed to load category transactions");
-      router.push("/dashboard/categories");
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
+          if (categoryError || !category) {
+            throw categoryError || new Error("Category not found");
+          }
+
+          nextCategoryInfo = {
+            name: category.name,
+            emoji: category.emoji,
+            type: category.type,
+          };
+          categoryValues = [category.name];
+          fetchExpenses = category.type === "expense" || category.type === "both";
+          fetchIncome = category.type === "income" || category.type === "both";
+        } else {
+          nextCategoryInfo = {
+            name: resolvedCategory.name,
+            emoji: "📂",
+            type: "both",
+          };
+          categoryValues = [resolvedCategory.name];
+        }
+
+        setCategoryInfo(nextCategoryInfo);
+
+        const expensesQuery = fetchExpenses
+          ? supabase
+              .from("expenses")
+              .select("*")
+              .eq("user_id", user.id)
+              .in("category", categoryValues)
+              .order("date", { ascending: false })
+          : Promise.resolve({ data: [], error: null });
+
+        const incomeQuery = fetchIncome
+          ? supabase
+              .from("income")
+              .select("*")
+              .eq("user_id", user.id)
+              .in("category", categoryValues)
+              .order("date", { ascending: false })
+          : Promise.resolve({ data: [], error: null });
+
+        const [expensesResult, incomeResult] = await Promise.all([expensesQuery, incomeQuery]);
+
+        if (expensesResult.error) throw expensesResult.error;
+        if (incomeResult.error) throw incomeResult.error;
+
+        setExpenses((expensesResult.data as Expense[]) || []);
+        setIncome((incomeResult.data as Income[]) || []);
+      } catch {
+        toast.error("Failed to load category transactions");
+        router.push("/dashboard/categories");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [router]
+  );
 
   useEffect(() => {
     if (params.id) {
-      fetchData(categoryName);
+      fetchData(categoryParam);
     }
-  }, [params.id, categoryName, fetchData]);
+  }, [params.id, categoryParam, fetchData]);
 
-  const totalExpenses =
-    expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0) || 0;
-  const totalIncome =
-    income.reduce((sum, inc) => sum + (inc.amount || 0), 0) || 0;
+  const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0) || 0;
+  const totalIncome = income.reduce((sum, inc) => sum + (inc.amount || 0), 0) || 0;
 
   const allTransactions = [
     ...expenses.map((exp) => ({
@@ -116,8 +251,8 @@ export default function CategoryDetailPage() {
       ) : (
         <>
           <PageHeader
-            title={`${categoryEmoji} ${categoryName}`}
-            description={`All transactions for ${categoryName}`}
+            title={`${categoryInfo?.emoji || "📂"} ${categoryInfo?.name || "Category"}`}
+            description={`All transactions for ${categoryInfo?.name || "this category"}`}
           />
 
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -128,11 +263,7 @@ export default function CategoryDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <AmountDisplay
-                  amount={totalExpenses}
-                  variant="danger"
-                  className="text-2xl"
-                />
+                <AmountDisplay amount={totalExpenses} variant="danger" className="text-2xl" />
               </CardContent>
             </Card>
 
@@ -143,11 +274,7 @@ export default function CategoryDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <AmountDisplay
-                  amount={totalIncome}
-                  variant="success"
-                  className="text-2xl"
-                />
+                <AmountDisplay amount={totalIncome} variant="success" className="text-2xl" />
               </CardContent>
             </Card>
 
@@ -158,10 +285,7 @@ export default function CategoryDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <AmountDisplay
-                  amount={totalIncome - totalExpenses}
-                  className="text-2xl"
-                />
+                <AmountDisplay amount={totalIncome - totalExpenses} className="text-2xl" />
               </CardContent>
             </Card>
           </div>
@@ -189,9 +313,7 @@ export default function CategoryDetailPage() {
                       <TableCell className="text-[13px] text-[var(--text-tertiary)]">
                         {formatDate(transaction.date, "dd MMM yyyy")}
                       </TableCell>
-                      <TableCell className="font-medium">
-                        {transaction.title}
-                      </TableCell>
+                      <TableCell className="font-medium">{transaction.title}</TableCell>
                       <TableCell>
                         <span
                           className={`inline-flex rounded-full px-2 py-1 text-[11px] font-semibold ${

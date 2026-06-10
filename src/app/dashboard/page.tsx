@@ -1,4 +1,5 @@
 import React from "react";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { SpendingChart } from "@/components/dashboard/spending-chart";
@@ -15,7 +16,7 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return null;
+    redirect("/auth/login");
   }
 
   const today = new Date();
@@ -26,62 +27,65 @@ export default async function DashboardPage() {
   // Previous month dates
   const prevMonthStart = subMonths(monthStart, 1);
 
-  // Fetch expenses for today
-  const { data: todayExpensesData } = await supabase
-    .from("expenses")
-    .select("amount")
-    .eq("user_id", user.id)
-    .gte("date", format(todayStart, "yyyy-MM-dd"))
-    .lte("date", format(todayStart, "yyyy-MM-dd"))
-    .range(0, 99);
+  const todayDate = format(todayStart, "yyyy-MM-dd");
+  const monthStartDate = format(monthStart, "yyyy-MM-dd");
+  const monthEndDate = format(monthEnd, "yyyy-MM-dd");
+  const prevMonthDate = format(prevMonthStart, "yyyy-MM-dd");
 
-  // Fetch month rows for daily chart only.
-  const { data: monthExpensesData } = await supabase
-    .from("expenses")
-    .select("amount, category, date")
-    .eq("user_id", user.id)
-    .gte("date", format(monthStart, "yyyy-MM-dd"))
-    .lte("date", format(monthEnd, "yyyy-MM-dd"))
-    .range(0, 499);
-
-  const { data: monthExpenseSummaryData } = await supabase
-    .from("monthly_expense_summary")
-    .select("category, total")
-    .eq("user_id", user.id)
-    .eq("month", format(monthStart, "yyyy-MM-dd"))
-    .range(0, 19);
-
-  // Fetch previous month expense summary for MoM comparison
-  const { data: prevMonthExpenseSummary } = await supabase
-    .from("monthly_expense_summary")
-    .select("total")
-    .eq("user_id", user.id)
-    .eq("month", format(prevMonthStart, "yyyy-MM-dd"))
-    .range(0, 99);
-
-  // Fetch income for month
-  const { data: monthIncomeData } = await supabase
-    .from("income")
-    .select("amount")
-    .eq("user_id", user.id)
-    .gte("date", format(monthStart, "yyyy-MM-dd"))
-    .lte("date", format(monthEnd, "yyyy-MM-dd"))
-    .range(0, 99);
-
-  // Fetch recent transactions
-  const { data: recentExpensesData } = await supabase
-    .from("expenses")
-    .select("id, title, amount, category, date")
-    .eq("user_id", user.id)
-    .order("date", { ascending: false })
-    .range(0, 9);
-
-  const { data: recentIncomeData } = await supabase
-    .from("income")
-    .select("id, title, amount, category, date")
-    .eq("user_id", user.id)
-    .order("date", { ascending: false })
-    .range(0, 9);
+  const [
+    { data: todayExpensesData },
+    { data: monthExpensesData },
+    { data: monthExpenseSummaryData },
+    { data: prevMonthExpenseSummary },
+    { data: monthIncomeData },
+    { data: recentExpensesData },
+    { data: recentIncomeData },
+  ] = await Promise.all([
+    supabase
+      .from("expenses")
+      .select("amount")
+      .eq("user_id", user.id)
+      .eq("date", todayDate)
+      .range(0, 99),
+    supabase
+      .from("expenses")
+      .select("amount, category, date")
+      .eq("user_id", user.id)
+      .gte("date", monthStartDate)
+      .lte("date", monthEndDate)
+      .range(0, 499),
+    supabase
+      .from("monthly_expense_summary")
+      .select("category, total")
+      .eq("user_id", user.id)
+      .eq("month", monthStartDate)
+      .range(0, 19),
+    supabase
+      .from("monthly_expense_summary")
+      .select("total")
+      .eq("user_id", user.id)
+      .eq("month", prevMonthDate)
+      .range(0, 99),
+    supabase
+      .from("income")
+      .select("amount")
+      .eq("user_id", user.id)
+      .gte("date", monthStartDate)
+      .lte("date", monthEndDate)
+      .range(0, 99),
+    supabase
+      .from("expenses")
+      .select("id, title, amount, category, date")
+      .eq("user_id", user.id)
+      .order("date", { ascending: false })
+      .range(0, 9),
+    supabase
+      .from("income")
+      .select("id, title, amount, category, date")
+      .eq("user_id", user.id)
+      .order("date", { ascending: false })
+      .range(0, 9),
+  ]);
 
   const todayExpenses = todayExpensesData ?? [];
   const monthExpenses = monthExpensesData ?? [];
@@ -152,7 +156,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="page-enter">
-      <PageHeader title="📊 Dashboard" description="Welcome back! Here's your financial overview." />
+      <PageHeader
+        title="📊 Dashboard"
+        description="Welcome back! Here's your financial overview."
+      />
 
       <div className="space-y-6">
         <SummaryCards
