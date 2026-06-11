@@ -1,21 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { PageHeader } from "@/components/shared/page-header";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 import { AmountDisplay } from "@/components/shared/amount-display";
 import { format, subMonths } from "date-fns";
+
+const AnalyticsLineChart = dynamic(
+  () => import("@/components/dashboard/analytics-chart").then((mod) => mod.AnalyticsLineChart),
+  {
+    ssr: false,
+    loading: () => <div className="apple-card h-80 animate-pulse" />,
+  }
+);
 
 interface MonthlyTrendItem {
   month: string;
@@ -35,16 +35,6 @@ interface AnalyticsData {
 interface AmountRow {
   amount: number | null;
 }
-
-const tooltipStyle = {
-  background: "var(--glass-bg)",
-  backdropFilter: "blur(20px) saturate(180%)",
-  border: "1px solid var(--glass-border)",
-  borderRadius: "20px",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
-  color: "var(--text-primary)",
-  fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-};
 
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData>({
@@ -204,46 +194,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Monthly Trend Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>💡 Income vs Expenses (Last 6 Months)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data.monthlyTrend}>
-                <XAxis
-                  dataKey="month"
-                  axisLine={false}
-                  tickLine={false}
-                  stroke="var(--text-tertiary)"
-                />
-                <YAxis axisLine={false} tickLine={false} stroke="var(--text-tertiary)" />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Legend
-                  wrapperStyle={{ color: "var(--text-secondary)", fontSize: 13 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="income"
-                  stroke="#34c759"
-                  name="Income"
-                  strokeWidth={2.5}
-                  dot={false}
-                  activeDot={{ r: 6, fill: "#34c759" }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="expenses"
-                  stroke="#ff3b30"
-                  name="Expenses"
-                  strokeWidth={2.5}
-                  dot={false}
-                  activeDot={{ r: 6, fill: "#ff3b30" }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <AnalyticsLineChart monthlyTrend={data.monthlyTrend} />
       </div>
     </div>
   );
