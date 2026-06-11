@@ -20,8 +20,8 @@ function run() {
       due_date: null,
       status: 'Pending',
       created_at: new Date().toISOString(),
-    } as Partial<MoneyTaken>,
-    [{ id: 'r1', taken_id: '1', user_id: 'u', amount: 200, paid_date: '2022-06-01', note: null, created_at: new Date().toISOString() }] as Partial<TakenRepayment>[]
+    } as MoneyTaken,
+    [{ id: 'r1', taken_id: '1', user_id: 'u', amount: 200, paid_date: '2022-06-01', note: null, created_at: new Date().toISOString() }] as TakenRepayment[]
   );
   console.assert(noInterest.outstanding === 800, 'No interest outstanding should be 800');
 
@@ -43,7 +43,7 @@ function run() {
       compound_interest_rate: 0,
       compounding_frequency: 1,
       total_tenure_years: 2,
-    } as Partial<MoneyTaken>,
+    } as MoneyTaken,
     [],
     new Date('2021-01-01')
   );
@@ -68,7 +68,7 @@ function run() {
       due_date: null,
       status: 'Pending',
       created_at: new Date().toISOString(),
-    } as Partial<MoneyTaken>,
+    } as MoneyTaken,
     [],
     new Date('2022-01-01')
   );
@@ -93,8 +93,8 @@ function run() {
       due_date: null,
       status: 'Pending',
       created_at: new Date().toISOString(),
-    } as Partial<MoneyTaken>,
-    [{ id: 'p1', taken_id: '4', user_id: 'u', amount: 500, paid_date: '2020-06-01', note: null, created_at: new Date().toISOString() }] as Partial<TakenRepayment>[],
+    } as MoneyTaken,
+    [{ id: 'p1', taken_id: '4', user_id: 'u', amount: 500, paid_date: '2020-06-01', note: null, created_at: new Date().toISOString() }] as TakenRepayment[],
     new Date('2021-01-01')
   );
   // First half-year interest on 1000 at 10% = 50 => balance 1050 then repayment 500 -> 550 then 6 months interest on 550 at 10% = 27.5 => ~577.5
@@ -113,8 +113,8 @@ function run() {
       due_date: null,
       status: 'Repaid',
       created_at: new Date().toISOString(),
-    } as Partial<MoneyTaken>,
-    [{ id: 'r1', taken_id: '5', user_id: 'u', amount: 500, paid_date: '2020-02-01', note: null, created_at: new Date().toISOString() }] as Partial<TakenRepayment>[]
+    } as MoneyTaken,
+    [{ id: 'r1', taken_id: '5', user_id: 'u', amount: 500, paid_date: '2020-02-01', note: null, created_at: new Date().toISOString() }] as TakenRepayment[]
   );
   console.assert(repFull.outstanding === 0, 'Fully repaid outstanding 0');
 
