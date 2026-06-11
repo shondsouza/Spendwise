@@ -32,7 +32,7 @@ export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
     borderRadius: "20px",
     boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
     color: "var(--text-primary)",
-    fontFamily: "SF Pro Text, system-ui, sans-serif",
+    fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   };
 
   return (

@@ -9,6 +9,12 @@ export const metadata: Metadata = {
     template: `%s | ${APP_NAME}`,
   },
   description: APP_DESCRIPTION,
+  themeColor: "#000000",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+  },
   icons: {
     icon: [
       {
@@ -17,7 +23,13 @@ export const metadata: Metadata = {
         sizes: "any",
       },
     ],
-    apple: "/spendwise.png",
+    apple: [{ url: "/spendwise.png" }],
+    shortcut: [
+      {
+        url: "/spendwise.png",
+        sizes: "192x192",
+      },
+    ],
   },
   openGraph: {
     type: "website",
@@ -38,16 +50,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="application-name" content="FinTracka" />
+        <meta name="application-name" content="SpendWise" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="FinTracka" />
+        <meta name="apple-mobile-web-app-title" content="SpendWise" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#000000" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/spendwise.png" />
+        <link rel="mask-icon" href="/spendwise.png" color="#000000" />
+        <link rel="shortcut icon" href="/favicon.ico" />
       </head>
       <body className="font-sans antialiased">
         <Providers>{children}</Providers>
