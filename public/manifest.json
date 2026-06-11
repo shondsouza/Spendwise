@@ -12,15 +12,15 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/spendwise.png",
+      "src": "/wallet.jpg",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "/spendwise.png",
+      "src": "/wallet.jpg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ]
