@@ -13,7 +13,13 @@ export const EXPENSE_CATEGORIES = [
   { value: "rent", label: "Rent & Housing", emoji: "🏠", icon: "home", color: "blue" },
   { value: "gaming", label: "Gaming", emoji: "🎮", icon: "gamepad-2", color: "purple" },
   { value: "gifts", label: "Gifts", emoji: "🎁", icon: "gift", color: "pink" },
-  { value: "subscriptions", label: "Subscriptions", emoji: "📱", icon: "smartphone", color: "indigo" },
+  {
+    value: "subscriptions",
+    label: "Subscriptions",
+    emoji: "📱",
+    icon: "smartphone",
+    color: "indigo",
+  },
   { value: "other", label: "Miscellaneous", emoji: "💡", icon: "more-horizontal", color: "gray" },
 ];
 
@@ -22,9 +28,22 @@ export const INCOME_CATEGORIES = [
   { value: "freelance", label: "Freelance", emoji: "🧾", icon: "code", color: "blue" },
   { value: "investment", label: "Investments", emoji: "📈", icon: "trending-up", color: "cyan" },
   { value: "bonus", label: "Gifts Received", emoji: "🎁", icon: "gift", color: "purple" },
+  { value: "hostel", label: "Hostel", emoji: "🏣", icon: "hostel", color: "purple" },
   { value: "interest", label: "Interest", emoji: "🏦", icon: "landmark", color: "indigo" },
-  { value: "side-hustle", label: "Side Hustle", emoji: "💸", icon: "badge-indian-rupee", color: "orange" },
-  { value: "reimbursement", label: "Reimbursement", emoji: "🤝", icon: "handshake", color: "green" },
+  {
+    value: "side-hustle",
+    label: "Side Hustle",
+    emoji: "💸",
+    icon: "badge-indian-rupee",
+    color: "orange",
+  },
+  {
+    value: "reimbursement",
+    label: "Reimbursement",
+    emoji: "🤝",
+    icon: "handshake",
+    color: "green",
+  },
   { value: "other", label: "Miscellaneous", emoji: "💡", icon: "more-horizontal", color: "gray" },
 ];
 
