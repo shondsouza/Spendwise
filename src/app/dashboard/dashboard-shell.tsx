@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,7 +18,7 @@ import {
   Settings,
   FolderTree,
 } from "lucide-react";
-import { useTheme } from "next-themes";
+
 import { Sidebar } from "@/components/shared/sidebar";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -46,13 +46,7 @@ const bottomNav = [{ href: "/dashboard/settings", label: "Settings", emoji: "⚙
 export default function DashboardShell({ children, userName }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { theme, resolvedTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -65,7 +59,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
     return pathname.startsWith(href);
   };
 
-  const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");
+  
 
   return (
     <div className="flex h-screen bg-[var(--bg-primary)]">
@@ -81,14 +75,8 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
             <div className="flex items-center justify-between gap-3 border-b border-[var(--separator)] px-6 py-6">
               <div className="flex items-center gap-3">
                 <Image
-                  src={
-                    mounted
-                      ? isDark
-                        ? "/spendwise-light.png"
-                        : "/spendwise-dark.png"
-                      : "/spendwise-dark.png"
-                  }
-                  alt="SpendWise"
+                  src="/wallet.jpg"
+                  alt="Wallet"
                   width={36}
                   height={36}
                   className="rounded-lg"
@@ -188,20 +176,8 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
             <Menu className="h-6 w-6 text-[var(--text-primary)]" />
           </button>
           <div className="flex items-center gap-2">
-            <Image
-              src={
-                mounted
-                  ? isDark
-                    ? "/spendwise-light.png"
-                    : "/spendwise-dark.png"
-                  : "/spendwise-dark.png"
-              }
-              alt="SpendWise"
-              width={28}
-              height={28}
-              className="rounded-md"
-            />
-            <span className="text-[15px] font-semibold text-[var(--text-primary)]">SpendWise</span>
+            <Image src="/wallet.jpg" alt="Wallet" width={28} height={28} className="rounded-md" />
+            <span className="text-[15px] font-semibold text-[var(--text-primary)] hidden sm:inline">SpendWise</span>
           </div>
           <ThemeToggle />
         </header>
@@ -211,20 +187,20 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
         </div>
 
         <nav className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around border-t border-[var(--separator)] bg-[var(--bg-primary)] py-2 md:hidden">
-          {mainNav.slice(0, 5).map((item) => {
+              {mainNav.slice(0, 5).map((item) => {
             const active = isActive(item.href);
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-1 transition-all duration-200",
-                  active ? "text-[var(--apple-blue)]" : "text-[var(--text-tertiary)]"
-                )}
+                    className={cn(
+                      "flex flex-col items-center gap-1 px-4 py-2 touch-manipulation transition-all duration-200",
+                      active ? "text-[var(--apple-blue)]" : "text-[var(--text-tertiary)]"
+                    )}
               >
-                <Icon className="h-6 w-6" />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                    <Icon className="h-7 w-7" />
+                    <span className="text-[10px] font-medium">{item.label}</span>
               </Link>
             );
           })}
