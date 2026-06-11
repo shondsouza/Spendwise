@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,7 +18,7 @@ import {
   Settings,
   FolderTree,
 } from "lucide-react";
-import { useTheme } from "next-themes";
+
 import { Sidebar } from "@/components/shared/sidebar";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -46,13 +46,7 @@ const bottomNav = [{ href: "/dashboard/settings", label: "Settings", emoji: "⚙
 export default function DashboardShell({ children, userName }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { theme, resolvedTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -65,7 +59,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
     return pathname.startsWith(href);
   };
 
-  const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");
+  
 
   return (
     <div className="flex h-screen bg-[var(--bg-primary)]">
