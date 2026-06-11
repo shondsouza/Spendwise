@@ -16,15 +16,23 @@ const config: Config = {
         warning: "var(--apple-orange)",
       },
       fontFamily: {
-        sans: ["SF Pro Text", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
-        display: [
-          "SF Pro Display",
+        sans: [
+          "ui-sans-serif",
+          "system-ui",
           "-apple-system",
           "BlinkMacSystemFont",
-          "system-ui",
+          "Segoe UI",
           "sans-serif",
         ],
-        mono: ["SF Mono", "ui-monospace", "monospace"],
+        display: [
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "sans-serif",
+        ],
+        mono: ["ui-monospace", "SF Mono", "monospace"],
       },
       borderRadius: {
         apple: "20px",

@@ -1,21 +1,27 @@
 {
-  "name": "FinTracka",
-  "short_name": "FinTracka",
-  "description": "A simple app to track personal finances, including loans and money given.",
+  "name": "SpendWise",
+  "short_name": "SpendWise",
+  "description": "Your personal daily expense tracker.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#000000",
+  "categories": ["productivity", "finance"],
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/spendwise.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/spendwise.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
