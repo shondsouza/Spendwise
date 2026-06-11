@@ -36,6 +36,12 @@ export interface MoneyTaken {
   repayments?: TakenRepayment[];
   total_paid?: number;
   remaining?: number;
+  has_interest?: boolean;
+  simple_interest_rate?: number;
+  simple_interest_years?: number;
+  compound_interest_rate?: number;
+  compounding_frequency?: number;
+  total_tenure_years?: number;
 }
 
 export interface TakenRepayment {

@@ -203,6 +203,7 @@ export async function addMoneyTaken(formData: FormData) {
   }
 
   const parsed = addMoneyTakenSchema.safeParse(Object.fromEntries(formData));
+
   if (!parsed.success) {
     return { data: null, error: parsed.error.errors[0].message };
   }
@@ -210,6 +211,38 @@ export async function addMoneyTaken(formData: FormData) {
   const { data, error } = await supabase
     .from("money_taken")
     .insert({ ...parsed.data, user_id: user.id })
+    .select()
+    .single();
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  revalidatePath("/dashboard/loan");
+  revalidatePath("/dashboard");
+  return { data, error: null };
+}
+
+export async function updateMoneyTaken(id: string, formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  const parsed = addMoneyTakenSchema.safeParse(Object.fromEntries(formData));
+
+  if (!parsed.success) {
+    return { data: null, error: parsed.error.errors[0].message };
+  }
+
+  const { data, error } = await supabase
+    .from("money_taken")
+    .update({ ...parsed.data, user_id: user.id })
+    .eq("id", id)
     .select()
     .single();
 

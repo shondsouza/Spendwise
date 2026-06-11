@@ -14,8 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
-import { addMoneyTaken } from '@/app/actions/money.actions';
+import { Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '../ui/checkbox';
 import {
@@ -25,26 +24,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import { MoneyTaken } from '@/types/money.types';
+import { updateMoneyTaken } from '@/app/actions/money.actions';
 
-interface AddMoneyTakenDialogProps {
+interface EditMoneyTakenDialogProps {
+  entry: MoneyTaken;
   onSuccess?: () => void;
 }
 
-export function AddMoneyTakenDialog({ onSuccess }: AddMoneyTakenDialogProps) {
+export function EditMoneyTakenDialog({
+  entry,
+  onSuccess,
+}: EditMoneyTakenDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [hasInterest, setHasInterest] = useState(false);
+  const [hasInterest, setHasInterest] = useState(entry.has_interest || false);
   const [formData, setFormData] = useState({
-    person_name: '',
-    amount: '',
-    taken_date: new Date().toISOString().split('T')[0],
-    reason: '',
-    due_date: '',
-    simple_interest_rate: '',
-    simple_interest_years: '',
-    compound_interest_rate: '',
-    compounding_frequency: '1',
-    total_tenure_years: '',
+    person_name: entry.person_name,
+    amount: entry.amount.toString(),
+    taken_date: entry.taken_date,
+    reason: entry.reason || '',
+    due_date: entry.due_date || '',
+    simple_interest_rate: entry.simple_interest_rate?.toString() || '',
+    simple_interest_years: entry.simple_interest_years?.toString() || '',
+    compound_interest_rate: entry.compound_interest_rate?.toString() || '',
+    compounding_frequency: entry.compounding_frequency?.toString() || '1',
+    total_tenure_years: entry.total_tenure_years?.toString() || '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,26 +83,13 @@ export function AddMoneyTakenDialog({ onSuccess }: AddMoneyTakenDialogProps) {
         );
         fd.append('total_tenure_years', formData.total_tenure_years.toString());
       }
-
-      const result = await addMoneyTaken(fd);
+      const result = await updateMoneyTaken(entry.id, fd);
 
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success('Entry added successfully!');
+        toast.success('Entry updated successfully!');
         setOpen(false);
-        setFormData({
-          person_name: '',
-          amount: '',
-          taken_date: new Date().toISOString().split('T')[0],
-          reason: '',
-          due_date: '',
-          simple_interest_rate: '',
-          simple_interest_years: '',
-          compound_interest_rate: '',
-          compounding_frequency: '1',
-          total_tenure_years: '',
-        });
         onSuccess?.();
       }
     } catch {
@@ -110,17 +102,14 @@ export function AddMoneyTakenDialog({ onSuccess }: AddMoneyTakenDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Entry
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-500">
+          <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>🏦 Money Borrowed</DialogTitle>
-          <DialogDescription>
-            Record money you borrowed from someone
-          </DialogDescription>
+          <DialogTitle>Edit Money Borrowed</DialogTitle>
+          <DialogDescription>Update the details of the loan.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
