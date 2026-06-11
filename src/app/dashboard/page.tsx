@@ -1,12 +1,27 @@
 import React from "react";
+import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
-import { SpendingChart } from "@/components/dashboard/spending-chart";
-import { CategoryBreakdownChart } from "@/components/dashboard/expense-category-chart";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { PageHeader } from "@/components/shared/page-header";
 import { format, startOfDay, endOfMonth, subMonths } from "date-fns";
+
+const SpendingChart = dynamic(
+  () => import("@/components/dashboard/spending-chart").then((mod) => mod.SpendingChart),
+  {
+    ssr: false,
+    loading: () => <div className="h-[300px] rounded-3xl bg-[var(--bg-secondary)] animate-pulse" />,
+  }
+);
+
+const CategoryBreakdownChart = dynamic(
+  () => import("@/components/dashboard/expense-category-chart").then((mod) => mod.CategoryBreakdownChart),
+  {
+    ssr: false,
+    loading: () => <div className="h-[300px] rounded-3xl bg-[var(--bg-secondary)] animate-pulse" />,
+  }
+);
 
 export default async function DashboardPage() {
   const supabase = await createClient();

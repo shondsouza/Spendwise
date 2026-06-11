@@ -23,7 +23,7 @@ export const metadata: Metadata = {
         sizes: "any",
       },
     ],
-    apple: [{ url: "/spendwise.png" }],
+    apple: [{ url: "/wallet.jpg" }],
     shortcut: [
       {
         url: "/spendwise.png",
@@ -61,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#000000" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/spendwise.png" />
+        <link rel="apple-touch-icon" href="/wallet.jpg" />
         <link rel="mask-icon" href="/spendwise.png" color="#000000" />
         <link rel="shortcut icon" href="/favicon.ico" />
       </head>
