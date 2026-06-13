@@ -8,17 +8,19 @@ import {
   Menu,
   X,
   LogOut,
-  Home,
-  CreditCard,
-  DollarSign,
-  Handshake,
-  Building2,
-  TrendingUp,
-  Target,
-  Settings,
   FolderTree,
-  MoreHorizontal,
+  Settings,
+  Target,
+  Handshake,
+  Building2
 } from "lucide-react";
+import { 
+  IoHomeOutline, IoHome, 
+  IoCardOutline, IoCard, 
+  IoWalletOutline, IoWallet,
+  IoPieChartOutline, IoPieChart,
+  IoEllipsisHorizontalOutline, IoEllipsisHorizontal
+} from "react-icons/io5";
 
 import { Sidebar } from "@/components/shared/sidebar";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
@@ -32,10 +34,10 @@ interface DashboardShellProps {
 }
 
 const mainNav = [
-  { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/dashboard/expenses", label: "Expenses", icon: CreditCard },
-  { href: "/dashboard/income", label: "Income", icon: DollarSign },
-  { href: "/dashboard/analytics", label: "Analytics", icon: TrendingUp },
+  { href: "/dashboard", label: "Home", icon: IoHomeOutline, activeIcon: IoHome },
+  { href: "/dashboard/expenses", label: "Expenses", icon: IoCardOutline, activeIcon: IoCard },
+  { href: "/dashboard/income", label: "Income", icon: IoWalletOutline, activeIcon: IoWallet },
+  { href: "/dashboard/analytics", label: "Analytics", icon: IoPieChartOutline, activeIcon: IoPieChart },
 ];
 
 const moreNav = [
@@ -234,7 +236,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
           <div className="bottom-nav-inner">
             {mainNav.map((item) => {
               const active = isActive(item.href);
-              const Icon = item.icon;
+              const Icon = active ? item.activeIcon : item.icon;
               return (
                 <Link
                   key={item.href}
@@ -242,7 +244,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
                   className={cn("bottom-nav-item", active && "active")}
                 >
                   <div className="nav-icon-wrap">
-                    <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
+                    <Icon className="h-6 w-6" />
                   </div>
                   <span className="nav-label">{item.label}</span>
                   <span className="nav-dot" />
@@ -255,7 +257,11 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
               className={cn("bottom-nav-item", (isMoreActive || moreOpen) && "active")}
             >
               <div className="nav-icon-wrap">
-                <MoreHorizontal className="h-5 w-5" strokeWidth={(isMoreActive || moreOpen) ? 2.5 : 2} />
+                {(isMoreActive || moreOpen) ? (
+                  <IoEllipsisHorizontal className="h-6 w-6" />
+                ) : (
+                  <IoEllipsisHorizontalOutline className="h-6 w-6" />
+                )}
               </div>
               <span className="nav-label">More</span>
               <span className="nav-dot" />
