@@ -5,6 +5,8 @@ import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { PageHeader } from "@/components/shared/page-header";
 import { format, startOfDay, endOfMonth, subMonths } from "date-fns";
+import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
+import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 
 import ChartsClient from "@/components/dashboard/charts-client";
 
@@ -159,6 +161,12 @@ export default async function DashboardPage() {
       <PageHeader
         title="📊 Dashboard"
         description="Welcome back! Here's your financial overview."
+        action={
+          <div className="flex items-center gap-2">
+            <AddExpenseDialog />
+            <AddIncomeDialog />
+          </div>
+        }
       />
 
       <div className="space-y-6">

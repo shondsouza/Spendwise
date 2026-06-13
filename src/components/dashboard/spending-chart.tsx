@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/utils/currency";
 
 interface SpendingChartProps {
   data: Array<{
@@ -28,19 +29,45 @@ export function SpendingChart({ data }: SpendingChartProps) {
         <CardTitle>📊 Daily Spending Trend</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
-            <CartesianGrid stroke="var(--separator)" vertical={false} />
+        <ResponsiveContainer width="100%" height={320}>
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--apple-blue)" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="var(--apple-blue)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--separator)" />
             <XAxis
-              axisLine={false}
               dataKey="day"
-              stroke="var(--text-tertiary)"
+              axisLine={false}
               tickLine={false}
+              tick={{ fill: "var(--text-tertiary)", fontSize: 12 }}
+              dy={10}
             />
-            <YAxis axisLine={false} stroke="var(--text-tertiary)" tickLine={false} />
-            <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(0,122,255,0.06)" }} />
-            <Bar dataKey="amount" fill="#007aff" radius={[6, 6, 0, 0]} />
-          </BarChart>
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "var(--text-tertiary)", fontSize: 12 }}
+              tickFormatter={(value) => `₹${value}`}
+              dx={-10}
+            />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              cursor={{ stroke: "var(--apple-blue)", strokeWidth: 1, strokeDasharray: "4 4" }}
+              formatter={(value: number) => [formatCurrency(value), "Spent"]}
+              labelFormatter={(label) => `Day ${label}`}
+            />
+            <Area
+              type="monotone"
+              dataKey="amount"
+              stroke="var(--apple-blue)"
+              strokeWidth={3}
+              fillOpacity={1}
+              fill="url(#colorAmount)"
+              activeDot={{ r: 6, fill: "var(--apple-blue)", stroke: "var(--bg-primary)", strokeWidth: 2 }}
+            />
+          </AreaChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>

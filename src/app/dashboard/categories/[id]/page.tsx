@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Expense, Income, Category } from "@/types";
+import { Expense, Income, Category, Budget } from "@/types";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils/date";
-import { ArrowLeft, FolderOpen } from "lucide-react";
+import { formatCurrency } from "@/lib/utils/currency";
+import { ArrowLeft, FolderOpen, Target, Pencil, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants/config";
 
@@ -106,7 +107,15 @@ export default function CategoryDetailPage() {
   const [income, setIncome] = useState<Income[]>([]);
   const [categoryInfo, setCategoryInfo] = useState<CategoryInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [budget, setBudget] = useState<Budget | null>(null);
+  const [showLimitInput, setShowLimitInput] = useState(false);
+  const [limitValue, setLimitValue] = useState("");
+  const [savingLimit, setSavingLimit] = useState(false);
   const categoryParam = decodeURIComponent(params.id as string);
+
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
 
   const fetchData = useCallback(
     async (rawParam: string) => {
@@ -186,13 +195,28 @@ export default function CategoryDetailPage() {
               .order("date", { ascending: false })
           : Promise.resolve({ data: [], error: null });
 
-        const [expensesResult, incomeResult] = await Promise.all([expensesQuery, incomeQuery]);
+        // Load budget for current category + current month
+        const budgetQuery = supabase
+          .from("budgets")
+          .select("id, user_id, category, amount, month, year, created_at")
+          .eq("user_id", user.id)
+          .eq("category", categoryValues[0])
+          .eq("month", currentMonth)
+          .eq("year", currentYear)
+          .maybeSingle();
+
+        const [expensesResult, incomeResult, budgetResult] = await Promise.all([
+          expensesQuery,
+          incomeQuery,
+          budgetQuery,
+        ]);
 
         if (expensesResult.error) throw expensesResult.error;
         if (incomeResult.error) throw incomeResult.error;
 
         setExpenses((expensesResult.data as Expense[]) || []);
         setIncome((incomeResult.data as Income[]) || []);
+        setBudget((budgetResult.data as Budget) || null);
       } catch {
         toast.error("Failed to load category transactions");
         router.push("/dashboard/categories");
@@ -200,7 +224,7 @@ export default function CategoryDetailPage() {
         setLoading(false);
       }
     },
-    [router]
+    [router, currentMonth, currentYear]
   );
 
   useEffect(() => {
@@ -212,6 +236,74 @@ export default function CategoryDetailPage() {
   const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0) || 0;
   const totalIncome = income.reduce((sum, inc) => sum + (inc.amount || 0), 0) || 0;
 
+  // Current month's spending only (for limit tracking)
+  const thisMonthStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
+  const spentThisMonth = expenses
+    .filter((e) => e.date.startsWith(thisMonthStr))
+    .reduce((sum, e) => sum + (e.amount || 0), 0);
+
+  const handleSaveLimit = async () => {
+    const amount = parseFloat(limitValue);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    setSavingLimit(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Unauthorized");
+
+      if (budget) {
+        // Update existing
+        const { data, error } = await supabase
+          .from("budgets")
+          .update({ amount })
+          .eq("id", budget.id)
+          .eq("user_id", user.id)
+          .select("id, user_id, category, amount, month, year, created_at")
+          .single();
+        if (error) throw error;
+        setBudget(data as Budget);
+        toast.success("Spending limit updated!");
+      } else {
+        // Create new — use category name from categoryInfo
+        const catName = categoryInfo?.name || "";
+        const { data, error } = await supabase
+          .from("budgets")
+          .insert({ category: catName, amount, month: currentMonth, year: currentYear, user_id: user.id })
+          .select("id, user_id, category, amount, month, year, created_at")
+          .single();
+        if (error) throw error;
+        setBudget(data as Budget);
+        toast.success("Spending limit set!");
+      }
+      setShowLimitInput(false);
+      setLimitValue("");
+    } catch {
+      toast.error("Failed to save spending limit");
+    } finally {
+      setSavingLimit(false);
+    }
+  };
+
+  const handleRemoveLimit = async () => {
+    if (!budget) return;
+    if (!confirm("Remove the spending limit for this category?")) return;
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("budgets")
+        .delete()
+        .eq("id", budget.id);
+      if (error) throw error;
+      setBudget(null);
+      toast.success("Spending limit removed");
+    } catch {
+      toast.error("Failed to remove spending limit");
+    }
+  };
+
   const allTransactions = [
     ...expenses.map((exp) => ({
       ...exp,
@@ -222,6 +314,31 @@ export default function CategoryDetailPage() {
       type: "income" as const,
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const monthlyStats = React.useMemo(() => {
+    const stats: Record<string, { expenses: number; income: number; sortDate: number }> = {};
+    
+    allTransactions.forEach((t) => {
+      const date = new Date(t.date);
+      const monthYear = date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      if (!stats[monthYear]) {
+        stats[monthYear] = {
+          expenses: 0,
+          income: 0,
+          sortDate: new Date(date.getFullYear(), date.getMonth(), 1).getTime(),
+        };
+      }
+      if (t.type === "expense") {
+        stats[monthYear].expenses += (t.amount || 0);
+      } else {
+        stats[monthYear].income += (t.amount || 0);
+      }
+    });
+
+    return Object.entries(stats)
+      .map(([monthYear, data]) => ({ monthYear, ...data }))
+      .sort((a, b) => b.sortDate - a.sortDate);
+  }, [allTransactions]);
 
   return (
     <div className="page-enter">
@@ -255,39 +372,189 @@ export default function CategoryDetailPage() {
             description={`All transactions for ${categoryInfo?.name || "this category"}`}
           />
 
+          {/* Spending Limit Card — only for expense/both categories */}
+          {categoryInfo?.type !== "income" && (
+            <div className="mb-6">
+              {!budget && !showLimitInput && (
+                <button
+                  onClick={() => {
+                    setShowLimitInput(true);
+                    setLimitValue("");
+                  }}
+                  className="flex items-center gap-2 rounded-xl border border-dashed border-[var(--apple-blue)] px-4 py-3 text-[14px] font-medium text-[var(--apple-blue)] transition-all hover:bg-[rgba(0,122,255,0.06)] w-full sm:w-auto"
+                >
+                  <Target className="h-4 w-4" />
+                  Set Monthly Spending Limit
+                </button>
+              )}
+
+              {(budget || showLimitInput) && (
+                <div className="apple-card p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Target className="h-5 w-5 text-[var(--apple-blue)]" />
+                      <span className="font-semibold text-[15px] text-[var(--text-primary)]">
+                        Monthly Spending Limit
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {budget && !showLimitInput && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-[var(--text-secondary)] hover:text-[var(--apple-blue)]"
+                            onClick={() => {
+                              setLimitValue(String(budget.amount));
+                              setShowLimitInput(true);
+                            }}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-[var(--apple-red)] hover:text-[var(--apple-red)]"
+                            onClick={handleRemoveLimit}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </>
+                      )}
+                      {showLimitInput && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-[var(--text-secondary)]"
+                          onClick={() => { setShowLimitInput(false); setLimitValue(""); }}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {showLimitInput ? (
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-1">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] text-sm font-medium">₹</span>
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="Enter limit amount"
+                          value={limitValue}
+                          onChange={(e) => setLimitValue(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleSaveLimit()}
+                          className="w-full rounded-xl border border-[var(--separator)] bg-[rgba(120,120,128,0.08)] px-3 py-2 pl-7 text-[15px] text-[var(--text-primary)] outline-none focus:border-[var(--apple-blue)] focus:ring-2 focus:ring-[rgba(0,122,255,0.15)]"
+                          autoFocus
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        disabled={savingLimit}
+                        onClick={handleSaveLimit}
+                        className="gap-1.5 bg-[var(--apple-blue)] text-white hover:bg-[var(--apple-blue)]/90"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        {savingLimit ? "Saving…" : "Save"}
+                      </Button>
+                    </div>
+                  ) : budget ? (
+                    <>
+                      {/* Progress bar */}
+                      {(() => {
+                        const pct = Math.min((spentThisMonth / budget.amount) * 100, 100);
+                        const remaining = budget.amount - spentThisMonth;
+                        const overBudget = remaining < 0;
+                        return (
+                          <div className="space-y-3">
+                            <div className="flex items-end justify-between">
+                              <div>
+                                <p className="text-[12px] text-[var(--text-secondary)] mb-0.5">Spent this month</p>
+                                <p className={`text-[22px] font-bold tabular-nums ${
+                                  overBudget ? "text-[var(--apple-red)]" : "text-[var(--text-primary)]"
+                                }`}>{formatCurrency(spentThisMonth)}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[12px] text-[var(--text-secondary)] mb-0.5">Limit</p>
+                                <p className="text-[15px] font-semibold text-[var(--text-primary)]">{formatCurrency(budget.amount)}</p>
+                              </div>
+                            </div>
+
+                            <div className="relative h-2.5 w-full rounded-full bg-[rgba(120,120,128,0.15)] overflow-hidden">
+                              <div
+                                className="absolute left-0 top-0 h-full rounded-full transition-all duration-700"
+                                style={{
+                                  width: `${pct}%`,
+                                  background: overBudget
+                                    ? "var(--apple-red)"
+                                    : pct > 80
+                                    ? "var(--apple-orange)"
+                                    : "var(--apple-blue)",
+                                }}
+                              />
+                            </div>
+
+                            <p className={`text-[13px] font-medium ${
+                              overBudget
+                                ? "text-[var(--apple-red)]"
+                                : pct > 80
+                                ? "text-[var(--apple-orange)]"
+                                : "text-[var(--apple-green)]"
+                            }`}>
+                              {overBudget
+                                ? `⚠️ Over budget by ${formatCurrency(Math.abs(remaining))}`
+                                : `✅ ${formatCurrency(remaining)} remaining (${(100 - pct).toFixed(0)}% left)`}
+                            </p>
+                          </div>
+                        );
+                      })()}
+                    </>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-[var(--text-secondary)]">
-                  Total Expenses
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AmountDisplay amount={totalExpenses} variant="danger" className="text-2xl" />
-              </CardContent>
-            </Card>
+            {categoryInfo?.type !== "income" && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-[var(--text-secondary)]">
+                    Total Expenses
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AmountDisplay amount={totalExpenses} variant="danger" className="text-2xl" />
+                </CardContent>
+              </Card>
+            )}
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-[var(--text-secondary)]">
-                  Total Income
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AmountDisplay amount={totalIncome} variant="success" className="text-2xl" />
-              </CardContent>
-            </Card>
+            {categoryInfo?.type !== "expense" && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-[var(--text-secondary)]">
+                    Total Income
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AmountDisplay amount={totalIncome} variant="success" className="text-2xl" />
+                </CardContent>
+              </Card>
+            )}
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-[var(--text-secondary)]">
-                  Net Balance
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AmountDisplay amount={totalIncome - totalExpenses} className="text-2xl" />
-              </CardContent>
-            </Card>
+            {categoryInfo?.type === "both" && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-[var(--text-secondary)]">
+                    Net Balance
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AmountDisplay amount={totalIncome - totalExpenses} className="text-2xl" />
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {allTransactions.length === 0 ? (
@@ -297,13 +564,63 @@ export default function CategoryDetailPage() {
               description="Add expenses or income with this category to see them here"
             />
           ) : (
-            <div className="apple-card overflow-hidden">
+            <>
+              {monthlyStats.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-medium mb-4 text-[var(--text-primary)]">Monthly Summary</h3>
+                  <div className="apple-card overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Month</TableHead>
+                          {categoryInfo?.type !== "income" && (
+                            <TableHead className="text-right">Expenses</TableHead>
+                          )}
+                          {categoryInfo?.type !== "expense" && (
+                            <TableHead className="text-right">Income</TableHead>
+                          )}
+                          {categoryInfo?.type === "both" && (
+                            <TableHead className="text-right">Net</TableHead>
+                          )}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {monthlyStats.map((stat) => (
+                          <TableRow key={stat.monthYear}>
+                            <TableCell className="font-medium">{stat.monthYear}</TableCell>
+                            {categoryInfo?.type !== "income" && (
+                              <TableCell className="text-right">
+                                <AmountDisplay amount={stat.expenses} variant="danger" />
+                              </TableCell>
+                            )}
+                            {categoryInfo?.type !== "expense" && (
+                              <TableCell className="text-right">
+                                <AmountDisplay amount={stat.income} variant="success" />
+                              </TableCell>
+                            )}
+                            {categoryInfo?.type === "both" && (
+                              <TableCell className="text-right">
+                                <AmountDisplay amount={stat.income - stat.expenses} />
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+
+              <div className="mb-4">
+                <h3 className="text-lg font-medium text-[var(--text-primary)]">All Transactions</h3>
+              </div>
+              <div className="apple-card overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead>Description</TableHead>
-                    <TableHead>Type</TableHead>
+                    {categoryInfo?.type === "both" && <TableHead>Type</TableHead>}
                     <TableHead className="text-right">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -314,17 +631,19 @@ export default function CategoryDetailPage() {
                         {formatDate(transaction.date, "dd MMM yyyy")}
                       </TableCell>
                       <TableCell className="font-medium">{transaction.title}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`inline-flex rounded-full px-2 py-1 text-[11px] font-semibold ${
-                            transaction.type === "expense"
-                              ? "bg-[rgba(255,59,48,0.12)] text-[var(--apple-red)]"
-                              : "bg-[rgba(52,199,89,0.12)] text-[var(--apple-green)]"
-                          }`}
-                        >
-                          {transaction.type.toUpperCase()}
-                        </span>
-                      </TableCell>
+                      {categoryInfo?.type === "both" && (
+                        <TableCell>
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-[11px] font-semibold ${
+                              transaction.type === "expense"
+                                ? "bg-[rgba(255,59,48,0.12)] text-[var(--apple-red)]"
+                                : "bg-[rgba(52,199,89,0.12)] text-[var(--apple-green)]"
+                            }`}
+                          >
+                            {transaction.type.toUpperCase()}
+                          </span>
+                        </TableCell>
+                      )}
                       <TableCell className="text-right">
                         <AmountDisplay
                           amount={transaction.amount}
@@ -336,6 +655,7 @@ export default function CategoryDetailPage() {
                 </TableBody>
               </Table>
             </div>
+            </>
           )}
         </>
       )}
