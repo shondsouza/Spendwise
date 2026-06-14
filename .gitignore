@@ -9,6 +9,12 @@ node_modules/
 # next.js
 /.next/
 /out/
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/fallback-*.js
+public/swe-worker-*.js
+public/service-worker.js
 
 # production
 /build
