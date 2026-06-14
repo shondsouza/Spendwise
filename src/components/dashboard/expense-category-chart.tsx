@@ -28,12 +28,15 @@ const COLORS = [
 export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
   const tooltipStyle = {
     background: "var(--glass-bg)",
-    backdropFilter: "blur(20px) saturate(180%)",
+    backdropFilter: "blur(24px) saturate(180%)",
     border: "1px solid var(--glass-border)",
-    borderRadius: "20px",
-    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+    borderRadius: "16px",
+    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
     color: "var(--text-primary)",
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontSize: "13px",
+    fontWeight: "600",
+    padding: "10px 14px",
   };
 
   const total = data.reduce((sum, item) => sum + item.value, 0);
@@ -41,7 +44,7 @@ export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
   return (
     <Card className="col-span-1 flex flex-col">
       <CardHeader className="pb-0">
-        <CardTitle>💡 Spending by Category</CardTitle>
+        <CardTitle className="text-[17px] font-bold tracking-[-0.3px]">Spending by Category</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col items-center justify-center pt-6">
         <div className="relative h-[220px] w-full">
@@ -74,8 +77,8 @@ export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
           </ResponsiveContainer>
           {/* Center Total */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-[12px] font-medium text-[var(--text-secondary)]">Total</span>
-            <span className="text-[18px] font-bold text-[var(--text-primary)] tabular-nums">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.4px] text-[var(--text-tertiary)]">Total</span>
+            <span className="text-[19px] font-extrabold text-[var(--text-primary)] tabular-nums tracking-[-0.5px]">
               {formatCurrency(total)}
             </span>
           </div>

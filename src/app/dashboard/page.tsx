@@ -7,8 +7,9 @@ import { PageHeader } from "@/components/shared/page-header";
 import { format, startOfDay, endOfMonth, subMonths } from "date-fns";
 import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
 import { AddIncomeDialog } from "@/components/income/add-income-dialog";
-
 import ChartsClient from "@/components/dashboard/charts-client";
+import { LoanDashboardWidget } from "@/components/loans/loan-dashboard-widget";
+import type { UserLoan } from "@/types/loan.types";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -42,6 +43,7 @@ export default async function DashboardPage() {
     { data: monthIncomeData },
     { data: recentExpensesData },
     { data: recentIncomeData },
+    { data: activeLoansData },
   ] = await Promise.all([
     supabase
       .from("expenses")
@@ -87,6 +89,13 @@ export default async function DashboardPage() {
       .eq("user_id", user.id)
       .order("date", { ascending: false })
       .range(0, 9),
+    // Fetch active loans for the dashboard widget
+    supabase
+      .from("user_loans")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false }),
   ]);
 
   const todayExpenses = todayExpensesData ?? [];
@@ -96,6 +105,7 @@ export default async function DashboardPage() {
   const monthIncome = monthIncomeData ?? [];
   const recentExpenses = recentExpensesData ?? [];
   const recentIncome = recentIncomeData ?? [];
+  const activeLoans = (activeLoansData ?? []) as UserLoan[];
 
   // Calculate totals
   const totalSpentToday = todayExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
@@ -183,6 +193,12 @@ export default async function DashboardPage() {
             dailyData={dailyData}
             categoryData={categoryData.length > 0 ? categoryData : [{ name: "No data", value: 1 }]}
           />
+          {activeLoans.length > 0 && (
+            <LoanDashboardWidget
+              loans={activeLoans}
+              monthlyIncome={totalIncomeMonth}
+            />
+          )}
         </div>
 
         <RecentTransactions transactions={allTransactions} />

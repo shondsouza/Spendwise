@@ -36,18 +36,24 @@ export function ExpenseTable({ expenses, onEdit, onDelete }: ExpenseTableProps) 
     <div className="apple-card overflow-hidden">
       {/* Mobile: card rows */}
       <div className="md:hidden divide-y divide-[var(--separator)]">
-        {expenses.map((expense) => {
+      {expenses.map((expense) => {
           const emoji = getCategoryEmoji(expense.category);
           const color = getCategoryColor(expense.category);
           return (
             <div key={expense.id} className="tx-card group">
-              <div className="tx-card-icon" style={{ background: `${color}18` }}>
+              {/* Left color accent strip */}
+              <div
+                className="absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full"
+                style={{ background: 'var(--apple-red)' }}
+              />
+              <div className="tx-card-icon ml-2" style={{ background: `${color}18` }}>
                 <span>{emoji}</span>
               </div>
               <div className="tx-card-body">
                 <div className="tx-card-title">{expense.title}</div>
                 <div className="tx-card-sub">
-                  {expense.category} · {formatDateShort(expense.date)} · {expense.payment_method}
+                  {expense.category} · {formatDateShort(expense.date)}
+                  {expense.payment_method && ` · ${expense.payment_method}`}
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1.5">
@@ -81,52 +87,66 @@ export function ExpenseTable({ expenses, onEdit, onDelete }: ExpenseTableProps) 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Payment Method</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="pl-5 text-[11px] font-semibold uppercase tracking-[0.5px]">Date</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.5px]">Description</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.5px]">Category</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-[0.5px]">Method</TableHead>
+              <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.5px]">Amount</TableHead>
+              <TableHead className="text-right pr-5 text-[11px] font-semibold uppercase tracking-[0.5px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {expenses.map((expense) => (
-              <TableRow key={expense.id} className="group">
-                <TableCell className="text-[13px] text-[var(--text-tertiary)]">
-                  {formatDate(expense.date, "dd MMM yyyy")}
-                </TableCell>
-                <TableCell className="font-medium">{expense.title}</TableCell>
-                <TableCell>
-                  <CategoryBadge category={expense.category} type="expense" />
-                </TableCell>
-                <TableCell className="text-[13px] capitalize text-[var(--text-secondary)]">
-                  {expense.payment_method}
-                </TableCell>
-                <TableCell className="text-right">
-                  <AmountDisplay amount={expense.amount} variant="danger" />
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit?.(expense)}
-                      className="h-8 w-8"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete?.(expense.id)}
-                      className="h-8 w-8 text-[var(--apple-red)]"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+            {expenses.map((expense, i) => {
+              const emoji = getCategoryEmoji(expense.category);
+              const color = getCategoryColor(expense.category);
+              return (
+                <TableRow key={expense.id} className={`group transition-colors ${i % 2 === 0 ? '' : 'bg-[rgba(120,120,128,0.02)]'} hover:bg-[rgba(0,122,255,0.03)]`}>
+                  <TableCell className="pl-5 text-[13px] text-[var(--text-tertiary)] tracking-[-0.1px]">
+                    {formatDate(expense.date, "dd MMM yyyy")}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl text-[15px]"
+                        style={{ background: `${color}18` }}
+                      >
+                        {emoji}
+                      </div>
+                      <span className="font-semibold text-[14px] text-[var(--text-primary)] tracking-[-0.2px]">{expense.title}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <CategoryBadge category={expense.category} type="expense" />
+                  </TableCell>
+                  <TableCell className="text-[13px] capitalize text-[var(--text-secondary)] tracking-[-0.1px]">
+                    {expense.payment_method}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <AmountDisplay amount={expense.amount} variant="danger" />
+                  </TableCell>
+                  <TableCell className="text-right pr-5">
+                    <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit?.(expense)}
+                        className="h-8 w-8 text-[var(--apple-blue)] hover:bg-[rgba(0,122,255,0.1)]"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete?.(expense.id)}
+                        className="h-8 w-8 text-[var(--apple-red)] hover:bg-[rgba(255,59,48,0.1)]"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

@@ -15,18 +15,21 @@ interface SpendingChartProps {
 export function SpendingChart({ data }: SpendingChartProps) {
   const tooltipStyle = {
     background: "var(--glass-bg)",
-    backdropFilter: "blur(20px) saturate(180%)",
+    backdropFilter: "blur(24px) saturate(180%)",
     border: "1px solid var(--glass-border)",
-    borderRadius: "20px",
-    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+    borderRadius: "16px",
+    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
     color: "var(--text-primary)",
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontSize: "13px",
+    fontWeight: "600",
+    padding: "10px 14px",
   };
 
   return (
     <Card className="col-span-1 lg:col-span-2">
-      <CardHeader>
-        <CardTitle>📊 Daily Spending Trend</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-[17px] font-bold tracking-[-0.3px]">Daily Spending Trend</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={320}>
@@ -42,13 +45,13 @@ export function SpendingChart({ data }: SpendingChartProps) {
               dataKey="day"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "var(--text-tertiary)", fontSize: 12 }}
+              tick={{ fill: "var(--text-tertiary)", fontSize: 11, fontFamily: "'Inter', ui-sans-serif", fontWeight: 500 }}
               dy={10}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "var(--text-tertiary)", fontSize: 12 }}
+              tick={{ fill: "var(--text-tertiary)", fontSize: 11, fontFamily: "'Inter', ui-sans-serif", fontWeight: 500 }}
               tickFormatter={(value) => `₹${value}`}
               dx={-10}
             />

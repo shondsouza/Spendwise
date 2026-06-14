@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { LogOut, ChevronLeft } from "lucide-react";
+import {
+  LogOut,
+  ChevronLeft,
+  LayoutDashboard,
+  CreditCard,
+  Wallet,
+  Handshake,
+  Building2,
+  BarChart3,
+  Target,
+  FolderOpen,
+  Settings,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils/cn";
-import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 
 interface SidebarProps {
@@ -16,24 +27,24 @@ interface SidebarProps {
 }
 
 const mainNav = [
-  { href: "/dashboard", label: "Dashboard", emoji: "📊" },
-  { href: "/dashboard/expenses", label: "Expenses", emoji: "💳" },
-  { href: "/dashboard/income", label: "Income", emoji: "💰" },
-  { href: "/dashboard/lent", label: "Lent", emoji: "🤝" },
-  { href: "/dashboard/loan", label: "Loan", emoji: "🏦" },
-  { href: "/dashboard/analytics", label: "Analytics", emoji: "📈" },
-  { href: "/dashboard/budgets", label: "Budgets", emoji: "🎯" },
-  { href: "/dashboard/categories", label: "Categories", emoji: "📂" },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/expenses", label: "Expenses", icon: CreditCard },
+  { href: "/dashboard/income", label: "Income", icon: Wallet },
+  { href: "/dashboard/lent", label: "Lent", icon: Handshake },
+  { href: "/dashboard/loan", label: "Loans", icon: Building2 },
+  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/dashboard/budgets", label: "Budgets", icon: Target },
+  { href: "/dashboard/categories", label: "Categories", icon: FolderOpen },
 ];
 
 const bottomNav = [
-  { href: "/dashboard/settings", label: "Settings", emoji: "⚙️" },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -44,78 +55,88 @@ export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, 
   };
 
   const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");
+  const userInitial = (userName || "U").charAt(0).toUpperCase();
 
   return (
-    <aside 
+    <aside
       className={cn(
-        "hidden border-r border-[var(--separator)] bg-[rgba(246,246,248,0.85)] backdrop-blur-xl dark:bg-[rgba(28,28,30,0.82)] md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col transition-all duration-300 ease-in-out",
-        isCollapsed ? "md:w-[80px]" : "md:w-64"
+        "hidden border-r border-[var(--separator)] md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col transition-all duration-300 ease-in-out",
+        isCollapsed ? "md:w-[72px]" : "md:w-64"
       )}
+      style={{
+        background: isDark ? "rgba(18, 18, 20, 0.88)" : "rgba(248, 248, 250, 0.88)",
+        backdropFilter: "blur(24px) saturate(180%)",
+        WebkitBackdropFilter: "blur(24px) saturate(180%)",
+      }}
     >
       {/* Logo */}
       <div
         className={cn(
-          "flex items-center py-6 relative transition-all duration-300",
-          isCollapsed ? "px-4 justify-center" : "px-6 gap-3"
+          "flex items-center py-5 relative transition-all duration-300",
+          isCollapsed ? "px-3 justify-center" : "px-5 gap-3"
         )}
         style={{ borderBottom: "1px solid var(--separator)" }}
       >
         <Image
           src={mounted ? (isDark ? "/spendwise-light.png" : "/spendwise-dark.png") : "/spendwise-dark.png"}
           alt="SpendWise"
-          width={36}
-          height={36}
-          className="rounded-lg flex-shrink-0"
+          width={34}
+          height={34}
+          className="rounded-xl flex-shrink-0"
         />
         {!isCollapsed && (
-          <span className="text-[17px] font-semibold tracking-[-0.2px] text-[var(--text-primary)] whitespace-nowrap overflow-hidden">
+          <span className="text-[16px] font-bold tracking-[-0.4px] text-[var(--text-primary)] whitespace-nowrap overflow-hidden">
             SpendWise
           </span>
         )}
-        
-        {/* Collapse Toggle Button */}
+
+        {/* Collapse Toggle */}
         <button
           onClick={onToggleCollapse}
           className={cn(
-            "absolute -right-3.5 top-8 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--separator)] bg-[var(--bg-primary)] text-[var(--text-secondary)] shadow-sm hover:text-[var(--apple-blue)] transition-colors z-50",
+            "absolute -right-3.5 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--separator)] bg-[var(--bg-secondary)] text-[var(--text-tertiary)] shadow-sm hover:text-[var(--apple-blue)] hover:border-[var(--apple-blue)] transition-all z-50",
             isCollapsed && "rotate-180"
           )}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-3.5 w-3.5" />
         </button>
       </div>
 
       {/* Main Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
+      <nav className="flex-1 overflow-y-auto px-2.5 py-3">
         {!isCollapsed && (
-          <p className="nav-section-label mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.8px] text-[var(--text-tertiary)]">
+          <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.8px] text-[var(--text-tertiary)]">
             Overview
           </p>
         )}
         <div className="space-y-0.5">
           {mainNav.map((item) => {
             const active = isActive(item.href);
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 title={isCollapsed ? item.label : undefined}
                 className={cn(
-                  "flex items-center rounded-lg py-2 transition-all duration-200 group relative",
-                  isCollapsed ? "justify-center px-0" : "gap-3 px-3",
-                  active
-                    ? "bg-[rgba(0,122,255,0.12)] font-semibold text-[var(--apple-blue)]"
-                    : "text-[var(--text-secondary)] hover:bg-[rgba(120,120,128,0.10)]"
+                  "sidebar-nav-item",
+                  isCollapsed && "justify-center px-2",
+                  active && "active"
                 )}
               >
-                {active && isCollapsed && (
-                  <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-md bg-[var(--apple-blue)]" />
-                )}
-                <span className={cn("flex-shrink-0 text-center leading-none", isCollapsed ? "text-xl" : "w-5 text-base")}>
-                  {item.emoji}
-                </span>
+                <Icon
+                  className={cn(
+                    "flex-shrink-0 transition-transform duration-200",
+                    isCollapsed ? "h-5 w-5" : "h-4.5 w-4.5",
+                    active && "scale-110"
+                  )}
+                  strokeWidth={active ? 2.5 : 1.8}
+                />
                 {!isCollapsed && (
-                  <span className="truncate text-[14px]">{item.label}</span>
+                  <span className="truncate">{item.label}</span>
+                )}
+                {active && !isCollapsed && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--apple-blue)] flex-shrink-0" />
                 )}
               </Link>
             );
@@ -123,34 +144,36 @@ export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, 
         </div>
 
         {!isCollapsed && (
-          <p className="nav-section-label mb-2 mt-6 px-3 text-[11px] font-semibold uppercase tracking-[0.8px] text-[var(--text-tertiary)]">
+          <p className="mb-1.5 mt-5 px-3 text-[10px] font-semibold uppercase tracking-[0.8px] text-[var(--text-tertiary)]">
             System
           </p>
         )}
+        {isCollapsed && <div className="my-3 mx-2 h-px bg-[var(--separator)]" />}
         <div className="space-y-0.5">
           {bottomNav.map((item) => {
             const active = isActive(item.href);
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 title={isCollapsed ? item.label : undefined}
                 className={cn(
-                  "flex items-center rounded-lg py-2 transition-all duration-200 group relative",
-                  isCollapsed ? "justify-center px-0 mt-4" : "gap-3 px-3",
-                  active
-                    ? "bg-[rgba(0,122,255,0.12)] font-semibold text-[var(--apple-blue)]"
-                    : "text-[var(--text-secondary)] hover:bg-[rgba(120,120,128,0.10)]"
+                  "sidebar-nav-item",
+                  isCollapsed && "justify-center px-2",
+                  active && "active"
                 )}
               >
-                {active && isCollapsed && (
-                  <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-md bg-[var(--apple-blue)]" />
-                )}
-                <span className={cn("flex-shrink-0 text-center leading-none", isCollapsed ? "text-xl" : "w-5 text-base")}>
-                  {item.emoji}
-                </span>
+                <Icon
+                  className={cn(
+                    "flex-shrink-0",
+                    isCollapsed ? "h-5 w-5" : "h-4.5 w-4.5",
+                    active && "scale-110"
+                  )}
+                  strokeWidth={active ? 2.5 : 1.8}
+                />
                 {!isCollapsed && (
-                  <span className="truncate text-[14px]">{item.label}</span>
+                  <span className="truncate">{item.label}</span>
                 )}
               </Link>
             );
@@ -159,14 +182,22 @@ export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, 
       </nav>
 
       {/* Footer */}
-      <div className={cn("space-y-3 border-t border-[var(--separator)] transition-all duration-300", isCollapsed ? "p-3" : "p-4")}>
+      <div
+        className={cn("transition-all duration-300", isCollapsed ? "p-2.5" : "p-3")}
+        style={{ borderTop: "1px solid var(--separator)" }}
+      >
         {!isCollapsed && (
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 mb-3 px-1">
+            {/* User avatar */}
+            <div
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white font-bold text-[14px]"
+              style={{ background: "var(--gradient-blue)" }}
+            >
+              {userInitial}
+            </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.5px] text-[var(--text-tertiary)]">
-                Profile
-              </p>
-              <p className="truncate text-[14px] font-semibold text-[var(--text-primary)]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.5px] text-[var(--text-tertiary)]">Account</p>
+              <p className="truncate text-[13px] font-semibold text-[var(--text-primary)] mt-0.5">
                 {userName || "User"}
               </p>
             </div>
@@ -174,19 +205,21 @@ export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, 
           </div>
         )}
         {isCollapsed && (
-          <div className="flex justify-center mb-3">
+          <div className="flex justify-center mb-2">
             <ThemeToggle />
           </div>
         )}
-        <Button
-          variant="outline"
-          className={cn("w-full text-[var(--apple-red)]", isCollapsed ? "px-0 justify-center" : "justify-start gap-2")}
+        <button
           onClick={onLogout}
           title={isCollapsed ? "Logout" : undefined}
+          className={cn(
+            "w-full flex items-center gap-2 rounded-xl bg-[rgba(255,59,48,0.07)] text-[var(--apple-red)] px-3 py-2.5 text-[13px] font-semibold transition-all hover:bg-[rgba(255,59,48,0.13)] active:scale-97",
+            isCollapsed ? "justify-center" : "justify-start"
+          )}
         >
-          <LogOut className="h-4 w-4" />
-          {!isCollapsed && <span>Logout</span>}
-        </Button>
+          <LogOut className="h-4 w-4 flex-shrink-0" />
+          {!isCollapsed && <span>Log out</span>}
+        </button>
       </div>
     </aside>
   );
