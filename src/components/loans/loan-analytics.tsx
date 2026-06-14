@@ -40,12 +40,13 @@ const CHART_COLORS = [
 ];
 
 // Custom tooltip styling
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3 shadow-lg backdrop-blur-xl">
       <p className="mb-2 text-[12px] font-semibold text-[var(--text-secondary)]">{label}</p>
-      {payload.map((p: any, i: number) => (
+      {payload.map((p: { color?: string, name?: string, value?: number }, i: number) => (
         <div key={i} className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color }} />
           <span className="text-[12px] text-[var(--text-secondary)]">{p.name}:</span>
@@ -157,7 +158,6 @@ export function LoanAnalytics({ loans, allPayments, monthlyIncome = 0 }: LoanAna
       {/* Smart Insights */}
       <LoanHealthInsights
         loans={loans}
-        allPayments={allPayments}
         monthlyIncome={monthlyIncome}
       />
 

@@ -88,7 +88,7 @@ export function LoanSimulator({ loans }: LoanSimulatorProps) {
         if (parsed.prepaymentAmount) setPrepaymentAmount(parsed.prepaymentAmount);
         if (parsed.prepaymentAtMonth) setPrepaymentAtMonth(parsed.prepaymentAtMonth);
         if (parsed.reduceTenure !== undefined) setReduceTenure(parsed.reduceTenure);
-      } catch (e) {
+      } catch {
         // ignore parse error
       }
     }

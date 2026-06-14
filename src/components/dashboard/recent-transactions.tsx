@@ -123,7 +123,6 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                   {shown.map((transaction, i) => {
                     const emoji = getCategoryEmoji(transaction.category, transaction.type);
                     const color = getCategoryColor(transaction.category, transaction.type);
-                    const isIncome = transaction.type === "income";
                     return (
                       <TableRow
                         key={transaction.id}

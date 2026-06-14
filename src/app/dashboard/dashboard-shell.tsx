@@ -22,7 +22,10 @@ import {
 
 import { Sidebar } from "@/components/shared/sidebar";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { Button } from "@/components/ui/button";
+import { PullToRefresh } from "@/components/shared/pull-to-refresh";
+import { PWAInstallBanner } from "@/components/shared/pwa-install-banner";
+import { useHaptic } from "@/hooks/use-haptic";
+
 import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/client";
 
@@ -73,6 +76,7 @@ function getPageTitle(pathname: string): string {
 export default function DashboardShell({ children, userName }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { haptic } = useHaptic();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -153,6 +157,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
             </div>
 
             {/* Nav items */}
+            <PWAInstallBanner />
             <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
               {[...sidebarNav].map((item) => {
                 const active = isActive(item.href);
@@ -275,7 +280,9 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
 
         {/* Page content */}
         <div className="flex-1 overflow-auto pb-24 md:pb-0">
-          <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">{children}</div>
+          <PullToRefresh>
+            <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">{children}</div>
+          </PullToRefresh>
         </div>
 
         {/* Premium Mobile Bottom Tab Bar */}
@@ -288,8 +295,11 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={cn("bottom-nav-item", active && "active")}
-                  onClick={() => moreOpen && setMoreOpen(false)}
+                  className={cn("bottom-nav-item", active && "active", "active:scale-95 transition-transform duration-200")}
+                  onClick={() => {
+                    haptic('light');
+                    if (moreOpen) setMoreOpen(false);
+                  }}
                 >
                   <div className="nav-icon-wrap">
                     <Icon className={cn("h-[22px] w-[22px]", active ? "stroke-[2.5px]" : "stroke-[1.8px]")} />
@@ -301,8 +311,11 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
             })}
             {/* More button */}
             <button
-              onClick={() => setMoreOpen(!moreOpen)}
-              className={cn("bottom-nav-item", (isMoreActive || moreOpen) && "active")}
+              onClick={() => {
+                haptic('light');
+                setMoreOpen(!moreOpen);
+              }}
+              className={cn("bottom-nav-item", (isMoreActive || moreOpen) && "active", "active:scale-95 transition-transform duration-200")}
             >
               <div className="nav-icon-wrap">
                 <MoreHorizontal className={cn("h-[22px] w-[22px]", (isMoreActive || moreOpen) ? "stroke-[2.5px]" : "stroke-[1.8px]")} />

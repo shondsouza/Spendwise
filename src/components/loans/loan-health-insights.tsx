@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Info, AlertCircle, CheckCircle2, TrendingDown, Zap, Clock } from 'lucide-react';
-import type { UserLoan, LoanPayment } from '@/types/loan.types';
+import type { UserLoan } from '@/types/loan.types';
 import { getEducationLoanPhase } from '@/lib/loans/education-loan-calculator';
 import { calculateEMI } from '@/lib/loans/emi-calculator';
 import { formatCurrency } from '@/lib/utils/currency';
@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils/cn';
 
 interface LoanHealthInsightsProps {
   loans: UserLoan[];
-  allPayments?: Record<string, LoanPayment[]>;
   monthlyIncome: number;
 }
 
@@ -47,7 +46,6 @@ const insightStyles: Record<InsightType, { bg: string; text: string; iconColor: 
 
 export function LoanHealthInsights({
   loans,
-  allPayments = {},
   monthlyIncome,
 }: LoanHealthInsightsProps) {
   if (loans.length === 0) return null;
@@ -113,7 +111,6 @@ export function LoanHealthInsights({
   });
 
   for (const loan of moratoriumLoans) {
-    const phase = getEducationLoanPhase(loan);
     const monthlySI = Number(loan.current_outstanding) * (Number(loan.moratorium_si_rate ?? loan.interest_rate) / 100 / 12);
     insights.push({
       text: `${loan.loan_name} is in moratorium. ₹${Math.round(monthlySI).toLocaleString('en-IN')} of interest is accruing each month. Consider paying this now to avoid it capitalizing.`,

@@ -246,8 +246,8 @@ export function LoanDetailSheet({
                 balance.estimatedPayoffDate && { label: 'Estimated Payoff', value: formatDate(balance.estimatedPayoffDate, 'dd MMM yyyy') },
                 loan.notes && { label: 'Notes', value: loan.notes },
               ]
-                .filter(Boolean)
-                .map((item: any) => (
+                .filter((item): item is { label: string; value: string } => Boolean(item))
+                .map((item) => (
                   <div key={item.label} className="flex items-center justify-between rounded-xl bg-[rgba(120,120,128,0.05)] px-4 py-3">
                     <span className="text-[13px] text-[var(--text-secondary)]">{item.label}</span>
                     <span className="text-[13px] font-semibold text-[var(--text-primary)]">{item.value}</span>

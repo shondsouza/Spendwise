@@ -359,10 +359,6 @@ export function generateEducationLoanSchedule(
 ): EMIScheduleRow[] {
   if (!loan.emi_start_date || !loan.loan_tenure_months) return [];
 
-  const moratoriumEnd = loan.moratorium_end_date ? parseISO(loan.moratorium_end_date) : null;
-  const siRate = Number(loan.moratorium_si_rate ?? loan.interest_rate);
-  const principal = Number(loan.original_principal);
-
   const emiBase = outstandingAtMoratoriumEnd(loan);
 
   const ciRate = Number(loan.ci_rate ?? loan.interest_rate);

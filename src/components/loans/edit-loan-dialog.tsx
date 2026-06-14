@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format, addMonths, parseISO } from 'date-fns';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +23,7 @@ import { calculateEMI } from '@/lib/loans/emi-calculator';
 import { calculateMoratoriumOutstanding, computeMoratoriumEndDate } from '@/lib/loans/education-loan-calculator';
 import { formatCurrency } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils/cn';
-import { Info, ChevronRight, ChevronLeft, Sparkles, Pencil, Building2, Landmark, HelpCircle, Loader2 } from 'lucide-react';
+import { Info, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 
 type Step = 1 | 2 | 3;
 

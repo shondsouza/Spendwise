@@ -52,7 +52,7 @@ export async function createLoan(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { data: null, error: 'Unauthorized' };
 
-  const raw = Object.fromEntries(formData);
+  const raw: Record<string, unknown> = Object.fromEntries(formData);
   // Disbursements come in as JSON string
   if (typeof raw.disbursements === 'string' && raw.disbursements.startsWith('[')) {
     try {
@@ -224,11 +224,12 @@ export async function updateLoan(id: string, formData: FormData) {
 
   const raw = { ...Object.fromEntries(formData), id };
   // Handle disbursements JSON
-  if (typeof (raw as any).disbursements === 'string' && (raw as any).disbursements.startsWith('[')) {
+  const rawObj = raw as Record<string, unknown>;
+  if (typeof rawObj.disbursements === 'string' && rawObj.disbursements.startsWith('[')) {
     try {
-      (raw as any).disbursements = JSON.parse((raw as any).disbursements);
+      rawObj.disbursements = JSON.parse(rawObj.disbursements);
     } catch {
-      (raw as any).disbursements = [];
+      rawObj.disbursements = [];
     }
   }
   const parsed = updateLoanSchema.safeParse(raw);
@@ -273,7 +274,8 @@ export async function updateLoan(id: string, formData: FormData) {
     }
   }
 
-  const { id: _id, ...updateData } = updates as { id: string } & Record<string, unknown>;
+  const updateData = { ...updates };
+  delete updateData.id;
 
   const { data, error } = await supabase
     .from('user_loans')

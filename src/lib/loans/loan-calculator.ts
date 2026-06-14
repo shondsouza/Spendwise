@@ -3,7 +3,7 @@
 // Master dispatcher for all loan types: simple, compound, hybrid
 // ============================================================
 
-import { parseISO, format, addMonths, differenceInDays, differenceInMonths } from 'date-fns';
+import { parseISO, format, addMonths, differenceInMonths } from 'date-fns';
 import type { UserLoan, LoanBalance, EMIScheduleRow, LoanPhase } from '@/types/loan.types';
 import {
   calculateEMI,

@@ -2,12 +2,12 @@
 
 import React, { useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
-import { Flag, TrendingDown, Zap } from 'lucide-react';
+import { Flag, Zap } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils/cn';
 import type { UserLoan, DebtFreeScenario } from '@/types/loan.types';
 import { calculateEMI } from '@/lib/loans/emi-calculator';
-import { educationLoanOutstandingAtEmiStart } from '@/lib/loans/loan-calculator';
+
 import { getEducationLoanPhase } from '@/lib/loans/education-loan-calculator';
 
 interface DebtFreedomWidgetProps {
@@ -188,7 +188,7 @@ export function DebtFreedomWidget({ loans, className }: DebtFreedomWidgetProps) 
     (a, b) => Number(b.current_outstanding) - Number(a.current_outstanding),
   )[0]?.loan_name ?? 'Your Loan';
 
-  const baseline = scenarios[0];
+
   const bestScenario = scenarios.reduce((best, s) =>
     s.interestSaved > best.interestSaved ? s : best, scenarios[0]);
 

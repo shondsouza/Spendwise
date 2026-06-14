@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { format, parseISO } from 'date-fns';
 import { Clock, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/currency';
 import { formatDate } from '@/lib/utils/date';

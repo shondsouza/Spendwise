@@ -10,7 +10,6 @@ import {
   Plus,
   ArrowUpRight,
   AlertTriangle,
-  Banknote,
   TrendingUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,7 @@ import { deleteLoan } from '@/app/actions/loan.actions';
 interface LoanCardProps {
   loan: UserLoan;
   payments?: LoanPayment[];
-  onPaymentAdded?: () => void;
+
   onDeleted?: () => void;
   onEditClick?: (loan: UserLoan) => void;
   onAddPaymentClick?: (loan: UserLoan) => void;
@@ -40,7 +39,7 @@ interface LoanCardProps {
 export function LoanCard({
   loan,
   payments = [],
-  onPaymentAdded,
+
   onDeleted,
   onEditClick,
   onAddPaymentClick,

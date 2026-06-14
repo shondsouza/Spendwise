@@ -105,8 +105,8 @@ export default function SettingsPage() {
       });
       if (error) throw error;
       toast.success("Preferences updated successfully");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to save preferences");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save preferences");
     } finally {
       setSavingPrefs(false);
     }
@@ -126,8 +126,8 @@ export default function SettingsPage() {
       if (error) throw error;
       toast.success("Password updated successfully");
       setNewPassword("");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update password");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update password");
     } finally {
       setChangingPassword(false);
     }

@@ -74,7 +74,7 @@ export default function LoanPage() {
         const total = incomeData.reduce((sum, i) => sum + Number(i.amount ?? 0), 0);
         setMonthlyIncome(total);
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to load loan data');
     } finally {
       setLoading(false);

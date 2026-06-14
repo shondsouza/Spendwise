@@ -308,7 +308,7 @@ export function AddLoanDialog({ open, onOpenChange, onSuccess }: AddLoanDialogPr
                 />
               </FormField>
 
-              <FormField label="Current Outstanding (₹) — Optional" error={(errors as any).current_outstanding?.message}>
+              <FormField label="Current Outstanding (₹) — Optional" error={(errors as Record<string, { message?: string }>).current_outstanding?.message}>
                 <Input
                   type="number"
                   placeholder="e.g. 524050 — leave blank if unknown"
@@ -321,7 +321,7 @@ export function AddLoanDialog({ open, onOpenChange, onSuccess }: AddLoanDialogPr
                 </p>
               </FormField>
 
-              <FormField label="Outstanding As Of (date from statement)" error={(errors as any).outstanding_as_of_date?.message}>
+              <FormField label="Outstanding As Of (date from statement)" error={(errors as Record<string, { message?: string }>).outstanding_as_of_date?.message}>
                 <Input
                   type="date"
                   {...register('outstanding_as_of_date')}
@@ -451,7 +451,7 @@ export function AddLoanDialog({ open, onOpenChange, onSuccess }: AddLoanDialogPr
               )}
 
               {/* Bank EMI field — for reconciliation */}
-              <FormField label="Bank-Stated EMI (₹) — Optional" error={(errors as any).bank_emi_amount?.message}>
+              <FormField label="Bank-Stated EMI (₹) — Optional" error={(errors as Record<string, { message?: string }>).bank_emi_amount?.message}>
                 <Input
                   type="number"
                   placeholder="Enter if different from above (e.g. from your loan statement)"
@@ -652,7 +652,7 @@ function DisbursementsField({ form }: { form: ReturnType<typeof useForm<CreateLo
   const { control, register } = form;
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'disbursements' as any,
+    name: 'disbursements' as never,
   });
 
   return (
@@ -663,7 +663,7 @@ function DisbursementsField({ form }: { form: ReturnType<typeof useForm<CreateLo
         </Label>
         <button
           type="button"
-          onClick={() => (append as any)({ date: '', amount: '', description: '' })}
+          onClick={() => append({ date: '', amount: '', description: '' })}
           className="flex items-center gap-1 text-[12px] font-semibold text-[var(--apple-blue)]"
         >
           <PlusCircle className="h-3.5 w-3.5" /> Add Tranche
@@ -682,19 +682,19 @@ function DisbursementsField({ form }: { form: ReturnType<typeof useForm<CreateLo
             <div className="grid flex-1 grid-cols-3 gap-2">
               <Input
                 type="date"
-                {...register(`disbursements.${i}.date` as any)}
+                {...register(`disbursements.${i}.date` as never)}
                 placeholder="Date"
                 className="text-[12px]"
               />
               <Input
                 type="number"
-                {...register(`disbursements.${i}.amount` as any)}
+                {...register(`disbursements.${i}.amount` as never)}
                 placeholder="Amount (₹)"
                 min={1}
                 className="text-[12px]"
               />
               <Input
-                {...register(`disbursements.${i}.description` as any)}
+                {...register(`disbursements.${i}.description` as never)}
                 placeholder="Sem 1, Sem 2…"
                 className="text-[12px]"
               />
