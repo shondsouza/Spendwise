@@ -202,6 +202,37 @@ caption, .caption {
     inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
+.dashboard-hero {
+  position: relative;
+  background:
+    linear-gradient(135deg, rgba(0, 122, 255, 0.13), rgba(52, 199, 89, 0.08) 42%, rgba(255, 255, 255, 0.58)),
+    var(--glass-bg);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 18px 50px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.dark .dashboard-hero {
+  background:
+    linear-gradient(135deg, rgba(0, 122, 255, 0.16), rgba(52, 199, 89, 0.08) 42%, rgba(28, 28, 30, 0.78)),
+    var(--glass-bg);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.32),
+    0 18px 50px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.dashboard-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), transparent 38%);
+}
+
 .dark .apple-card:hover {
   box-shadow:
     0 2px 6px rgba(0, 0, 0, 0.4),
@@ -382,9 +413,11 @@ caption, .caption {
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  padding: 6px 12px;
+  padding: 6px 8px;
   border-radius: 16px;
-  min-width: 56px;
+  min-width: 58px;
+  flex: 1 1 0;
+  max-width: 86px;
   cursor: pointer;
   transition: all 0.22s var(--ease-out-expo);
   border: none;
@@ -419,6 +452,10 @@ caption, .caption {
   font-weight: 500;
   letter-spacing: 0px;
   transition: all 0.2s ease;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bottom-nav-item.active .nav-label {
@@ -815,6 +852,28 @@ input:focus, textarea:focus, select:focus {
 
   .stat-card {
     border-radius: 18px;
+  }
+
+  .dashboard-hero-actions {
+    width: 100%;
+  }
+
+  .dashboard-hero-actions > div {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashboard-hero-actions button {
+    width: 100%;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+@media (max-width: 390px) {
+  .dashboard-hero-actions > div {
+    grid-template-columns: 1fr;
   }
 }
 

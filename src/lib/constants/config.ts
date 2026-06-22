@@ -8,7 +8,7 @@ export const EXPENSE_CATEGORIES = [
   { value: "bills", label: "Bills & Utilities", emoji: "⚡", icon: "zap", color: "yellow" },
   { value: "education", label: "College", emoji: "📚", icon: "graduation-cap", color: "indigo" },
   { value: "travel", label: "Travel", emoji: "✈️", icon: "plane", color: "cyan" },
-  { value: "personal", label: "Personal Care", emoji: "💆", icon: "sparkles", color: "rose" },
+  { value: "personal", label: "Personal Care", emoji: "✨", icon: "sparkles", color: "rose" },
   { value: "savings", label: "Savings", emoji: "💰", icon: "piggy-bank", color: "green" },
   { value: "rent", label: "Rent & Housing", emoji: "🏠", icon: "home", color: "blue" },
   { value: "gaming", label: "Gaming", emoji: "🎮", icon: "gamepad-2", color: "purple" },

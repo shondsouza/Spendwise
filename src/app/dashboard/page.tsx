@@ -1,14 +1,14 @@
 import React from "react";
 import { redirect } from "next/navigation";
+import { format, startOfDay, endOfMonth, subMonths } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
-import { PageHeader } from "@/components/shared/page-header";
-import { format, startOfDay, endOfMonth, subMonths } from "date-fns";
 import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
 import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 import ChartsClient from "@/components/dashboard/charts-client";
 import { LoanDashboardWidget } from "@/components/loans/loan-dashboard-widget";
+import { DashboardSnapshot } from "@/components/dashboard/dashboard-snapshot";
 import type { UserLoan } from "@/types/loan.types";
 
 export default async function DashboardPage() {
@@ -26,8 +26,6 @@ export default async function DashboardPage() {
   const todayStart = startOfDay(today);
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const monthEnd = endOfMonth(today);
-
-  // Previous month dates
   const prevMonthStart = subMonths(monthStart, 1);
 
   const todayDate = format(todayStart, "yyyy-MM-dd");
@@ -89,7 +87,6 @@ export default async function DashboardPage() {
       .eq("user_id", user.id)
       .order("date", { ascending: false })
       .range(0, 9),
-    // Fetch active loans for the dashboard widget
     supabase
       .from("user_loans")
       .select("*")
@@ -107,8 +104,7 @@ export default async function DashboardPage() {
   const recentIncome = recentIncomeData ?? [];
   const activeLoans = (activeLoansData ?? []) as UserLoan[];
 
-  // Calculate totals
-  const totalSpentToday = todayExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+  const totalSpentToday = todayExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
   const totalSpentMonth = monthExpenseSummary.reduce(
     (sum, item) => sum + (Number(item.total) || 0),
     0
@@ -117,60 +113,68 @@ export default async function DashboardPage() {
     (sum, item) => sum + (Number(item.total) || 0),
     0
   );
-  const totalIncomeMonth = monthIncome.reduce((sum, inc) => sum + (inc.amount || 0), 0);
+  const totalIncomeMonth = monthIncome.reduce((sum, income) => sum + (income.amount || 0), 0);
   const netBalance = totalIncomeMonth - totalSpentMonth;
+  const dailyAverage = today.getDate() > 0 ? totalSpentMonth / today.getDate() : 0;
+  const savingsRate = totalIncomeMonth > 0 ? (netBalance / totalIncomeMonth) * 100 : 0;
+  const boundedSavingsRate = Math.max(-100, Math.min(100, savingsRate));
 
-  // Month-over-month change percentage (positive = spending went down = good)
   let monthOverMonthChange = 0;
   if (totalSpentPrevMonth > 0) {
     monthOverMonthChange = ((totalSpentPrevMonth - totalSpentMonth) / totalSpentPrevMonth) * 100;
   } else if (totalSpentMonth > 0) {
-    monthOverMonthChange = -100; // spending went from 0 to something = 100% increase
+    monthOverMonthChange = -100;
   }
 
-  // Generate daily spending data for chart
   const dailyData = Array.from(
     { length: new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate() },
     (_, i) => {
       const day = i + 1;
       const dayString = format(new Date(today.getFullYear(), today.getMonth(), day), "yyyy-MM-dd");
-      const dayExpenses = monthExpenses.filter((exp) => exp.date === dayString);
-      const amount = dayExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+      const dayExpenses = monthExpenses.filter((expense) => expense.date === dayString);
+      const amount = dayExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
       return { day, amount };
     }
   );
 
-  // Generate category breakdown data
   const categoryData = monthExpenseSummary.map((item) => ({
     name: item.category,
     value: Number(item.total) || 0,
   }));
+  const topCategory = [...categoryData].sort((a, b) => b.value - a.value)[0];
 
-  // Combine and sort recent transactions
   const allTransactions = [
-    ...recentExpenses.map((exp) => ({
-      id: exp.id,
+    ...recentExpenses.map((expense) => ({
+      id: expense.id,
       type: "expense" as const,
-      title: exp.title,
-      amount: exp.amount,
-      category: exp.category,
-      date: exp.date,
+      title: expense.title,
+      amount: expense.amount,
+      category: expense.category,
+      date: expense.date,
     })),
-    ...recentIncome.map((inc) => ({
-      id: inc.id,
+    ...recentIncome.map((income) => ({
+      id: income.id,
       type: "income" as const,
-      title: inc.title,
-      amount: inc.amount,
-      category: inc.category,
-      date: inc.date,
+      title: income.title,
+      amount: income.amount,
+      category: income.category,
+      date: income.date,
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+  const userName = user.user_metadata?.name || user.email?.split("@")[0] || "User";
+
   return (
     <div className="page-enter">
-      <PageHeader
-        title="📊 Dashboard"
-        description="Welcome back! Here's your financial overview."
+      <DashboardSnapshot
+        userName={userName}
+        monthLabel={format(today, "MMMM yyyy")}
+        totalIncome={totalIncomeMonth}
+        totalSpentMonth={totalSpentMonth}
+        netBalance={netBalance}
+        dailyAverage={dailyAverage}
+        savingsRate={boundedSavingsRate}
+        topCategory={topCategory}
         action={
           <div className="flex items-center gap-2">
             <AddExpenseDialog />
@@ -189,15 +193,9 @@ export default async function DashboardPage() {
         />
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <ChartsClient
-            dailyData={dailyData}
-            categoryData={categoryData.length > 0 ? categoryData : [{ name: "No data", value: 1 }]}
-          />
+          <ChartsClient dailyData={dailyData} categoryData={categoryData} />
           {activeLoans.length > 0 && (
-            <LoanDashboardWidget
-              loans={activeLoans}
-              monthlyIncome={totalIncomeMonth}
-            />
+            <LoanDashboardWidget loans={activeLoans} monthlyIncome={totalIncomeMonth} />
           )}
         </div>
 
