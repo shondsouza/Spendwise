@@ -5,14 +5,14 @@ import { X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHaptic } from '@/hooks/use-haptic';
 
-interface BeforeInstallPromptEvent extends Event {
+type BeforeInstallPromptEvent = Event & {
   readonly platforms: string[];
   readonly userChoice: Promise<{
     outcome: 'accepted' | 'dismissed';
     platform: string;
   }>;
   prompt(): Promise<void>;
-}
+};
 
 export function PWAInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -21,7 +21,10 @@ export function PWAInstallBanner() {
 
   useEffect(() => {
     // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      ((window.navigator as Navigator & { standalone?: boolean }).standalone === true);
+    if (isStandalone) {
       return;
     }
 
@@ -60,10 +63,10 @@ export function PWAInstallBanner() {
     localStorage.setItem('pwa-prompt-dismissed', 'true');
   };
 
-  if (!isVisible) return null;
+  if (!isVisible || !deferredPrompt) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] animate-in slide-in-from-top px-4 py-3 sm:hidden">
+    <div className="fixed top-0 left-0 right-0 z-[100] animate-in slide-in-from-top px-4 py-3 sm:hidden" role="status" aria-live="polite">
       <div className="flex items-center gap-3 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] p-3 shadow-lg backdrop-blur-2xl">
         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--apple-blue)] text-white shadow-sm">
           <Download className="h-5 w-5" />

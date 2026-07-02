@@ -4,5 +4,5 @@ A production-grade daily expense tracking web application built with modern web 
 
 ## Overview
 
-SpendWise is a beautiful, fast, and intuitive expense tracking application that helps you manage your finances. Track your spending, monitor income, set budgets, and gain insights into your financial habits with stunning visualizations.
+SpendWise is a  fast, and intuitive expense tracking application that helps you manage your finances. Track your spending, monitor income, set budgets, and gain insights into your financial habits with stunning visualizations.
 

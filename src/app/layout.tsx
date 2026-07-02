@@ -45,7 +45,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  userScalable: false,
+  userScalable: true,
   viewportFit: "cover",
 };
 
@@ -59,11 +59,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-title" content="SpendWise" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#000000" />
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-tap-highlight" content="no" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/wallet.jpg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/spendwise.png" />
         <link rel="mask-icon" href="/spendwise.png" color="#000000" />
         <link rel="shortcut icon" href="/favicon.ico" />
       </head>

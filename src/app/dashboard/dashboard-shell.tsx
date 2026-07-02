@@ -151,7 +151,6 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
               </div>
             </div>
 
-            <PWAInstallBanner />
             <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-3">
               {sidebarNav.map((item) => {
                 const active = isActive(item.href);
@@ -274,7 +273,9 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
           <ThemeToggle />
         </header>
 
-        <div className="flex-1 overflow-auto pb-28 md:pb-0">
+        <PWAInstallBanner />
+
+        <div className="flex-1 overflow-auto mobile-pb md:pb-0">
           <PullToRefresh>
             <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">{children}</div>
           </PullToRefresh>
