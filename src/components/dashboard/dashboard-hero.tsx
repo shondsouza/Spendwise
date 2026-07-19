@@ -1,9 +1,7 @@
 import React from "react";
-import { format } from "date-fns";
-import { TrendingDown, TrendingUp, Sparkles } from "lucide-react";
+import { Bell, TrendingDown, TrendingUp } from "lucide-react";
 import { AmountDisplay } from "@/components/shared/amount-display";
 import { formatCurrency } from "@/lib/utils/currency";
-import { EXPENSE_CATEGORIES } from "@/lib/constants/config";
 
 interface DashboardHeroProps {
   displayName: string;
@@ -11,7 +9,6 @@ interface DashboardHeroProps {
   totalIncome: number;
   totalSpent: number;
   monthOverMonthChange: number;
-  savingsRate: number;
   topCategory?: { name: string; value: number };
 }
 
@@ -21,103 +18,80 @@ function getGreeting(hour: number): string {
   return "Good evening";
 }
 
-function getCategoryEmoji(category: string): string {
-  const found = EXPENSE_CATEGORIES.find(
-    (item) => item.value === category || item.label === category
-  );
-  return found?.emoji ?? "📊";
-}
-
 export function DashboardHero({
   displayName,
   netBalance,
   totalIncome,
   totalSpent,
   monthOverMonthChange,
-  savingsRate,
   topCategory,
 }: DashboardHeroProps) {
   const now = new Date();
   const greeting = getGreeting(now.getHours());
-  const monthLabel = format(now, "MMMM yyyy");
-  const changeIsDown = monthOverMonthChange > 0;
-  const changeAbs = Math.abs(monthOverMonthChange);
-  const boundedSavingsRate = Math.max(-100, Math.min(100, savingsRate));
   const balanceVariant = netBalance >= 0 ? "success" : "danger";
+  const changePositive = monthOverMonthChange >= 0;
+  const categoryLabel = topCategory
+    ? `${topCategory.name} · ${formatCurrency(topCategory.value)}`
+    : "No top category yet";
 
   return (
-    <section className="dashboard-hero relative overflow-hidden rounded-[32px] border border-[var(--glass-border)] p-5 sm:p-6">
-      <div className="relative z-[1] flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 flex-1">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.32em] text-[var(--text-tertiary)]">
-            {monthLabel}
+    <section className="relative overflow-hidden rounded-[32px] border border-[var(--separator)] bg-white/95 p-5 shadow-sm">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--text-tertiary)]">
+            SpendWise
           </p>
-          <h1 className="mt-2 text-[26px] font-extrabold tracking-[-0.8px] text-[var(--text-primary)] sm:text-[32px]">
+          <p className="mt-2 text-[15px] font-semibold text-[var(--text-primary)]">
             {greeting}, {displayName}
-          </h1>
-
-          <div className="mt-4">
-            <p className="text-[13px] font-medium text-[var(--text-secondary)]">
-              Net balance this month
-            </p>
-            <div className="mt-1 text-[36px] font-extrabold tabular-nums tracking-[-1px] sm:text-[42px]">
-              <AmountDisplay amount={netBalance} variant={balanceVariant} />
-            </div>
-            <p className="mt-2 text-[13px] text-[var(--text-secondary)]">
-              <span className="font-semibold text-[var(--apple-green)]">
-                {formatCurrency(totalIncome)}
-              </span>{" "}
-              in ·{" "}
-              <span className="font-semibold text-[var(--apple-red)]">
-                {formatCurrency(totalSpent)}
-              </span>{" "}
-              out
-            </p>
-          </div>
+          </p>
         </div>
-
+        <button className="grid h-11 w-11 place-items-center rounded-3xl border border-[var(--separator)] bg-white text-[var(--text-primary)] shadow-sm">
+          <Bell className="h-5 w-5" />
+        </button>
       </div>
 
-      <div className="relative z-[1] mt-5 flex flex-wrap gap-2">
-        {changeAbs > 0 && (
-          <div className="hero-stat-pill">
-            {changeIsDown ? (
-              <TrendingDown className="h-3.5 w-3.5 text-[var(--apple-green)]" strokeWidth={2.5} />
-            ) : (
-              <TrendingUp className="h-3.5 w-3.5 text-[var(--apple-red)]" strokeWidth={2.5} />
-            )}
-            <span>
-              Spending {changeIsDown ? "down" : "up"}{" "}
-              <strong className={changeIsDown ? "text-[var(--apple-green)]" : "text-[var(--apple-red)]"}>
-                {changeAbs.toFixed(1)}%
-              </strong>{" "}
-              vs last month
-            </span>
-          </div>
-        )}
-
-        <div className="hero-stat-pill">
-          <Sparkles className="h-3.5 w-3.5 text-[var(--apple-blue)]" strokeWidth={2.5} />
-          <span>
-            Savings rate{" "}
-            <strong
-              className={
-                boundedSavingsRate >= 0 ? "text-[var(--apple-green)]" : "text-[var(--apple-red)]"
-              }
-            >
-              {Math.round(boundedSavingsRate)}%
-            </strong>
+      <div className="mt-5 rounded-[32px] border border-[var(--separator)] bg-white p-5 shadow-sm">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--text-tertiary)]">
+          Total balance
+        </p>
+        <div className="mt-3 text-[36px] font-extrabold tracking-[-0.88px] text-[var(--text-primary)] sm:text-[44px]">
+          <AmountDisplay amount={netBalance} variant={balanceVariant} />
+        </div>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-[var(--separator)] bg-[rgba(15,23,42,0.02)] px-3 py-3 text-[13px] font-semibold text-[var(--text-primary)]">
+          <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(52,199,89,0.12)] px-2 py-1 text-[var(--apple-green)]">
+            <TrendingUp className="h-4 w-4" />
+            {changePositive ? "+" : ""}{monthOverMonthChange.toFixed(1)}%
           </span>
+          <span className="text-[12px] text-[var(--text-secondary)]">{categoryLabel}</span>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-[28px] border border-[var(--separator)] bg-white p-4 shadow-sm">
+          <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--text-tertiary)]">Income</p>
+          <div className="mt-3 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-3xl bg-[rgba(59,130,246,0.18)] text-[var(--apple-blue)]">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[18px] font-semibold text-[var(--text-primary)]">{formatCurrency(totalIncome)}</p>
+              <p className="text-[12px] text-[var(--text-secondary)]">Incoming this month</p>
+            </div>
+          </div>
         </div>
 
-        {topCategory && topCategory.value > 0 && (
-          <div className="hero-stat-pill">
-            <span aria-hidden="true">{getCategoryEmoji(topCategory.name)}</span>
-            <span>
-              Top spend: <strong>{topCategory.name}</strong> · {formatCurrency(topCategory.value)}
-            </span>
+        <div className="rounded-[28px] border border-[var(--separator)] bg-white p-4 shadow-sm">
+          <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--text-tertiary)]">Expenses</p>
+          <div className="mt-3 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-3xl bg-[rgba(255,59,48,0.18)] text-[var(--apple-red)]">
+              <TrendingDown className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[18px] font-semibold text-[var(--text-primary)]">-{formatCurrency(totalSpent)}</p>
+              <p className="text-[12px] text-[var(--text-secondary)]">Spent this month</p>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </section>
   );

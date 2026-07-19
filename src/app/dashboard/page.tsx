@@ -179,6 +179,7 @@ export default async function DashboardPage() {
         totalIncome={totalIncomeMonth}
         netBalance={netBalance}
         monthOverMonthChange={monthOverMonthChange}
+        categoryData={categoryData}
       />
 
       <section>

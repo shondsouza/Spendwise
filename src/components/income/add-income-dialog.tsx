@@ -30,9 +30,10 @@ import { Category } from "@/types";
 
 interface AddIncomeDialogProps {
   onSuccess?: () => void;
+  trigger?: React.ReactNode;
 }
 
-export function AddIncomeDialog({ onSuccess }: AddIncomeDialogProps) {
+export function AddIncomeDialog({ onSuccess, trigger }: AddIncomeDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
@@ -102,10 +103,12 @@ export function AddIncomeDialog({ onSuccess }: AddIncomeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Income
-        </Button>
+        {trigger ?? (
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Income
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
