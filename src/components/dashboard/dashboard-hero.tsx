@@ -9,6 +9,7 @@ interface DashboardHeroProps {
   totalIncome: number;
   totalSpent: number;
   monthOverMonthChange: number;
+  savingsRate: number;
   topCategory?: { name: string; value: number };
 }
 
@@ -24,6 +25,7 @@ export function DashboardHero({
   totalIncome,
   totalSpent,
   monthOverMonthChange,
+  savingsRate,
   topCategory,
 }: DashboardHeroProps) {
   const now = new Date();
@@ -57,11 +59,16 @@ export function DashboardHero({
         <div className="mt-3 text-[36px] font-extrabold tracking-[-0.88px] text-[var(--text-primary)] sm:text-[44px]">
           <AmountDisplay amount={netBalance} variant={balanceVariant} />
         </div>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-[var(--separator)] bg-[rgba(15,23,42,0.02)] px-3 py-3 text-[13px] font-semibold text-[var(--text-primary)]">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(52,199,89,0.12)] px-2 py-1 text-[var(--apple-green)]">
-            <TrendingUp className="h-4 w-4" />
-            {changePositive ? "+" : ""}{monthOverMonthChange.toFixed(1)}%
-          </span>
+        <div className="mt-4 grid gap-3 rounded-[20px] border border-[var(--separator)] bg-[rgba(15,23,42,0.02)] p-4 text-[13px] font-semibold text-[var(--text-primary)] sm:grid-cols-[1fr_auto]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(52,199,89,0.12)] px-2 py-1 text-[var(--apple-green)]">
+              <TrendingUp className="h-4 w-4" />
+              {changePositive ? "+" : ""}{monthOverMonthChange.toFixed(1)}%
+            </span>
+            <span className="rounded-full bg-[rgba(0,122,255,0.12)] px-2 py-1 text-[var(--apple-blue)]">
+              Save {savingsRate.toFixed(0)}%
+            </span>
+          </div>
           <span className="text-[12px] text-[var(--text-secondary)]">{categoryLabel}</span>
         </div>
       </div>
