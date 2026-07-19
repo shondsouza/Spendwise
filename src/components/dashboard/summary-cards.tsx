@@ -67,10 +67,21 @@ export function SummaryCards({
   });
   const changeIsDown = monthOverMonthChange > 0;
   const changeAbs = Math.abs(monthOverMonthChange);
+  const todayInsight = totalSpentToday > 0 ? "Tracking today’s flow" : "No spend logged yet — add one to start";
+  const monthInsight = changeAbs > 0
+    ? `${changeAbs.toFixed(1)}% ${changeIsDown ? "better" : "higher"} than last month`
+    : "Your monthly trend is just getting started";
+  const incomeInsight = totalIncome > 0 ? "Income is keeping pace" : "Add income to build a fuller picture";
+  const balanceInsight = netBalance >= 0 ? "You’re still in the green" : "A small reset could help";
+  const insights = [todayInsight, monthInsight, incomeInsight, balanceInsight];
 
   return (
-    <>
-      <div className="snap-scroll-x md:hidden -mx-4 px-4">
+    <section>
+      <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-[0.4em] text-[var(--text-tertiary)]">
+        Overview
+      </h2>
+      <div className="scroll-fade-x md:hidden -mx-4 px-4">
+        <div className="snap-scroll-x">
         {summaryItems.map((item, index) => {
           const Icon = item.icon;
           return (
@@ -105,11 +116,15 @@ export function SummaryCards({
                   <div className="mt-2 text-[22px] font-extrabold tabular-nums tracking-[-0.6px] leading-tight">
                     <AmountDisplay amount={amounts[index]} variant={variants[index]} />
                   </div>
+                  <p className="mt-2 text-[11px] font-medium leading-5 text-[var(--text-secondary)]">
+                    {insights[index]}
+                  </p>
                 </div>
               </div>
             </div>
           );
         })}
+        </div>
       </div>
 
       <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
@@ -146,17 +161,15 @@ export function SummaryCards({
                   <div className="mt-2 text-[26px] font-extrabold tabular-nums tracking-[-0.8px] leading-tight">
                     <AmountDisplay amount={amounts[index]} variant={variants[index]} />
                   </div>
-                  {index === 1 && changeAbs > 0 && (
-                    <p className={`mt-1.5 text-[12px] font-medium ${changeIsDown ? "text-[var(--apple-green)]" : "text-[var(--apple-red)]"}`}>
-                      {changeIsDown ? "Spending down" : "Spending up"} vs last month
-                    </p>
-                  )}
+                  <p className="mt-2 text-[12px] font-medium leading-5 text-[var(--text-secondary)]">
+                    {insights[index]}
+                  </p>
                 </div>
               </div>
             </div>
           );
         })}
       </div>
-    </>
+    </section>
   );
 }

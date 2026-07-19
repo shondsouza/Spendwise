@@ -233,6 +233,52 @@ caption, .caption {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), transparent 38%);
 }
 
+.dark .dashboard-hero::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 38%);
+}
+
+.hero-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(120, 120, 128, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: -0.1px;
+  transition: background 0.2s ease;
+}
+
+.dark .hero-stat-pill {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.hero-stat-pill strong {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.scroll-fade-x {
+  position: relative;
+}
+
+.scroll-fade-x::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 6px;
+  width: 32px;
+  pointer-events: none;
+  background: linear-gradient(to left, var(--bg-primary), transparent);
+  z-index: 1;
+}
+
 .dark .apple-card:hover {
   box-shadow:
     0 2px 6px rgba(0, 0, 0, 0.4),
@@ -854,21 +900,6 @@ input:focus, textarea:focus, select:focus {
     border-radius: 18px;
   }
 
-  .dashboard-hero-actions {
-    width: 100%;
-  }
-
-  .dashboard-hero-actions > div {
-    display: grid;
-    width: 100%;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .dashboard-hero-actions button {
-    width: 100%;
-    padding-left: 12px;
-    padding-right: 12px;
-  }
 }
 
 @media (max-width: 390px) {

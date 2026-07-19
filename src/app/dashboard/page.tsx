@@ -2,11 +2,9 @@ import React from "react";
 import { redirect } from "next/navigation";
 import { format, startOfDay, endOfMonth, subMonths } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
-import { formatCurrency } from "@/lib/utils/currency";
+import { DashboardHero } from "@/components/dashboard/dashboard-hero";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
-import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
-import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 import ChartsClient from "@/components/dashboard/charts-client";
 import { LoanDashboardWidget } from "@/components/loans/loan-dashboard-widget";
 import type { UserLoan } from "@/types/loan.types";
@@ -115,9 +113,7 @@ export default async function DashboardPage() {
   );
   const totalIncomeMonth = monthIncome.reduce((sum, income) => sum + (income.amount || 0), 0);
   const netBalance = totalIncomeMonth - totalSpentMonth;
-  const dailyAverage = today.getDate() > 0 ? totalSpentMonth / today.getDate() : 0;
   const savingsRate = totalIncomeMonth > 0 ? (netBalance / totalIncomeMonth) * 100 : 0;
-  const boundedSavingsRate = Math.max(-100, Math.min(100, savingsRate));
 
   let monthOverMonthChange = 0;
   if (totalSpentPrevMonth > 0) {
@@ -142,7 +138,6 @@ export default async function DashboardPage() {
     value: Number(item.total) || 0,
   }));
   const topCategory = [...categoryData].sort((a, b) => b.value - a.value)[0];
-  const topCategoryLabel = topCategory ? `${topCategory.name} • ${formatCurrency(topCategory.value)}` : "No spend yet";
 
   const allTransactions = [
     ...recentExpenses.map((expense) => ({
@@ -165,63 +160,45 @@ export default async function DashboardPage() {
 
   const userName = user.user_metadata?.name || user.email?.split("@")[0] || "User";
   const displayName = userName.split(" ")[0] || "there";
-  const dailyAverageLabel = formatCurrency(dailyAverage);
-  const savingsRateLabel = `${Math.round(boundedSavingsRate)}%`;
 
   return (
-    <div className="page-enter space-y-6">
-      <div className="rounded-[32px] border border-[var(--glass-border)] bg-[var(--glass-bg)] p-5 shadow-sm backdrop-blur-xl">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.32em] text-[var(--text-tertiary)]">
-              Dashboard
-            </p>
-            <h1 className="mt-3 text-[28px] font-extrabold tracking-[-0.8px] text-[var(--text-primary)] sm:text-[34px]">
-              Welcome back, {displayName}
-            </h1>
-            <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[var(--text-secondary)] sm:text-[15px]">
-              Your spending habits and cash flow are ready to explore.
-            </p>
-          </div>
-          <div className="flex flex-wrap justify-end gap-3">
-            <AddExpenseDialog />
-            <AddIncomeDialog />
-          </div>
-        </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-3xl border border-[var(--glass-border)] bg-[rgba(255,255,255,0.65)] p-4 text-[var(--text-primary)] backdrop-blur-xl">
-            <p className="text-[11px] uppercase tracking-[0.4em] text-[var(--text-tertiary)]">Average daily spend</p>
-            <p className="mt-3 text-[22px] font-extrabold tracking-[-0.7px]">{dailyAverageLabel}</p>
-          </div>
-          <div className="rounded-3xl border border-[var(--glass-border)] bg-[rgba(255,255,255,0.65)] p-4 text-[var(--text-primary)] backdrop-blur-xl">
-            <p className="text-[11px] uppercase tracking-[0.4em] text-[var(--text-tertiary)]">Top category</p>
-            <p className="mt-3 text-[22px] font-extrabold tracking-[-0.7px]">{topCategoryLabel}</p>
-          </div>
-          <div className="rounded-3xl border border-[var(--glass-border)] bg-[rgba(255,255,255,0.65)] p-4 text-[var(--text-primary)] backdrop-blur-xl">
-            <p className="text-[11px] uppercase tracking-[0.4em] text-[var(--text-tertiary)]">Savings rate</p>
-            <p className="mt-3 text-[22px] font-extrabold tracking-[-0.7px]">{savingsRateLabel}</p>
-          </div>
-        </div>
-      </div>
+    <div className="page-enter space-y-8">
+      <DashboardHero
+        displayName={displayName}
+        netBalance={netBalance}
+        totalIncome={totalIncomeMonth}
+        totalSpent={totalSpentMonth}
+        monthOverMonthChange={monthOverMonthChange}
+        savingsRate={savingsRate}
+        topCategory={topCategory}
+      />
 
-      <div className="space-y-6">
-        <SummaryCards
-          totalSpentToday={totalSpentToday}
-          totalSpentMonth={totalSpentMonth}
-          totalIncome={totalIncomeMonth}
-          netBalance={netBalance}
-          monthOverMonthChange={monthOverMonthChange}
+      <SummaryCards
+        totalSpentToday={totalSpentToday}
+        totalSpentMonth={totalSpentMonth}
+        totalIncome={totalIncomeMonth}
+        netBalance={netBalance}
+        monthOverMonthChange={monthOverMonthChange}
+      />
+
+      <section>
+        <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-[0.4em] text-[var(--text-tertiary)]">
+          Analytics
+        </h2>
+        <ChartsClient
+          dailyData={dailyData}
+          categoryData={categoryData}
+          sidebar={
+            activeLoans.length > 0 ? (
+              <LoanDashboardWidget loans={activeLoans} monthlyIncome={totalIncomeMonth} />
+            ) : undefined
+          }
         />
+      </section>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <ChartsClient dailyData={dailyData} categoryData={categoryData} />
-          {activeLoans.length > 0 && (
-            <LoanDashboardWidget loans={activeLoans} monthlyIncome={totalIncomeMonth} />
-          )}
-        </div>
-
+      <section>
         <RecentTransactions transactions={allTransactions} />
-      </div>
+      </section>
     </div>
   );
 }

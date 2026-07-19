@@ -4,6 +4,7 @@ import React from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils/currency";
+import { CURRENCY_SYMBOL } from "@/lib/constants/config";
 
 interface SpendingChartProps {
   data: Array<{
@@ -63,7 +64,7 @@ export function SpendingChart({ data }: SpendingChartProps) {
               axisLine={false}
               tickLine={false}
               tick={{ fill: "var(--text-tertiary)", fontSize: 11, fontFamily: "'Inter', ui-sans-serif", fontWeight: 500 }}
-              tickFormatter={(value) => `₹${value}`}
+              tickFormatter={(value) => `${CURRENCY_SYMBOL}${value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value}`}
               dx={-10}
             />
             <Tooltip

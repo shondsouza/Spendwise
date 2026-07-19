@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { CookieOptions } from "@supabase/ssr";
+import { createFallbackClient, hasSupabaseConfig } from "./fallback-client";
 
 type CookieToSet = {
   name: string;
@@ -10,6 +11,10 @@ type CookieToSet = {
 
 export async function createClient() {
   const cookieStore = await cookies();
+
+  if (!hasSupabaseConfig()) {
+    return createFallbackClient() as ReturnType<typeof createServerClient>;
+  }
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
