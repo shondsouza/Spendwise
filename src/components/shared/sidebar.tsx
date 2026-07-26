@@ -78,7 +78,7 @@ export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, 
         style={{ borderBottom: "1px solid var(--separator)" }}
       >
         <Image
-          src={mounted ? (isDark ? "/spendwise-light.png" : "/spendwise-dark.png") : "/spendwise-dark.png"}
+          src="/logo.png"
           alt="SpendWise"
           width={34}
           height={34}

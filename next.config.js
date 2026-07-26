@@ -40,7 +40,7 @@ module.exports = withPWA({
   swSrc: './src/service-worker.js',
   fallbacks: {
     document: '/offline.html',
-    image: '/spendwise.png',
-    font: '/spendwise.png',
+    image: '/logo.png',
+    font: '/logo.png',
   },
 })(nextConfig);

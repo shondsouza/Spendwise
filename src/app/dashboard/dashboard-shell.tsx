@@ -126,8 +126,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
           >
             <div className="flex items-center justify-between px-5 py-5" style={{ borderBottom: "1px solid var(--separator)" }}>
               <div className="flex items-center gap-2.5">
-                <Image src="/spendwise-dark.png" alt="SpendWise" width={30} height={30} className="rounded-xl dark:hidden" />
-                <Image src="/spendwise-light.png" alt="SpendWise" width={30} height={30} className="hidden rounded-xl dark:block" />
+                <Image src="/logo.png" alt="SpendWise" width={30} height={30} className="rounded-xl" />
                 <span className="text-[17px] font-bold tracking-[-0.4px] text-[var(--text-primary)]">SpendWise</span>
               </div>
               <button
@@ -263,8 +262,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
             onClick={() => setMobileMenuOpen(true)}
             className="flex items-center gap-3 text-left"
           >
-            <Image src="/spendwise-dark.png" alt="" width={42} height={42} className="rounded-full border border-white/30 dark:hidden" />
-            <Image src="/spendwise-light.png" alt="" width={42} height={42} className="hidden rounded-full border border-white/10 dark:block" />
+            <Image src="/logo.png" alt="" width={42} height={42} className="rounded-full border border-white/30" />
             <span className="max-w-[58vw] truncate text-[26px] font-bold tracking-[-1px] text-[var(--text-primary)]">
               {pathname === "/dashboard" ? "SpendWise" : pageTitle}
             </span>

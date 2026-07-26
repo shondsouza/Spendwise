@@ -12,16 +12,17 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/spendwise.png",
+        url: "/logo.png",
         type: "image/png",
-        sizes: "any",
+        sizes: "3200x3200",
       },
     ],
-    apple: [{ url: "/wallet.jpg" }],
+    apple: [{ url: "/logo.png", sizes: "3200x3200", type: "image/png" }],
     shortcut: [
       {
-        url: "/spendwise.png",
-        sizes: "192x192",
+        url: "/logo.png",
+        sizes: "3200x3200",
+        type: "image/png",
       },
     ],
   },
@@ -64,9 +65,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-tap-highlight" content="no" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/spendwise.png" />
-        <link rel="mask-icon" href="/spendwise.png" color="#000000" />
-        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="3200x3200" href="/logo.png" />
+        <link rel="mask-icon" href="/logo.png" color="#000000" />
+        <link rel="shortcut icon" href="/logo.png" type="image/png" />
       </head>
       <body className="font-sans antialiased">
         <Providers>{children}</Providers>
