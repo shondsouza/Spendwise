@@ -8,7 +8,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Expense } from "@/types";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Wallet } from "lucide-react";
+import { Wallet, Plus } from "lucide-react";
+import { MobileLedgerPage } from "@/components/shared/mobile-ledger-page";
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -51,12 +52,6 @@ export default function ExpensesPage() {
 
   return (
     <div className="page-enter">
-      <PageHeader
-        title="💳 Expenses"
-        description="Track and manage all your expenses"
-        action={<AddExpenseDialog onSuccess={fetchExpenses} />}
-      />
-
       {/* Edit dialog - renders when editingExpense is set */}
       {editingExpense && (
         <AddExpenseDialog
@@ -70,29 +65,41 @@ export default function ExpensesPage() {
         />
       )}
 
-      {loading ? (
-        <div className="space-y-4">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl bg-[rgba(120,120,128,0.12)]" />
-          ))}
-        </div>
-      ) : expenses.length === 0 ? (
-        <EmptyState
-          icon={Wallet}
-          title="No expenses yet"
-          description="Start tracking your expenses to see them here"
-          action={{
-            label: "Add Expense",
-            onClick: () => fetchExpenses(),
-          }}
-        />
-      ) : (
-        <ExpenseTable
-          expenses={expenses}
-          onEdit={(expense) => setEditingExpense(expense)}
+      <div className="md:hidden">
+        <MobileLedgerPage
+          title="Expenses"
+          entries={expenses.map((expense) => ({ ...expense, detail: expense.payment_method }))}
+          loading={loading}
           onDelete={handleDelete}
+          onEdit={(entry) => setEditingExpense(expenses.find((expense) => expense.id === entry.id) ?? null)}
+          addAction={
+            <AddExpenseDialog
+              onSuccess={fetchExpenses}
+              trigger={<button type="button" className="mobile-ledger-add"><Plus className="h-4 w-4" /> Add</button>}
+            />
+          }
         />
-      )}
+      </div>
+
+      <div className="hidden md:block">
+        <PageHeader
+          title="💳 Expenses"
+          description="Track and manage all your expenses"
+          action={<AddExpenseDialog onSuccess={fetchExpenses} />}
+        />
+
+        {loading ? (
+          <div className="space-y-4">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-14 animate-pulse rounded-xl bg-[rgba(120,120,128,0.12)]" />
+            ))}
+          </div>
+        ) : expenses.length === 0 ? (
+          <EmptyState icon={Wallet} title="No expenses yet" description="Start tracking your expenses to see them here" />
+        ) : (
+          <ExpenseTable expenses={expenses} onEdit={setEditingExpense} onDelete={handleDelete} />
+        )}
+      </div>
     </div>
   );
 }

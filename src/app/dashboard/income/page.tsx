@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Income } from "@/types";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
-import { TrendingUp, Trash2 } from "lucide-react";
+import { TrendingUp, Plus, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -18,19 +18,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { AmountDisplay } from "@/components/shared/amount-display";
 import { CategoryBadge } from "@/components/shared/category-badge";
-import { formatDate, formatDateShort } from "@/lib/utils/date";
+import { formatDate } from "@/lib/utils/date";
 import { AddIncomeDialog } from "@/components/income/add-income-dialog";
-import { INCOME_CATEGORIES } from "@/lib/constants/config";
-
-function getCategoryEmoji(category: string): string {
-  const found = INCOME_CATEGORIES.find((c) => c.value === category || c.label === category);
-  return found?.emoji || "💰";
-}
-
-function getCategoryColor(category: string): string {
-  const found = INCOME_CATEGORIES.find((c) => c.value === category || c.label === category);
-  return found?.color || "#34c759";
-}
+import { MobileLedgerPage } from "@/components/shared/mobile-ledger-page";
 
 export default function IncomePage() {
   const [incomeList, setIncomeList] = useState<Income[]>([]);
@@ -72,62 +62,38 @@ export default function IncomePage() {
 
   return (
     <div className="page-enter">
-      <PageHeader
-        title="💰 Income"
-        description="Track and manage all your income sources"
-        action={<AddIncomeDialog onSuccess={fetchIncome} />}
-      />
-
-      {loading ? (
-        <div className="space-y-3">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-[68px] animate-pulse rounded-2xl bg-[rgba(120,120,128,0.12)]" />
-          ))}
-        </div>
-      ) : incomeList.length === 0 ? (
-        <EmptyState
-          icon={TrendingUp}
-          title="No income entries yet"
-          description="Start tracking your income sources"
-          action={{
-            label: "Add Income",
-            onClick: () => fetchIncome(),
-          }}
+      <div className="md:hidden">
+        <MobileLedgerPage
+          title="Income"
+          entries={incomeList.map((income) => ({ ...income, detail: income.source }))}
+          loading={loading}
+          onDelete={handleDelete}
+          addAction={
+            <AddIncomeDialog
+              onSuccess={fetchIncome}
+              trigger={<button type="button" className="mobile-ledger-add"><Plus className="h-4 w-4" /> Add</button>}
+            />
+          }
         />
-      ) : (
-        <div className="apple-card overflow-hidden">
-          {/* Mobile: card rows */}
-          <div className="md:hidden divide-y divide-[var(--separator)]">
-            {incomeList.map((income) => {
-              const emoji = getCategoryEmoji(income.category);
-              const color = getCategoryColor(income.category);
-              return (
-                <div key={income.id} className="tx-card">
-                  <div className="tx-card-icon" style={{ background: `${color}18` }}>
-                    <span>{emoji}</span>
-                  </div>
-                  <div className="tx-card-body">
-                    <div className="tx-card-title">{income.title}</div>
-                    <div className="tx-card-sub">
-                      {income.category} · {formatDateShort(income.date)}{income.source ? ` · ${income.source}` : ""}
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1.5">
-                    <AmountDisplay amount={income.amount} variant="success" className="text-[15px] font-bold" />
-                    <button
-                      onClick={() => handleDelete(income.id)}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg bg-[rgba(255,59,48,0.1)] text-[var(--apple-red)] transition-all active:scale-90"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      </div>
 
-          {/* Desktop: table */}
-          <div className="hidden md:block">
+      <div className="hidden md:block">
+        <PageHeader
+          title="💰 Income"
+          description="Track and manage all your income sources"
+          action={<AddIncomeDialog onSuccess={fetchIncome} />}
+        />
+
+        {loading ? (
+          <div className="space-y-3">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-[68px] animate-pulse rounded-2xl bg-[rgba(120,120,128,0.12)]" />
+            ))}
+          </div>
+        ) : incomeList.length === 0 ? (
+          <EmptyState icon={TrendingUp} title="No income entries yet" description="Start tracking your income sources" />
+        ) : (
+        <div className="apple-card overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -169,9 +135,9 @@ export default function IncomePage() {
                 ))}
               </TableBody>
             </Table>
-          </div>
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
