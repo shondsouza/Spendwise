@@ -317,13 +317,13 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
               <small>Add</small>
             </Link>
             <Link
-              href="/dashboard/budgets"
-              aria-current={pathname.startsWith("/dashboard/budgets") ? "page" : undefined}
-              className={cn("bottom-nav-item", pathname.startsWith("/dashboard/budgets") && "active", "active:scale-95 transition-transform duration-200")}
+              href="/dashboard/income"
+              aria-current={pathname.startsWith("/dashboard/income") ? "page" : undefined}
+              className={cn("bottom-nav-item", pathname.startsWith("/dashboard/income") && "active", "active:scale-95 transition-transform duration-200")}
               onClick={() => haptic("light")}
             >
-              <div className="nav-icon-wrap"><Target className={cn("h-[22px] w-[22px]", pathname.startsWith("/dashboard/budgets") ? "stroke-[2.5px]" : "stroke-[1.8px]")} /></div>
-              <span className="nav-label">Budgets</span>
+              <div className="nav-icon-wrap"><Wallet className={cn("h-[22px] w-[22px]", pathname.startsWith("/dashboard/income") ? "stroke-[2.5px]" : "stroke-[1.8px]")} /></div>
+              <span className="nav-label">Income</span>
               <span className="nav-pill" />
             </Link>
             <button
