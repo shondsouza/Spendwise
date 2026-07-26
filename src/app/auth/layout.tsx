@@ -10,7 +10,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="mb-8 text-center">
           <div className="mb-4 inline-flex items-center justify-center">
             <Image
-              src="/logo.png"
+              src="/logo/login-logo.png"
               alt="SpendWise"
               width={48}
               height={48}

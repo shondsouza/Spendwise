@@ -78,7 +78,7 @@ export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, 
         style={{ borderBottom: "1px solid var(--separator)" }}
       >
         <Image
-          src="/logo.png"
+          src="/logo/logo.png"
           alt="SpendWise"
           width={34}
           height={34}
