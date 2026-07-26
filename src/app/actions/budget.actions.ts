@@ -35,7 +35,7 @@ export async function addBudget(formData: FormData) {
     return { data: null, error: error.message };
   }
 
-  revalidatePath("/budgets");
+  revalidatePath("/dashboard/budgets");
   revalidatePath("/dashboard");
   return { data, error: null };
 }
@@ -73,7 +73,7 @@ export async function updateBudget(id: string, formData: FormData) {
     return { data: null, error: error.message };
   }
 
-  revalidatePath("/budgets");
+  revalidatePath("/dashboard/budgets");
   revalidatePath("/dashboard");
   return { data, error: null };
 }
@@ -94,7 +94,7 @@ export async function deleteBudget(id: string) {
     return { success: false, error: error.message };
   }
 
-  revalidatePath("/budgets");
+  revalidatePath("/dashboard/budgets");
   revalidatePath("/dashboard");
   return { success: true, error: null };
 }

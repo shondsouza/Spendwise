@@ -30,10 +30,10 @@ function createFallbackQueryBuilder() {
     update: async () => ({ data: null, error: createFallbackError("Supabase is not configured") }),
     delete: async () => ({ data: null, error: createFallbackError("Supabase is not configured") }),
     then(resolve: (value: { data: null; error: SupabaseError }) => unknown) {
-      return Promise.resolve({ data: [], error: null }).then(resolve);
+      return Promise.resolve({ data: null, error: createFallbackError("Supabase is not configured") }).then(resolve);
     },
     catch(reject: (reason: SupabaseError) => unknown) {
-      return Promise.resolve({ data: [], error: null }).catch(reject);
+      return Promise.resolve({ data: null, error: createFallbackError("Supabase is not configured") }).catch(reject);
     },
   };
 

@@ -311,7 +311,7 @@ export async function deleteLoan(id: string) {
 
   revalidatePath('/dashboard/loan');
   revalidatePath('/dashboard');
-  revalidatePath('/expenses');
+  revalidatePath('/dashboard/expenses');
   return { success: true, error: null };
 }
 
@@ -437,7 +437,7 @@ export async function addLoanPayment(formData: FormData) {
 
   revalidatePath('/dashboard/loan');
   revalidatePath('/dashboard');
-  revalidatePath('/expenses');
+  revalidatePath('/dashboard/expenses');
   return { data: payment as LoanPayment, error: null };
 }
 

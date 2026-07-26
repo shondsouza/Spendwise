@@ -13,7 +13,7 @@ export async function createClient() {
   const cookieStore = await cookies();
 
   if (!hasSupabaseConfig()) {
-    return createFallbackClient() as ReturnType<typeof createServerClient>;
+    return createFallbackClient() as unknown as ReturnType<typeof createServerClient>;
   }
 
   return createServerClient(

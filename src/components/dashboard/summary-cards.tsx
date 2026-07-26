@@ -61,6 +61,7 @@ export function SummaryCards({
   totalIncome,
   netBalance,
   monthOverMonthChange,
+  categoryData,
 }: SummaryCardsProps) {
   const amounts = [totalSpentToday, totalSpentMonth, totalIncome, netBalance];
   const variants = summaryItems.map((item, index) => {

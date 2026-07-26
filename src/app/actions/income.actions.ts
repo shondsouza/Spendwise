@@ -37,7 +37,7 @@ export async function addIncome(formData: FormData) {
     return { data: null, error: error.message };
   }
 
-  revalidatePath("/income");
+  revalidatePath("/dashboard/income");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/analytics");
   return { data, error: null };
@@ -78,7 +78,7 @@ export async function updateIncome(id: string, formData: FormData) {
     return { data: null, error: error.message };
   }
 
-  revalidatePath("/income");
+  revalidatePath("/dashboard/income");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/analytics");
   return { data, error: null };
@@ -100,7 +100,7 @@ export async function deleteIncome(id: string) {
     return { success: false, error: error.message };
   }
 
-  revalidatePath("/income");
+  revalidatePath("/dashboard/income");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/analytics");
   return { success: true, error: null };

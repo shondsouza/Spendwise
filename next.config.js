@@ -3,6 +3,9 @@ const withPWA = require('next-pwa');
 
 const nextConfig = {
   reactStrictMode: true,
+  // Keep output tracing scoped to this application when the machine has
+  // additional lockfiles outside the repository (common in CI and Vercel).
+  outputFileTracingRoot: __dirname,
   images: {
     remotePatterns: [
       {
