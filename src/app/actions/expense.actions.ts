@@ -38,6 +38,7 @@ export async function addExpense(formData: FormData) {
   }
 
   revalidatePath("/dashboard/expenses");
+  revalidatePath("/dashboard/budgets");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/analytics");
   return { data, error: null };
@@ -79,6 +80,7 @@ export async function updateExpense(id: string, formData: FormData) {
   }
 
   revalidatePath("/dashboard/expenses");
+  revalidatePath("/dashboard/budgets");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/analytics");
   return { data, error: null };
@@ -101,6 +103,7 @@ export async function deleteExpense(id: string) {
   }
 
   revalidatePath("/dashboard/expenses");
+  revalidatePath("/dashboard/budgets");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/analytics");
   return { success: true, error: null };

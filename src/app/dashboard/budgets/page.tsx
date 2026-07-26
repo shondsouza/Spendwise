@@ -7,7 +7,7 @@ import { Budget } from "@/types";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { AmountDisplay } from "@/components/shared/amount-display";
 import { CreateBudgetDialog } from "@/components/budgets/create-budget-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -29,7 +29,7 @@ const MONTH_NAMES = [
 ];
 
 export default function BudgetsPage() {
-  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [budgets, setBudgets] = useState<Array<Budget & { spent: number }>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -92,8 +92,21 @@ export default function BudgetsPage() {
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {budgets.map((budget) => (
-            <Card key={budget.id} className="relative">
+          {budgets.map((budget) => {
+            const spent = Number(budget.spent) || 0;
+            const limit = Number(budget.amount) || 0;
+            const percentageUsed = limit > 0 ? (spent / limit) * 100 : 0;
+            const progressWidth = Math.min(percentageUsed, 100);
+            const remaining = limit - spent;
+            const isOverBudget = remaining < 0;
+            const progressColor = isOverBudget
+              ? "var(--apple-red)"
+              : percentageUsed >= 80
+                ? "var(--apple-orange)"
+                : "var(--apple-green)";
+
+            return (
+            <Card key={budget.id} className="relative overflow-hidden">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-[17px]">{budget.category}</CardTitle>
@@ -118,18 +131,31 @@ export default function BudgetsPage() {
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-[rgba(120,120,128,0.12)]">
                     <div
-                      className="h-full rounded-full bg-[var(--apple-green)] transition-all duration-500"
-                      style={{ width: "45%" }}
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${progressWidth}%`, background: progressColor }}
                     />
                   </div>
-                  <p className="mt-1 text-[11px] text-[var(--text-tertiary)]">45% used</p>
+                  <div className="mt-2 flex items-center justify-between gap-3 text-[11px]">
+                    <span className="font-medium text-[var(--text-secondary)]">
+                      <AmountDisplay amount={spent} className="text-[11px] font-semibold text-[var(--text-primary)]" /> spent
+                    </span>
+                    <span className={isOverBudget ? "font-semibold text-[var(--apple-red)]" : "font-semibold text-[var(--apple-green)]"}>
+                      {isOverBudget ? "Over by " : "Remaining "}
+                      <AmountDisplay amount={Math.abs(remaining)} className="text-[11px] font-semibold" />
+                    </span>
+                  </div>
+                  <div className={`mt-3 flex items-center gap-1.5 text-[11px] font-semibold ${isOverBudget ? "text-[var(--apple-red)]" : "text-[var(--text-tertiary)]"}`}>
+                    {isOverBudget ? <AlertTriangle className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5 text-[var(--apple-green)]" />}
+                    {Math.round(percentageUsed)}% used{isOverBudget ? " — budget exceeded" : ""}
+                  </div>
                 </div>
                 <div className="text-[11px] text-[var(--text-tertiary)]">
                   One monthly budget per category
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
