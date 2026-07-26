@@ -2,7 +2,6 @@ import React from "react";
 import { redirect } from "next/navigation";
 import { format, startOfDay, endOfMonth, subMonths } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
-import { DashboardHero } from "@/components/dashboard/dashboard-hero";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import ChartsClient from "@/components/dashboard/charts-client";
@@ -113,7 +112,6 @@ export default async function DashboardPage() {
   );
   const totalIncomeMonth = monthIncome.reduce((sum, income) => sum + (income.amount || 0), 0);
   const netBalance = totalIncomeMonth - totalSpentMonth;
-  const savingsRate = totalIncomeMonth > 0 ? (netBalance / totalIncomeMonth) * 100 : 0;
 
   let monthOverMonthChange = 0;
   if (totalSpentPrevMonth > 0) {
@@ -137,8 +135,6 @@ export default async function DashboardPage() {
     name: item.category,
     value: Number(item.total) || 0,
   }));
-  const topCategory = [...categoryData].sort((a, b) => b.value - a.value)[0];
-
   const allTransactions = [
     ...recentExpenses.map((expense) => ({
       id: expense.id,
@@ -158,21 +154,8 @@ export default async function DashboardPage() {
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const userName = user.user_metadata?.name || user.email?.split("@")[0] || "User";
-  const displayName = userName.split(" ")[0] || "there";
-
   return (
     <div className="page-enter space-y-8">
-      <DashboardHero
-        displayName={displayName}
-        netBalance={netBalance}
-        totalIncome={totalIncomeMonth}
-        totalSpent={totalSpentMonth}
-        monthOverMonthChange={monthOverMonthChange}
-        savingsRate={savingsRate}
-        topCategory={topCategory}
-      />
-
       <SummaryCards
         totalSpentToday={totalSpentToday}
         totalSpentMonth={totalSpentMonth}
