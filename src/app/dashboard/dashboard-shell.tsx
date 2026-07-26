@@ -279,7 +279,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
 
         <div className="flex-1 overflow-auto mobile-pb md:pb-0">
           <PullToRefresh>
-            <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">{children}</div>
+            <div className="mobile-scroll-content mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">{children}</div>
           </PullToRefresh>
         </div>
 

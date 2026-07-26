@@ -956,7 +956,12 @@ input:focus, textarea:focus, select:focus {
   }
 
   .mobile-pb {
-    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 20px);
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 44px);
+  }
+
+  .mobile-scroll-content {
+    /* The dock is fixed and the raised Add control extends above its bar. */
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 64px);
   }
 
   .mobile-no-table table {
