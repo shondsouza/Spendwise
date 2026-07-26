@@ -5,6 +5,19 @@ import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, ChevronLeft, Pencil, Plus, Trash2, Wallet } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatDateShort } from "@/lib/utils/date";
+import { CURRENCY_SYMBOL } from "@/lib/constants/config";
+
+function formatMobileTotal(amount: number, compact: boolean): string {
+  if (!compact) return formatCurrency(amount);
+
+  const absoluteAmount = Math.abs(amount);
+  const compactAmount = new Intl.NumberFormat("en-IN", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(absoluteAmount);
+
+  return `${CURRENCY_SYMBOL} ${amount < 0 ? "-" : ""}${compactAmount}`;
+}
 
 export interface MobileLedgerEntry {
   id: string;
@@ -43,6 +56,8 @@ export function MobileLedgerPage({ title, entries, addAction, onDelete, onEdit, 
     });
   }, [entries, range]);
   const total = periodEntries.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+  const totalLabel = formatCurrency(total);
+  const displayedTotal = formatMobileTotal(total, range === "Year");
 
   return (
     <div className="mobile-ledger-page md:hidden">
@@ -76,7 +91,7 @@ export function MobileLedgerPage({ title, entries, addAction, onDelete, onEdit, 
           <p>Total {title}</p>
           <span>{periodEntries.length ? `${periodEntries.length} entries` : "No entries"}</span>
         </div>
-        <strong>{isIncome ? "+" : "-"}{formatCurrency(total)}</strong>
+        <strong title={totalLabel}>{isIncome ? "+" : "-"}{displayedTotal}</strong>
         <small>{isIncome ? "Money received this period" : "Money spent this period"}</small>
       </section>
 

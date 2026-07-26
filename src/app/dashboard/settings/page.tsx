@@ -19,7 +19,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { toast } from "sonner";
-import { AlertCircle, Download, Shield } from "lucide-react";
+import { AlertCircle, Download, Shield, UserRound, Palette, Database, Moon, Mail, BadgeCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   checkDatabaseSize,
@@ -235,20 +235,56 @@ export default function SettingsPage() {
   }
 
   const isStorageNearLimit = databaseSize !== null && databaseSize > SUPABASE_STORAGE_WARNING_BYTES;
+  const displayName = name || user?.email?.split("@")[0] || "SpendWise member";
+  const accountInitial = displayName.trim().charAt(0).toUpperCase();
+  const memberSince = user?.created_at
+    ? new Intl.DateTimeFormat("en", { month: "short", year: "numeric" }).format(new Date(user.created_at))
+    : null;
 
   return (
     <div className="page-enter">
       <PageHeader
-        title="⚙️ Settings"
-        description="Manage your account preferences and application settings"
+        title="Profile & Settings"
+        description="Manage your account, preferences, and data in one place"
       />
 
-      <div className="max-w-2xl space-y-6">
+      <div className="max-w-4xl space-y-6">
+        <section className="relative overflow-hidden rounded-[28px] border border-[var(--glass-border)] bg-[var(--glass-bg)] p-5 shadow-[0_14px_36px_rgba(30,38,68,0.07)] sm:p-6">
+          <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[rgba(0,122,255,0.13)] blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-[rgba(175,82,222,0.08)] blur-3xl" />
+          <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-4">
+              <div className="flex h-16 w-16 flex-none items-center justify-center rounded-[22px] bg-[var(--gradient-blue)] text-[25px] font-extrabold text-white shadow-[0_10px_22px_rgba(0,122,255,0.25)]">
+                {accountInitial}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h2 className="truncate text-[21px] font-extrabold tracking-[-0.5px] text-[var(--text-primary)]">{displayName}</h2>
+                  {user?.email_confirmed_at && <BadgeCheck className="h-4 w-4 flex-none text-[var(--apple-blue)]" aria-label="Verified account" />}
+                </div>
+                <p className="mt-1 flex items-center gap-1.5 truncate text-[13px] text-[var(--text-secondary)]"><Mail className="h-3.5 w-3.5 flex-none" />{user?.email}</p>
+                {memberSince && <p className="mt-1 text-[11px] font-medium text-[var(--text-tertiary)]">Member since {memberSince}</p>}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5 sm:min-w-[210px]">
+              <div className="rounded-2xl border border-[rgba(0,122,255,0.12)] bg-[rgba(0,122,255,0.06)] px-3 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.45px] text-[var(--apple-blue)]">Currency</p>
+                <p className="mt-0.5 text-[15px] font-bold text-[var(--text-primary)]">{currency}</p>
+              </div>
+              <div className="rounded-2xl border border-[rgba(52,199,89,0.12)] bg-[rgba(52,199,89,0.06)] px-3 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.45px] text-[var(--apple-green)]">Default pay</p>
+                <p className="mt-0.5 truncate text-[15px] font-bold capitalize text-[var(--text-primary)]">{paymentMethod}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-6 lg:grid-cols-2">
         
         {/* Profile Section */}
         <Card>
           <CardHeader>
-            <CardTitle>👤 Profile</CardTitle>
+            <CardTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(0,122,255,0.1)]"><UserRound className="h-4 w-4 text-[var(--apple-blue)]" /></span>Profile</CardTitle>
             <CardDescription>Your account information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -283,7 +319,7 @@ export default function SettingsPage() {
         {/* Preferences Section */}
         <Card>
           <CardHeader>
-            <CardTitle>🎨 Preferences</CardTitle>
+            <CardTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(175,82,222,0.1)]"><Palette className="h-4 w-4 text-[var(--apple-purple)]" /></span>Preferences</CardTitle>
             <CardDescription>Customize your experience</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -322,7 +358,9 @@ export default function SettingsPage() {
             </Button>
           </CardContent>
         </Card>
+        </div>
 
+        <div className="grid gap-6 lg:grid-cols-2">
         {/* Security Section */}
         <Card>
           <CardHeader>
@@ -367,11 +405,13 @@ export default function SettingsPage() {
             </Button>
           </CardContent>
         </Card>
+        </div>
 
+        <div className="grid gap-6 lg:grid-cols-2">
         {/* Database Health Section */}
         <Card>
           <CardHeader>
-            <CardTitle>🗄️ Database Health</CardTitle>
+            <CardTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(90,200,250,0.12)]"><Database className="h-4 w-4 text-[var(--apple-teal)]" /></span>Database Health</CardTitle>
             <CardDescription>Supabase free tier storage usage</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -413,7 +453,7 @@ export default function SettingsPage() {
         {/* Theme Section */}
         <Card>
           <CardHeader>
-            <CardTitle>🌓 Theme</CardTitle>
+            <CardTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(88,86,214,0.1)]"><Moon className="h-4 w-4 text-[var(--apple-indigo)]" /></span>Appearance</CardTitle>
             <CardDescription>Choose your preferred theme</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-between">
@@ -426,6 +466,7 @@ export default function SettingsPage() {
             <ThemeToggle />
           </CardContent>
         </Card>
+        </div>
 
         {/* Danger Zone */}
         <Card className="border-[rgba(255,59,48,0.2)]">

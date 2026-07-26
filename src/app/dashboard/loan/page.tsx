@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { PageHeader } from '@/components/shared/page-header';
 import { getLoans, getAllLoanPayments } from '@/app/actions/loan.actions';
 import type { UserLoan, LoanPayment } from '@/types/loan.types';
-import { Plus, BarChart3, Calculator, Shield, Landmark } from 'lucide-react';
+import { Plus, BarChart3, Calculator, Shield, Landmark, ArrowUpRight, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,8 @@ import { LoanSimulator } from '@/components/loans/loan-simulator';
 import { MoratoriumDashboard } from '@/components/loans/moratorium-dashboard';
 import { DebtFreedomWidget } from '@/components/loans/debt-freedom-widget';
 import { LoanHealthScoreCard } from '@/components/loans/loan-health-score-card';
+import { computeLoanBalance } from '@/lib/loans/loan-calculator';
+import { formatCurrency } from '@/lib/utils/currency';
 
 export default function LoanPage() {
   const [loans, setLoans] = useState<UserLoan[]>([]);
@@ -82,6 +84,18 @@ export default function LoanPage() {
   };
 
   const handleRefresh = () => fetchData();
+  const portfolio = useMemo(() => {
+    const activeLoans = loans.filter((loan) => loan.status === 'active');
+
+    return activeLoans.reduce(
+      (summary, loan) => {
+        summary.outstanding += computeLoanBalance(loan).currentOutstanding;
+        summary.monthlyEmi += Number(loan.emi_amount ?? 0);
+        return summary;
+      },
+      { activeLoans, outstanding: 0, monthlyEmi: 0 },
+    );
+  }, [loans]);
 
   return (
     <div className="page-enter space-y-6 pb-20">
@@ -133,22 +147,48 @@ export default function LoanPage() {
         </div>
       ) : (
         <>
+          <section className="relative overflow-hidden rounded-[28px] border border-[var(--glass-border)] bg-[var(--glass-bg)] p-5 shadow-[0_12px_32px_rgba(30,38,68,0.06)] sm:p-6">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[rgba(0,122,255,0.12)] blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 left-1/3 h-36 w-36 rounded-full bg-[rgba(175,82,222,0.08)] blur-3xl" />
+            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.7px] text-[var(--apple-blue)]">Loan portfolio</p>
+                <h2 className="mt-1.5 text-[24px] font-extrabold tracking-[-0.7px] text-[var(--text-primary)] sm:text-[27px]">
+                  {portfolio.activeLoans.length} active loan{portfolio.activeLoans.length !== 1 ? 's' : ''} under control
+                </h2>
+                <p className="mt-1.5 text-[13px] text-[var(--text-secondary)]">
+                  Keep payments current and use the tools below to plan your payoff.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:min-w-[290px]">
+                <div className="rounded-2xl border border-[rgba(255,59,48,0.12)] bg-[rgba(255,59,48,0.06)] px-3.5 py-3">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.45px] text-[var(--apple-red)]">Outstanding</span>
+                  <p className="mt-1 truncate text-[17px] font-extrabold tracking-[-0.5px] text-[var(--text-primary)]" title={formatCurrency(portfolio.outstanding)}>{formatCurrency(portfolio.outstanding)}</p>
+                </div>
+                <div className="rounded-2xl border border-[rgba(0,122,255,0.12)] bg-[rgba(0,122,255,0.06)] px-3.5 py-3">
+                  <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.45px] text-[var(--apple-blue)]"><CreditCard className="h-3 w-3" /> Monthly EMI</span>
+                  <p className="mt-1 truncate text-[17px] font-extrabold tracking-[-0.5px] text-[var(--text-primary)]" title={formatCurrency(portfolio.monthlyEmi)}>{formatCurrency(portfolio.monthlyEmi)}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <LoanSummaryStrip loans={loans} />
 
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <div className="mb-5 overflow-x-auto">
-              <TabsList className="h-10 w-full min-w-[360px] rounded-xl bg-[rgba(120,120,128,0.08)] p-1 sm:max-w-lg">
-                <TabsTrigger value="loans" className="flex-1 rounded-lg text-[12px] font-semibold data-[state=active]:shadow-sm">
-                  <Landmark className="mr-1.5 h-3.5 w-3.5" /> My Loans
+            <div className="mb-5">
+              <TabsList className="grid h-11 w-full grid-cols-4 rounded-2xl bg-[rgba(120,120,128,0.08)] p-1 sm:max-w-xl">
+                <TabsTrigger value="loans" className="min-w-0 rounded-xl px-1.5 text-[11px] font-semibold data-[state=active]:shadow-sm sm:px-3 sm:text-[12px]">
+                  <Landmark className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">My Loans</span><span className="sm:hidden">Loans</span>
                 </TabsTrigger>
-                <TabsTrigger value="analytics" className="flex-1 rounded-lg text-[12px] font-semibold data-[state=active]:shadow-sm">
-                  <BarChart3 className="mr-1.5 h-3.5 w-3.5" /> Analytics
+                <TabsTrigger value="analytics" className="min-w-0 rounded-xl px-1.5 text-[11px] font-semibold data-[state=active]:shadow-sm sm:px-3 sm:text-[12px]">
+                  <BarChart3 className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">Analytics</span><span className="sm:hidden">Stats</span>
                 </TabsTrigger>
-                <TabsTrigger value="simulator" className="flex-1 rounded-lg text-[12px] font-semibold data-[state=active]:shadow-sm">
-                  <Calculator className="mr-1.5 h-3.5 w-3.5" /> Simulator
+                <TabsTrigger value="simulator" className="min-w-0 rounded-xl px-1.5 text-[11px] font-semibold data-[state=active]:shadow-sm sm:px-3 sm:text-[12px]">
+                  <Calculator className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">Simulator</span><span className="sm:hidden">Plan</span>
                 </TabsTrigger>
-                <TabsTrigger value="health" className="flex-1 rounded-lg text-[12px] font-semibold data-[state=active]:shadow-sm">
-                  <Shield className="mr-1.5 h-3.5 w-3.5" /> Health
+                <TabsTrigger value="health" className="min-w-0 rounded-xl px-1.5 text-[11px] font-semibold data-[state=active]:shadow-sm sm:px-3 sm:text-[12px]">
+                  <Shield className="h-3.5 w-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">Health</span><span className="sm:hidden">Health</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -157,6 +197,16 @@ export default function LoanPage() {
             <TabsContent value="loans" className="mt-0 space-y-5">
               {/* Moratorium Dashboard — only shown when active moratorium loans exist */}
               <MoratoriumDashboard loans={loans} />
+
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-[19px] font-bold tracking-[-0.4px] text-[var(--text-primary)]">Your loans</h2>
+                  <p className="mt-0.5 text-[12px] text-[var(--text-secondary)]">Select a loan to view its payment history and payoff plan.</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setAddLoanOpen(true)} className="hidden flex-none gap-1 rounded-full text-[var(--apple-blue)] sm:inline-flex">
+                  Add another <ArrowUpRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
 
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 {loans.map((loan, index) => (

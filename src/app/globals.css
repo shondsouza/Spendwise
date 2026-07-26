@@ -961,6 +961,9 @@ input:focus, textarea:focus, select:focus {
 
   .mobile-scroll-content {
     /* The dock is fixed and the raised Add control extends above its bar. */
+    width: 100%;
+    min-width: 0;
+    overflow-x: clip;
     padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 64px);
   }
 
