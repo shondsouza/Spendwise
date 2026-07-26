@@ -30,21 +30,21 @@ export function SpendingChart({ data }: SpendingChartProps) {
   };
 
   return (
-    <Card className="col-span-1 lg:col-span-2">
+    <Card className="col-span-1 self-start lg:col-span-2">
       <CardHeader className="pb-2">
         <CardTitle className="text-[17px] font-bold tracking-[-0.3px]">Daily Spending</CardTitle>
         <p className="text-[13px] text-[var(--text-secondary)]">
           {hasData ? `${formatCurrency(total)} spent this month` : "No expenses recorded this month"}
         </p>
       </CardHeader>
-      <CardContent className="relative">
+      <CardContent className="relative px-6 pb-3">
         {!hasData && (
           <div className="absolute inset-x-6 top-10 z-10 rounded-2xl border border-dashed border-[var(--separator)] bg-[rgba(120,120,128,0.06)] px-4 py-5 text-center">
             <p className="text-[14px] font-semibold text-[var(--text-primary)]">Your spending trend will appear here</p>
             <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Add an expense to start seeing daily movement.</p>
           </div>
         )}
-        <ResponsiveContainer width="100%" height={320}>
+        <ResponsiveContainer width="100%" height={260}>
           <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">

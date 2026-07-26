@@ -5,8 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Menu,
   X,
+  Bell,
   LogOut,
   FolderTree,
   Settings,
@@ -97,7 +97,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
   const userInitial = (userName || "U").charAt(0).toUpperCase();
 
   return (
-    <div className="flex h-screen bg-[var(--bg-primary)]">
+    <div className="dashboard-app-shell flex h-screen bg-[var(--bg-primary)]">
       <Sidebar
         currentPath={pathname}
         userName={userName}
@@ -250,7 +250,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
         )}
       >
         <header
-          className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 md:hidden"
+          className="mobile-app-header sticky top-0 z-30 flex items-center justify-between px-5 py-4 md:hidden"
           style={{
             background: "var(--glass-bg)",
             backdropFilter: "blur(24px) saturate(200%)",
@@ -261,16 +261,18 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
           <button
             aria-label="Open menu"
             onClick={() => setMobileMenuOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-[rgba(120,120,128,0.10)] text-[var(--text-primary)] transition-all active:scale-90"
+            className="flex items-center gap-3 text-left"
           >
-            <Menu className="h-5 w-5" />
+            <Image src="/spendwise-dark.png" alt="" width={42} height={42} className="rounded-full border border-white/30 dark:hidden" />
+            <Image src="/spendwise-light.png" alt="" width={42} height={42} className="hidden rounded-full border border-white/10 dark:block" />
+            <span className="max-w-[58vw] truncate text-[26px] font-bold tracking-[-1px] text-[var(--text-primary)]">
+              {pathname === "/dashboard" ? "SpendWise" : pageTitle}
+            </span>
           </button>
 
-          <span className="max-w-[58vw] truncate text-[17px] font-bold tracking-[-0.4px] text-[var(--text-primary)]">
-            {pageTitle}
-          </span>
-
-          <ThemeToggle />
+          <button aria-label="Notifications" className="mobile-notification-button">
+            <Bell className="h-5 w-5" />
+          </button>
         </header>
 
         <PWAInstallBanner />
@@ -281,9 +283,9 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
           </PullToRefresh>
         </div>
 
-        <nav className="bottom-nav md:hidden" aria-label="Primary navigation">
+        <nav className="bottom-nav mobile-dock md:hidden" aria-label="Primary navigation">
           <div className="bottom-nav-inner">
-            {mainNav.map((item) => {
+            {mainNav.slice(0, 2).map((item) => {
               const active = isActive(item.href);
               const Icon = item.icon;
               return (
@@ -305,6 +307,25 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
                 </Link>
               );
             })}
+            <Link
+              href="/dashboard/expenses"
+              aria-label="Add transaction"
+              className="mobile-add-button"
+              onClick={() => haptic("medium")}
+            >
+              <span>+</span>
+              <small>Add</small>
+            </Link>
+            <Link
+              href="/dashboard/budgets"
+              aria-current={pathname.startsWith("/dashboard/budgets") ? "page" : undefined}
+              className={cn("bottom-nav-item", pathname.startsWith("/dashboard/budgets") && "active", "active:scale-95 transition-transform duration-200")}
+              onClick={() => haptic("light")}
+            >
+              <div className="nav-icon-wrap"><Target className={cn("h-[22px] w-[22px]", pathname.startsWith("/dashboard/budgets") ? "stroke-[2.5px]" : "stroke-[1.8px]")} /></div>
+              <span className="nav-label">Budgets</span>
+              <span className="nav-pill" />
+            </Link>
             <button
               aria-label="Open more navigation"
               aria-expanded={moreOpen}
@@ -317,7 +338,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
               <div className="nav-icon-wrap">
                 <MoreHorizontal className={cn("h-[22px] w-[22px]", (isMoreActive || moreOpen) ? "stroke-[2.5px]" : "stroke-[1.8px]")} />
               </div>
-              <span className="nav-label">More</span>
+              <span className="nav-label">Profile</span>
               <span className="nav-pill" />
             </button>
           </div>

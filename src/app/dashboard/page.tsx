@@ -3,10 +3,14 @@ import { redirect } from "next/navigation";
 import { format, startOfDay, endOfMonth, subMonths } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
+import { MobileDashboard } from "@/components/dashboard/mobile-dashboard";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import ChartsClient from "@/components/dashboard/charts-client";
 import { LoanDashboardWidget } from "@/components/loans/loan-dashboard-widget";
+import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
+import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 import type { UserLoan } from "@/types/loan.types";
+import { ArrowUpRight, Plus } from "lucide-react";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -153,36 +157,61 @@ export default async function DashboardPage() {
       date: income.date,
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const firstName = user.user_metadata?.name?.split(" ")[0] || user.email?.split("@")[0] || "there";
 
   return (
     <div className="page-enter space-y-8">
-      <SummaryCards
-        totalSpentToday={totalSpentToday}
-        totalSpentMonth={totalSpentMonth}
-        totalIncome={totalIncomeMonth}
+      <MobileDashboard
         netBalance={netBalance}
+        totalIncome={totalIncomeMonth}
+        totalSpent={totalSpentMonth}
         monthOverMonthChange={monthOverMonthChange}
         categoryData={categoryData}
+        transactions={allTransactions}
       />
 
-      <section>
-        <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-[0.4em] text-[var(--text-tertiary)]">
-          Analytics
-        </h2>
-        <ChartsClient
-          dailyData={dailyData}
-          categoryData={categoryData}
-          sidebar={
-            activeLoans.length > 0 ? (
-              <LoanDashboardWidget loans={activeLoans} monthlyIncome={totalIncomeMonth} />
-            ) : undefined
-          }
-        />
-      </section>
+      <div className="desktop-dashboard hidden space-y-8 md:block">
+        <header className="desktop-dashboard-header">
+          <div>
+            <p className="desktop-dashboard-date">{format(today, "EEEE, MMMM d")}</p>
+            <h1>Good to see you, {firstName}</h1>
+            <p>Here&apos;s your financial pulse for this month.</p>
+          </div>
+          <div className="desktop-dashboard-actions">
+            <AddIncomeDialog trigger={<button type="button" className="desktop-secondary-action"><ArrowUpRight className="h-4 w-4" />Add income</button>} />
+            <AddExpenseDialog trigger={<button type="button" className="desktop-primary-action"><Plus className="h-4 w-4" />Add expense</button>} />
+          </div>
+        </header>
 
-      <section>
-        <RecentTransactions transactions={allTransactions} />
-      </section>
+        <SummaryCards
+          totalSpentToday={totalSpentToday}
+          totalSpentMonth={totalSpentMonth}
+          totalIncome={totalIncomeMonth}
+          netBalance={netBalance}
+          monthOverMonthChange={monthOverMonthChange}
+          categoryData={categoryData}
+        />
+
+        <section className="desktop-analytics-section">
+          <div className="desktop-section-title">
+            <div><p>Analytics</p><h2>Spending insights</h2></div>
+            <span>This month</span>
+          </div>
+          <ChartsClient
+            dailyData={dailyData}
+            categoryData={categoryData}
+            sidebar={
+              activeLoans.length > 0 ? (
+                <LoanDashboardWidget loans={activeLoans} monthlyIncome={totalIncomeMonth} />
+              ) : undefined
+            }
+          />
+        </section>
+
+        <section className="desktop-transactions-section">
+          <RecentTransactions transactions={allTransactions} />
+        </section>
+      </div>
     </div>
   );
 }
