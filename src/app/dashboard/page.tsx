@@ -120,8 +120,6 @@ export default async function DashboardPage() {
   let monthOverMonthChange = 0;
   if (totalSpentPrevMonth > 0) {
     monthOverMonthChange = ((totalSpentPrevMonth - totalSpentMonth) / totalSpentPrevMonth) * 100;
-  } else if (totalSpentMonth > 0) {
-    monthOverMonthChange = -100;
   }
 
   const dailyData = Array.from(

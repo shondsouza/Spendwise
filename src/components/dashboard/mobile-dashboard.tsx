@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { ArrowDown, ArrowUp, ChevronRight, ReceiptText, TrendingUp } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, Plus, ReceiptText, TrendingDown, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatDateShort } from "@/lib/utils/date";
+import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
+import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 
 type Transaction = {
   id: string;
@@ -33,19 +35,49 @@ export function MobileDashboard({
 }: MobileDashboardProps) {
   const topCategories = [...categoryData].sort((a, b) => b.value - a.value).slice(0, 3);
   const categoryTotal = topCategories.reduce((total, category) => total + category.value, 0);
-  const improvement = monthOverMonthChange >= 0;
+  const improvement = monthOverMonthChange > 0;
+  const hasComparison = monthOverMonthChange !== 0;
 
   return (
     <div className="mobile-dashboard md:hidden">
+      <header className="mobile-dashboard-header">
+        <div>
+          <p className="mobile-dashboard-kicker">SpendWise</p>
+          <h1>Your money, at a glance</h1>
+        </div>
+        <span className="mobile-dashboard-status"><span /> This month</span>
+      </header>
+
       <section className="mobile-balance-card">
         <span className="mobile-card-menu" aria-hidden="true">•••</span>
         <p className="mobile-overline">Total balance</p>
         <p className="mobile-balance-amount">{formatCurrency(netBalance)}</p>
         <div className={`mobile-trend-pill ${improvement ? "is-positive" : "is-negative"}`}>
-          <TrendingUp className="h-4 w-4" />
-          <span>{Math.abs(monthOverMonthChange).toFixed(1)}% {improvement ? "better" : "higher"} this month</span>
+          {improvement ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
+          <span>
+            {hasComparison
+              ? `${Math.abs(monthOverMonthChange).toFixed(1)}% ${improvement ? "less" : "more"} than last month`
+              : "Start tracking this month"}
+          </span>
         </div>
       </section>
+
+      <div className="mobile-quick-actions" aria-label="Quick actions">
+        <AddExpenseDialog
+          trigger={
+            <button type="button" className="mobile-quick-action primary">
+              <Plus className="h-4 w-4" /> Add expense
+            </button>
+          }
+        />
+        <AddIncomeDialog
+          trigger={
+            <button type="button" className="mobile-quick-action secondary">
+              <ArrowDown className="h-4 w-4" /> Add income
+            </button>
+          }
+        />
+      </div>
 
       <section className="mobile-stat-grid" aria-label="Monthly totals">
         <div className="mobile-stat-card income">

@@ -299,6 +299,11 @@ caption, .caption {
 }
 
 .mobile-dashboard { display: grid; gap: 16px; }
+.mobile-dashboard-header { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding: 5px 2px 2px; }
+.mobile-dashboard-kicker { margin: 0 0 5px; color: var(--apple-blue); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.mobile-dashboard-header h1 { margin: 0; font-size: clamp(24px, 7vw, 30px); font-weight: 750; letter-spacing: -1.05px; line-height: 1.08; }
+.mobile-dashboard-status { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; margin-bottom: 2px; color: var(--text-secondary); font-size: 11px; font-weight: 700; white-space: nowrap; }
+.mobile-dashboard-status span { width: 7px; height: 7px; border-radius: 999px; background: var(--apple-green); box-shadow: 0 0 0 4px rgba(52,199,89,.12); }
 
 .mobile-balance-card,
 .mobile-glass-card,
@@ -323,6 +328,12 @@ caption, .caption {
 .mobile-trend-pill { position: relative; display: inline-flex; align-items: center; gap: 7px; padding: 9px 17px; border: 1px solid var(--glass-border); border-radius: 999px; background: rgba(255,255,255,.35); font-size: 13px; font-weight: 600; }
 .mobile-trend-pill.is-positive { color: #15a77b; }.mobile-trend-pill.is-negative { color: var(--apple-red); }
 .mobile-stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.mobile-quick-actions { display: grid; grid-template-columns: 1.15fr 1fr; gap: 10px; }
+.mobile-quick-action { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 7px; border-radius: 16px; padding: 0 12px; font-size: 13px; font-weight: 750; transition: transform .2s var(--ease-out-expo), filter .2s ease, background .2s ease; }
+.mobile-quick-action:active { transform: scale(.97); }
+.mobile-quick-action.primary { border: 1px solid rgba(255,255,255,.25); background: linear-gradient(135deg, #007aff, #5856d6); box-shadow: 0 10px 20px rgba(0,122,255,.22), inset 0 1px 0 rgba(255,255,255,.28); color: #fff; }
+.mobile-quick-action.secondary { border: 1px solid var(--separator); background: var(--glass-bg); box-shadow: inset 0 1px 0 rgba(255,255,255,.55); color: var(--text-primary); }
+.mobile-quick-action:hover { filter: brightness(1.03); }
 .mobile-stat-card { min-height: 182px; padding: 27px 24px 22px; border-radius: 30px; }
 .mobile-stat-card.income { background: linear-gradient(135deg, rgba(255,255,255,.76), rgba(203,229,255,.78)); }.mobile-stat-card.expense { background: linear-gradient(135deg, rgba(255,255,255,.76), rgba(255,215,226,.8)); }
 .mobile-stat-icon { position: relative; display: grid; width: 42px; height: 42px; place-items: center; border-radius: 999px; }.income .mobile-stat-icon { color: #4189d6; background: rgba(143,198,255,.34); }.expense .mobile-stat-icon { color: #e74c79; background: rgba(255,160,190,.35); }
@@ -332,7 +343,7 @@ caption, .caption {
 .mobile-transaction { position: relative; display: flex; align-items: center; gap: 14px; min-height: 96px; }.mobile-transaction-icon { display: grid; width: 52px; height: 52px; flex: 0 0 auto; place-items: center; border-radius: 999px; }.mobile-transaction-icon.income { color: #438cdc; background: rgba(142,195,255,.25); }.mobile-transaction-icon.expense { color: var(--text-secondary); background: rgba(255,255,255,.55); }.mobile-transaction p { margin: 0; overflow: hidden; color: var(--text-primary); font-size: 16px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }.mobile-transaction span { color: var(--text-secondary); font-size: 12px; }.mobile-transaction strong { flex: 0 0 auto; font-size: 16px; letter-spacing: -.4px; }.mobile-empty-copy { position: relative; margin: 22px 0 0; color: var(--text-secondary); font-size: 14px; line-height: 1.55; }
 .mobile-add-button { display: flex; width: 58px; min-width: 58px; flex-direction: column; align-items: center; color: var(--text-secondary); font-size: 11px; font-weight: 600; text-decoration: none; }.mobile-add-button > span { display: grid; width: 58px; height: 58px; margin-top: -24px; place-items: center; border: 1px solid rgba(255,255,255,.65); border-radius: 999px; background: linear-gradient(135deg, #0070eb, #4c4aca); box-shadow: 0 12px 26px rgba(0,88,188,.3); color: white; font-size: 42px; font-weight: 300; line-height: 1; }.mobile-add-button small { margin-top: 5px; font-size: 11px; }
 
-.dark .mobile-balance-card, .dark .mobile-glass-card, .dark .mobile-stat-card { border-color: rgba(255,255,255,.11); background: linear-gradient(135deg, rgba(17,22,29,.89), rgba(4,7,11,.9)); box-shadow: 0 18px 38px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.09); }.dark .mobile-balance-card::before, .dark .mobile-glass-card::before, .dark .mobile-stat-card::before { background: linear-gradient(135deg, rgba(255,255,255,.08), transparent 46%); }.dark .mobile-stat-card.income { background: linear-gradient(135deg, rgba(6,25,43,.91), rgba(2,10,17,.94)); }.dark .mobile-stat-card.expense { background: linear-gradient(135deg, rgba(43,9,21,.88), rgba(13,5,8,.94)); }.dark .mobile-trend-pill { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.12); }.dark .mobile-transaction-icon.expense { background: rgba(255,255,255,.06); }.dark .mobile-notification-button { box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
+.dark .mobile-balance-card, .dark .mobile-glass-card, .dark .mobile-stat-card { border-color: rgba(255,255,255,.11); background: linear-gradient(135deg, rgba(17,22,29,.89), rgba(4,7,11,.9)); box-shadow: 0 18px 38px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.09); }.dark .mobile-balance-card::before, .dark .mobile-glass-card::before, .dark .mobile-stat-card::before { background: linear-gradient(135deg, rgba(255,255,255,.08), transparent 46%); }.dark .mobile-stat-card.income { background: linear-gradient(135deg, rgba(6,25,43,.91), rgba(2,10,17,.94)); }.dark .mobile-stat-card.expense { background: linear-gradient(135deg, rgba(43,9,21,.88), rgba(13,5,8,.94)); }.dark .mobile-trend-pill { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.12); }.dark .mobile-transaction-icon.expense { background: rgba(255,255,255,.06); }.dark .mobile-notification-button { box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }.dark .mobile-quick-action.secondary { border-color: rgba(255,255,255,.12); background: rgba(255,255,255,.07); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
 
 .hero-stat-pill strong {
   font-weight: 700;

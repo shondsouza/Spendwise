@@ -26,8 +26,9 @@ const COLORS = [
 ];
 
 export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
-  const hasData = data.length > 0 && data.some((item) => item.value > 0);
-  const chartData = hasData ? data : [{ name: "No data", value: 1 }];
+  const sortedData = [...data].sort((a, b) => b.value - a.value);
+  const hasData = sortedData.length > 0 && sortedData.some((item) => item.value > 0);
+  const chartData = hasData ? sortedData : [{ name: "No data", value: 1 }];
   const tooltipStyle = {
     background: "var(--glass-bg)",
     backdropFilter: "blur(24px) saturate(180%)",
@@ -41,14 +42,18 @@ export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
     padding: "10px 14px",
   };
 
-  const total = data.reduce((sum, item) => sum + item.value, 0);
+  const total = sortedData.reduce((sum, item) => sum + item.value, 0);
+  const topCategory = sortedData[0];
+  const topCategoryShare = total > 0 && topCategory ? Math.round((topCategory.value / total) * 100) : 0;
 
   return (
     <Card className="col-span-1 flex flex-col">
       <CardHeader className="pb-0">
         <CardTitle className="text-[17px] font-bold tracking-[-0.3px]">Spending by Category</CardTitle>
         <p className="text-[13px] text-[var(--text-secondary)]">
-          {hasData ? "Where your money went this month" : "Categories will appear after your first expense"}
+          {hasData
+            ? `${topCategory.name} is your largest category · ${topCategoryShare}% of spend`
+            : "Categories will appear after your first expense"}
         </p>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col items-center justify-center pt-6">
@@ -91,7 +96,7 @@ export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
         
         {/* Custom Legend */}
         <div className="mt-4 w-full grid grid-cols-2 gap-x-2 gap-y-3 px-2">
-          {hasData ? data.slice(0, 6).map((entry, index) => (
+          {hasData ? sortedData.slice(0, 6).map((entry, index) => (
             <div key={`legend-${index}`} className="flex items-center gap-2">
               <div 
                 className="w-3 h-3 rounded-full flex-shrink-0" 
@@ -106,11 +111,11 @@ export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
               Add a transaction to unlock category insights
             </div>
           )}
-          {hasData && data.length > 6 && (
+          {hasData && sortedData.length > 6 && (
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full flex-shrink-0 bg-[var(--text-tertiary)]" />
               <span className="truncate text-[13px] text-[var(--text-secondary)] font-medium">
-                +{data.length - 6} more
+                +{sortedData.length - 6} more
               </span>
             </div>
           )}
