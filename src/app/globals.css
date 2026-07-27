@@ -114,6 +114,89 @@ body {
   overscroll-behavior: none;
 }
 
+/* Shown only when the installed PWA opens on a mobile device. */
+.pwa-launch-splash {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+  background: #ffffff;
+  color: #1d1d1f;
+  opacity: 1;
+  transition: opacity 280ms ease-out, visibility 280ms ease-out;
+}
+
+.pwa-launch-splash--leaving {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pwa-launch-splash__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.pwa-launch-splash__logo-wrap {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 25px;
+  animation: pwa-splash-logo 1.35s ease-in-out infinite;
+}
+
+.pwa-launch-splash__logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 25px;
+  object-fit: cover;
+  box-shadow: 0 12px 28px rgba(29, 29, 31, 0.14);
+}
+
+.pwa-launch-splash__wordmark {
+  color: #1d1d1f;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -0.9px;
+  animation: pwa-splash-wordmark 900ms var(--ease-out-expo) both;
+}
+
+@keyframes pwa-splash-logo {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+
+@keyframes pwa-splash-wordmark {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pwa-launch-splash,
+  .pwa-launch-splash__logo-wrap,
+  .pwa-launch-splash__wordmark {
+    animation: none;
+    transition: none;
+  }
+}
+
 h1,
 h2,
 h3,
