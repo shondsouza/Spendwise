@@ -7,7 +7,6 @@ import Link from "next/link";
 import {
   X,
   Bell,
-  Menu,
   LogOut,
   FolderTree,
   Settings,
@@ -300,18 +299,9 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
             </span>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <button
-              aria-label="Open menu"
-              onClick={() => setMobileMenuOpen(true)}
-              className="mobile-notification-button"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <button aria-label="Notifications" className="mobile-notification-button">
-              <Bell className="h-5 w-5" />
-            </button>
-          </div>
+          <button aria-label="Notifications" className="mobile-notification-button">
+            <Bell className="h-5 w-5" />
+          </button>
         </header>
 
         <PWAInstallBanner />
