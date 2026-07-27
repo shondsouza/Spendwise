@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { ArrowDown, ArrowUp, ChevronRight, Plus, ReceiptText, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, ReceiptText, TrendingDown, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatDateShort } from "@/lib/utils/date";
-import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
-import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 
 type Transaction = {
   id: string;
@@ -41,11 +39,7 @@ export function MobileDashboard({
   return (
     <div className="mobile-dashboard md:hidden">
       <header className="mobile-dashboard-header">
-        <div>
-          <p className="mobile-dashboard-kicker">SpendWise</p>
-          <h1>Your money, at a glance</h1>
-        </div>
-        <span className="mobile-dashboard-status"><span /> This month</span>
+        <p className="mobile-dashboard-kicker">SpendWise</p>
       </header>
 
       <section className="mobile-balance-card">
@@ -61,23 +55,6 @@ export function MobileDashboard({
           </span>
         </div>
       </section>
-
-      <div className="mobile-quick-actions" aria-label="Quick actions">
-        <AddExpenseDialog
-          trigger={
-            <button type="button" className="mobile-quick-action primary">
-              <Plus className="h-4 w-4" /> Add expense
-            </button>
-          }
-        />
-        <AddIncomeDialog
-          trigger={
-            <button type="button" className="mobile-quick-action secondary">
-              <ArrowDown className="h-4 w-4" /> Add income
-            </button>
-          }
-        />
-      </div>
 
       <section className="mobile-stat-grid" aria-label="Monthly totals">
         <div className="mobile-stat-card income">

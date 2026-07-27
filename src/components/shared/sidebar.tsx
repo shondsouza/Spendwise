@@ -77,18 +77,24 @@ export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, 
         )}
         style={{ borderBottom: "1px solid var(--separator)" }}
       >
-        <Image
-          src="/logo/logo.png"
-          alt="SpendWise"
-          width={34}
-          height={34}
-          className="rounded-xl flex-shrink-0"
-        />
-        {!isCollapsed && (
-          <span className="text-[16px] font-bold tracking-[-0.4px] text-[var(--text-primary)] whitespace-nowrap overflow-hidden">
-            SpendWise
-          </span>
-        )}
+        <Link
+          href="/dashboard"
+          aria-label="Go to dashboard"
+          className={cn("flex items-center", isCollapsed ? "justify-center" : "gap-3")}
+        >
+          <Image
+            src="/logo/logo.png"
+            alt="SpendWise"
+            width={34}
+            height={34}
+            className="rounded-xl flex-shrink-0"
+          />
+          {!isCollapsed && (
+            <span className="text-[16px] font-bold tracking-[-0.4px] text-[var(--text-primary)] whitespace-nowrap overflow-hidden">
+              SpendWise
+            </span>
+          )}
+        </Link>
 
         {/* Collapse Toggle */}
         <button

@@ -7,6 +7,7 @@ import Link from "next/link";
 import {
   X,
   Bell,
+  Menu,
   LogOut,
   FolderTree,
   Settings,
@@ -124,11 +125,27 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
               animation: "slideInLeft 0.3s var(--ease-out-expo) both",
             }}
           >
-            <div className="flex items-center justify-between px-5 py-5" style={{ borderBottom: "1px solid var(--separator)" }}>
-              <div className="flex items-center gap-2.5">
-                <Image src="/logo/logo.png" alt="SpendWise" width={30} height={30} className="rounded-xl" />
-                <span className="text-[17px] font-bold tracking-[-0.4px] text-[var(--text-primary)]">SpendWise</span>
-              </div>
+            <div
+              className="flex items-center justify-between px-5 py-5"
+              style={{ borderBottom: "1px solid var(--separator)" }}
+            >
+              <Link
+                href="/dashboard"
+                aria-label="Go to dashboard"
+                className="flex items-center gap-2.5"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Image
+                  src="/logo/logo.png"
+                  alt="SpendWise"
+                  width={30}
+                  height={30}
+                  className="rounded-xl"
+                />
+                <span className="text-[17px] font-bold tracking-[-0.4px] text-[var(--text-primary)]">
+                  SpendWise
+                </span>
+              </Link>
               <button
                 aria-label="Close menu"
                 onClick={() => setMobileMenuOpen(false)}
@@ -140,12 +157,19 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
 
             <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--separator)" }}>
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-[16px] font-bold text-white" style={{ background: "var(--gradient-blue)" }}>
+                <div
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-[16px] font-bold text-white"
+                  style={{ background: "var(--gradient-blue)" }}
+                >
                   {userInitial}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.5px] text-[var(--text-tertiary)]">Signed in</p>
-                  <p className="mt-0.5 max-w-[180px] truncate text-[15px] font-semibold text-[var(--text-primary)]">{userName || "User"}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.5px] text-[var(--text-tertiary)]">
+                    Signed in
+                  </p>
+                  <p className="mt-0.5 max-w-[180px] truncate text-[15px] font-semibold text-[var(--text-primary)]">
+                    {userName || "User"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -170,7 +194,9 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
                       <Icon className="h-4.5 w-4.5" strokeWidth={active ? 2.4 : 1.9} />
                     </span>
                     <span className="tracking-[-0.2px]">{item.label}</span>
-                    {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--apple-blue)]" />}
+                    {active && (
+                      <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--apple-blue)]" />
+                    )}
                   </Link>
                 );
               })}
@@ -178,7 +204,9 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
 
             <div className="space-y-3 p-4" style={{ borderTop: "1px solid var(--separator)" }}>
               <div className="flex items-center justify-between">
-                <span className="text-[13px] font-medium text-[var(--text-secondary)]">Appearance</span>
+                <span className="text-[13px] font-medium text-[var(--text-secondary)]">
+                  Appearance
+                </span>
                 <ThemeToggle />
               </div>
               <button
@@ -214,7 +242,9 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
                 boxShadow: "0 8px 40px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.1)",
               }}
             >
-              <p className="px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.6px] text-[var(--text-tertiary)]">More</p>
+              <p className="px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.6px] text-[var(--text-tertiary)]">
+                More
+              </p>
               <div className="grid grid-cols-3 gap-1">
                 {moreNav.map((item) => {
                   const active = isActive(item.href);
@@ -232,7 +262,9 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
                       )}
                     >
                       <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 1.9} />
-                      <span className="text-[11px] font-medium tracking-[-0.1px]">{item.label}</span>
+                      <span className="text-[11px] font-medium tracking-[-0.1px]">
+                        {item.label}
+                      </span>
                     </Link>
                   );
                 })}
@@ -257,27 +289,38 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
             borderBottom: "1px solid var(--separator)",
           }}
         >
-          <button
-            aria-label="Open menu"
-            onClick={() => setMobileMenuOpen(true)}
+          <Link
+            href="/dashboard"
+            aria-label="Go to dashboard"
             className="flex items-center gap-3 text-left"
           >
-            <Image src="/logo/mobile-top-header.png" alt="" width={52} height={52} />
+            <Image src="/logo/mobile-top-header.png" alt="" width={50} height={50} />
             <span className="max-w-[58vw] truncate text-[26px] font-bold tracking-[-1px] text-[var(--text-primary)]">
               {pathname === "/dashboard" ? "SpendWise" : pageTitle}
             </span>
-          </button>
+          </Link>
 
-          <button aria-label="Notifications" className="mobile-notification-button">
-            <Bell className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              aria-label="Open menu"
+              onClick={() => setMobileMenuOpen(true)}
+              className="mobile-notification-button"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <button aria-label="Notifications" className="mobile-notification-button">
+              <Bell className="h-5 w-5" />
+            </button>
+          </div>
         </header>
 
         <PWAInstallBanner />
 
         <div className="flex-1 overflow-auto mobile-pb md:pb-0">
           <PullToRefresh>
-            <div className="mobile-scroll-content mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">{children}</div>
+            <div className="mobile-scroll-content mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
+              {children}
+            </div>
           </PullToRefresh>
         </div>
 
@@ -291,14 +334,23 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={cn("bottom-nav-item", active && "active", "active:scale-95 transition-transform duration-200")}
+                  className={cn(
+                    "bottom-nav-item",
+                    active && "active",
+                    "active:scale-95 transition-transform duration-200"
+                  )}
                   onClick={() => {
                     haptic("light");
                     if (moreOpen) setMoreOpen(false);
                   }}
                 >
                   <div className="nav-icon-wrap">
-                    <Icon className={cn("h-[22px] w-[22px]", active ? "stroke-[2.5px]" : "stroke-[1.8px]")} />
+                    <Icon
+                      className={cn(
+                        "h-[22px] w-[22px]",
+                        active ? "stroke-[2.5px]" : "stroke-[1.8px]"
+                      )}
+                    />
                   </div>
                   <span className="nav-label">{item.label}</span>
                   <span className="nav-pill" />
@@ -317,10 +369,21 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
             <Link
               href="/dashboard/income"
               aria-current={pathname.startsWith("/dashboard/income") ? "page" : undefined}
-              className={cn("bottom-nav-item", pathname.startsWith("/dashboard/income") && "active", "active:scale-95 transition-transform duration-200")}
+              className={cn(
+                "bottom-nav-item",
+                pathname.startsWith("/dashboard/income") && "active",
+                "active:scale-95 transition-transform duration-200"
+              )}
               onClick={() => haptic("light")}
             >
-              <div className="nav-icon-wrap"><Wallet className={cn("h-[22px] w-[22px]", pathname.startsWith("/dashboard/income") ? "stroke-[2.5px]" : "stroke-[1.8px]")} /></div>
+              <div className="nav-icon-wrap">
+                <Wallet
+                  className={cn(
+                    "h-[22px] w-[22px]",
+                    pathname.startsWith("/dashboard/income") ? "stroke-[2.5px]" : "stroke-[1.8px]"
+                  )}
+                />
+              </div>
               <span className="nav-label">Income</span>
               <span className="nav-pill" />
             </Link>
@@ -331,10 +394,19 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
                 haptic("light");
                 setMoreOpen(!moreOpen);
               }}
-              className={cn("bottom-nav-item", (isMoreActive || moreOpen) && "active", "active:scale-95 transition-transform duration-200")}
+              className={cn(
+                "bottom-nav-item",
+                (isMoreActive || moreOpen) && "active",
+                "active:scale-95 transition-transform duration-200"
+              )}
             >
               <div className="nav-icon-wrap">
-                <MoreHorizontal className={cn("h-[22px] w-[22px]", (isMoreActive || moreOpen) ? "stroke-[2.5px]" : "stroke-[1.8px]")} />
+                <MoreHorizontal
+                  className={cn(
+                    "h-[22px] w-[22px]",
+                    isMoreActive || moreOpen ? "stroke-[2.5px]" : "stroke-[1.8px]"
+                  )}
+                />
               </div>
               <span className="nav-label">Profile</span>
               <span className="nav-pill" />
