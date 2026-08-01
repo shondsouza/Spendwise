@@ -13,7 +13,8 @@ export function PwaLaunchSplash() {
   useEffect(() => {
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      ("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone === true);
+      ("standalone" in navigator &&
+        (navigator as Navigator & { standalone?: boolean }).standalone === true);
     const isMobile = window.matchMedia("(max-width: 767px) and (pointer: coarse)").matches;
 
     if (!isStandalone || !isMobile) {
@@ -62,7 +63,7 @@ export function PwaLaunchSplash() {
         <div className="pwa-launch-splash__logo-wrap">
           <Image
             className="pwa-launch-splash__logo"
-            src="/logo/app-icon.png"
+            src="/logo/desktop.png"
             alt=""
             width={96}
             height={96}
