@@ -37,11 +37,15 @@ const mainNav = [
   { href: "/dashboard/categories", label: "Categories", icon: FolderOpen },
 ];
 
-const bottomNav = [
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
-];
+const bottomNav = [{ href: "/dashboard/settings", label: "Settings", icon: Settings }];
 
-export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, onToggleCollapse }: SidebarProps) {
+export function Sidebar({
+  currentPath,
+  userName,
+  onLogout,
+  isCollapsed = false,
+  onToggleCollapse,
+}: SidebarProps) {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -67,6 +71,9 @@ export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, 
         background: isDark ? "rgba(18, 18, 20, 0.88)" : "rgba(248, 248, 250, 0.88)",
         backdropFilter: "blur(24px) saturate(180%)",
         WebkitBackdropFilter: "blur(24px) saturate(180%)",
+        visibility: mounted ? "visible" : "hidden",
+        opacity: mounted ? 1 : 0,
+        pointerEvents: mounted ? "auto" : "none",
       }}
     >
       {/* Logo */}
@@ -138,9 +145,7 @@ export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, 
                   )}
                   strokeWidth={active ? 2.5 : 1.8}
                 />
-                {!isCollapsed && (
-                  <span className="truncate">{item.label}</span>
-                )}
+                {!isCollapsed && <span className="truncate">{item.label}</span>}
                 {active && !isCollapsed && (
                   <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--apple-blue)] flex-shrink-0" />
                 )}
@@ -178,9 +183,7 @@ export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, 
                   )}
                   strokeWidth={active ? 2.5 : 1.8}
                 />
-                {!isCollapsed && (
-                  <span className="truncate">{item.label}</span>
-                )}
+                {!isCollapsed && <span className="truncate">{item.label}</span>}
               </Link>
             );
           })}
@@ -202,7 +205,9 @@ export function Sidebar({ currentPath, userName, onLogout, isCollapsed = false, 
               {userInitial}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.5px] text-[var(--text-tertiary)]">Account</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.5px] text-[var(--text-tertiary)]">
+                Account
+              </p>
               <p className="truncate text-[13px] font-semibold text-[var(--text-primary)] mt-0.5">
                 {userName || "User"}
               </p>
