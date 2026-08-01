@@ -64,7 +64,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-tap-highlight" content="no" />
-        <link rel="manifest" href="/manifest.json" />
+        <meta name="pwa-version" content="2026-08-01-desktop-icon" />
+        <link rel="manifest" href="/manifest.json?v=2026-08-01-desktop-icon" />
         <link rel="apple-touch-icon" sizes="563x563" href="/logo/home-screen.png" />
         <link rel="mask-icon" href="/logo/desktop.png" color="#000000" />
         <link rel="shortcut icon" href="/logo/desktop.png" type="image/png" />
