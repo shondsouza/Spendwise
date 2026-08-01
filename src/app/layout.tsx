@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/logo/app-icon.png",
+        url: "/logo/desktop.png",
         type: "image/png",
         sizes: "1600x1600",
       },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     apple: [{ url: "/logo/home-screen.png", sizes: "563x563", type: "image/png" }],
     shortcut: [
       {
-        url: "/logo/app-icon.png",
+        url: "/logo/desktop.png",
         sizes: "1600x1600",
         type: "image/png",
       },
@@ -66,8 +66,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-tap-highlight" content="no" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" sizes="563x563" href="/logo/home-screen.png" />
-        <link rel="mask-icon" href="/logo/app-icon.png" color="#000000" />
-        <link rel="shortcut icon" href="/logo/app-icon.png" type="image/png" />
+        <link rel="mask-icon" href="/logo/desktop.png" color="#000000" />
+        <link rel="shortcut icon" href="/logo/desktop.png" type="image/png" />
       </head>
       <body className="font-sans antialiased">
         <Providers>{children}</Providers>
