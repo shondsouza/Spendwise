@@ -14,20 +14,20 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/logo/desktop.png",
+      "src": "/logo/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/logo/desktop.png",
+      "src": "/logo/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/logo/desktop.png",
-      "sizes": "1600x1600",
+      "src": "/logo/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }

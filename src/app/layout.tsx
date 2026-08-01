@@ -12,16 +12,16 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/logo/desktop.png",
+        url: "/logo/icon-512.png",
         type: "image/png",
-        sizes: "1600x1600",
+        sizes: "512x512",
       },
     ],
     apple: [{ url: "/logo/home-screen.png", sizes: "563x563", type: "image/png" }],
     shortcut: [
       {
-        url: "/logo/desktop.png",
-        sizes: "1600x1600",
+        url: "/logo/icon-512.png",
+        sizes: "512x512",
         type: "image/png",
       },
     ],
@@ -64,11 +64,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="pwa-version" content="2026-08-01-desktop-icon" />
-        <link rel="manifest" href="/manifest.json?v=2026-08-01-desktop-icon" />
+        <meta name="pwa-version" content="2026-08-01-icon-v2" />
+        <link rel="manifest" href="/manifest.json?v=2026-08-01-icon-v2" />
         <link rel="apple-touch-icon" sizes="563x563" href="/logo/home-screen.png" />
-        <link rel="mask-icon" href="/logo/desktop.png" color="#000000" />
-        <link rel="shortcut icon" href="/logo/desktop.png" type="image/png" />
+        <link rel="mask-icon" href="/logo/icon-512.png" color="#000000" />
+        <link rel="shortcut icon" href="/logo/icon-512.png" type="image/png" />
       </head>
       <body className="font-sans antialiased">
         <Providers>{children}</Providers>
