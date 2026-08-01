@@ -17,7 +17,11 @@ export function PwaLaunchSplash() {
         (navigator as Navigator & { standalone?: boolean }).standalone === true);
     const isMobile = window.matchMedia("(max-width: 767px) and (pointer: coarse)").matches;
 
-    if (!isStandalone || !isMobile) {
+    // Keep the splash for installed mobile PWAs and show it for desktop/laptop
+    // browser sessions as well. Mobile browser tabs should load normally.
+    const shouldShowSplash = isStandalone || !isMobile;
+
+    if (!shouldShowSplash) {
       return;
     }
 
@@ -63,7 +67,7 @@ export function PwaLaunchSplash() {
         <div className="pwa-launch-splash__logo-wrap">
           <Image
             className="pwa-launch-splash__logo"
-            src="/logo/desktop.png"
+            src="/logo/icon-512.png"
             alt=""
             width={96}
             height={96}

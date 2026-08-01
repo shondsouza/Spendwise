@@ -25,7 +25,7 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
         />
       </div>
       {action && (
-        <div className="flex items-center gap-2.5 flex-shrink-0">
+        <div className="page-header-action flex flex-shrink-0 items-center gap-2.5">
           {action}
         </div>
       )}

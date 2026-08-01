@@ -97,7 +97,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
   const userInitial = (userName || "U").charAt(0).toUpperCase();
 
   return (
-    <div className="dashboard-app-shell flex h-screen bg-[var(--bg-primary)]">
+    <div className="dashboard-app-shell flex h-screen min-h-dvh bg-[var(--bg-primary)]">
       <Sidebar
         currentPath={pathname}
         userName={userName}
@@ -275,7 +275,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
 
       <main
         className={cn(
-          "flex flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out",
+          "flex min-w-0 flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out",
           isCollapsed ? "md:ml-[72px]" : "md:ml-64"
         )}
       >
@@ -306,9 +306,9 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
 
         <PWAInstallBanner />
 
-        <div className="flex-1 overflow-auto mobile-pb md:pb-0">
+        <div className="min-w-0 flex-1 overflow-auto mobile-pb md:pb-0">
           <PullToRefresh>
-            <div className="mobile-scroll-content mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
+            <div className="mobile-scroll-content mx-auto min-w-0 max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
               {children}
             </div>
           </PullToRefresh>

@@ -5,7 +5,7 @@ import Image from "next/image";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] px-4 py-8">
+    <div className="flex min-h-screen min-h-dvh items-center justify-center bg-[var(--bg-primary)] px-4 py-8">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mb-4 inline-flex items-center justify-center">
