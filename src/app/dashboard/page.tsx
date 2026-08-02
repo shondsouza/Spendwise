@@ -8,7 +8,6 @@ import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import ChartsClient from "@/components/dashboard/charts-client";
 import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
 import { AddIncomeDialog } from "@/components/income/add-income-dialog";
-import type { UserLoan } from "@/types/loan.types";
 import { ArrowUpRight, Plus } from "lucide-react";
 
 export default async function DashboardPage() {
@@ -41,7 +40,6 @@ export default async function DashboardPage() {
     { data: monthIncomeData },
     { data: recentExpensesData },
     { data: recentIncomeData },
-    { data: activeLoansData },
   ] = await Promise.all([
     supabase
       .from("expenses")
@@ -87,12 +85,6 @@ export default async function DashboardPage() {
       .eq("user_id", user.id)
       .order("date", { ascending: false })
       .range(0, 9),
-    supabase
-      .from("user_loans")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false }),
   ]);
 
   const todayExpenses = todayExpensesData ?? [];
@@ -102,7 +94,6 @@ export default async function DashboardPage() {
   const monthIncome = monthIncomeData ?? [];
   const recentExpenses = recentExpensesData ?? [];
   const recentIncome = recentIncomeData ?? [];
-  const activeLoans = (activeLoansData ?? []) as UserLoan[];
 
   const totalSpentToday = todayExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
   const totalSpentMonth = monthExpenseSummary.reduce(
