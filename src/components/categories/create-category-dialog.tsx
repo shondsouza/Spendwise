@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,11 +21,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { createCategory } from "@/app/actions/category.actions";
+import { createCategory, updateCategory } from "@/app/actions/category.actions";
 import { toast } from "sonner";
+
+interface CategoryFormValues {
+  id?: string;
+  name: string;
+  type: "expense" | "income" | "both";
+  emoji: string;
+  color: string;
+}
 
 interface CreateCategoryDialogProps {
   onSuccess?: () => void;
+  initialCategory?: CategoryFormValues | null;
+  trigger?: React.ReactNode;
 }
 
 const EMOJI_OPTIONS = [
@@ -65,16 +75,28 @@ const COLOR_OPTIONS = [
   "#6e6e73",
 ];
 
-export function CreateCategoryDialog({ onSuccess }: CreateCategoryDialogProps) {
+export function CreateCategoryDialog({
+  onSuccess,
+  initialCategory,
+  trigger,
+}: CreateCategoryDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    type: "both",
-    emoji: "📁",
-    color: "#6e6e73",
+  const getDefaultValues = (category?: CategoryFormValues | null) => ({
+    name: category?.name ?? "",
+    type: category?.type ?? "both",
+    emoji: category?.emoji ?? "📁",
+    color: category?.color ?? "#6e6e73",
   });
+
+  const [formData, setFormData] = useState(getDefaultValues(initialCategory));
+
+  useEffect(() => {
+    if (open) {
+      setFormData(getDefaultValues(initialCategory));
+    }
+  }, [open, initialCategory]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,19 +109,18 @@ export function CreateCategoryDialog({ onSuccess }: CreateCategoryDialogProps) {
       formDataObj.append("emoji", formData.emoji);
       formDataObj.append("color", formData.color);
 
-      const result = await createCategory(formDataObj);
+      const result = initialCategory?.id
+        ? await updateCategory(initialCategory.id, formDataObj)
+        : await createCategory(formDataObj);
 
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Category created successfully!");
+        toast.success(
+          initialCategory?.id ? "Category updated successfully!" : "Category created successfully!"
+        );
         setOpen(false);
-        setFormData({
-          name: "",
-          type: "both",
-          emoji: "📁",
-          color: "#6e6e73",
-        });
+        setFormData(getDefaultValues(undefined));
         onSuccess?.();
       }
     } catch {
@@ -109,18 +130,26 @@ export function CreateCategoryDialog({ onSuccess }: CreateCategoryDialogProps) {
     }
   };
 
+  const isEditMode = Boolean(initialCategory?.id);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Create Category
-        </Button>
+        {trigger ?? (
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            {isEditMode ? "Edit Category" : "Create Category"}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Create New Category</DialogTitle>
-          <DialogDescription>Create a custom category for your expenses and income</DialogDescription>
+          <DialogTitle>{isEditMode ? "Edit Category" : "Create New Category"}</DialogTitle>
+          <DialogDescription>
+            {isEditMode
+              ? "Update this custom category"
+              : "Create a custom category for your expenses and income"}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -185,7 +214,9 @@ export function CreateCategoryDialog({ onSuccess }: CreateCategoryDialogProps) {
                   type="button"
                   onClick={() => setFormData({ ...formData, color })}
                   className={`h-10 w-10 rounded-full border-2 transition-all ${
-                    formData.color === color ? "border-[var(--text-primary)] ring-2 ring-offset-2" : "border-[var(--separator)]"
+                    formData.color === color
+                      ? "border-[var(--text-primary)] ring-2 ring-offset-2"
+                      : "border-[var(--separator)]"
                   }`}
                   style={{ backgroundColor: color }}
                   disabled={loading}
@@ -204,7 +235,13 @@ export function CreateCategoryDialog({ onSuccess }: CreateCategoryDialogProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Category"}
+              {loading
+                ? isEditMode
+                  ? "Saving..."
+                  : "Creating..."
+                : isEditMode
+                  ? "Save Changes"
+                  : "Create Category"}
             </Button>
           </DialogFooter>
         </form>

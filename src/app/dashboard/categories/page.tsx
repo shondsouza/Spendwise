@@ -8,7 +8,7 @@ import { Category } from "@/types";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, ExternalLink } from "lucide-react";
+import { Pencil, Trash2, ExternalLink } from "lucide-react";
 import { CreateCategoryDialog } from "@/components/categories/create-category-dialog";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants/config";
 
@@ -125,6 +125,7 @@ export default function CategoriesPage() {
                     key={category.id}
                     category={category}
                     onDelete={category.isCustom ? handleDelete : undefined}
+                    onEditSuccess={fetchCategories}
                   />
                 ))}
             </div>
@@ -143,6 +144,7 @@ export default function CategoriesPage() {
                     key={category.id}
                     category={category}
                     onDelete={category.isCustom ? handleDelete : undefined}
+                    onEditSuccess={fetchCategories}
                   />
                 ))}
             </div>
@@ -160,6 +162,7 @@ export default function CategoriesPage() {
                     key={category.id}
                     category={category}
                     onDelete={category.isCustom ? handleDelete : undefined}
+                    onEditSuccess={fetchCategories}
                   />
                 ))}
               </div>
@@ -174,9 +177,11 @@ export default function CategoriesPage() {
 function CategoryCard({
   category,
   onDelete,
+  onEditSuccess,
 }: {
   category: DisplayCategory;
   onDelete?: (id: string) => void;
+  onEditSuccess?: () => void;
 }) {
   return (
     <Card className="relative group">
@@ -194,15 +199,28 @@ function CategoryCard({
               <p className="text-[13px] text-[var(--text-secondary)] capitalize">{category.type}</p>
             </div>
           </div>
-          {onDelete && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(category.id)}
-              className="h-8 w-8 text-[var(--apple-red)] opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+          {category.isCustom && (
+            <div className="flex items-center gap-1">
+              <CreateCategoryDialog
+                initialCategory={category}
+                onSuccess={onEditSuccess}
+                trigger={
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-[var(--apple-blue)]">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                }
+              />
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDelete(category.id)}
+                  className="h-8 w-8 text-[var(--apple-red)]"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </CardHeader>

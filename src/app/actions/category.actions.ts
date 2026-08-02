@@ -43,6 +43,72 @@ export async function createCategory(formData: FormData) {
   return { data, error: null };
 }
 
+export async function updateCategory(id: string, formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  const parsed = categorySchema.safeParse({
+    name: formData.get("name"),
+    type: formData.get("type"),
+    emoji: formData.get("emoji"),
+    color: formData.get("color"),
+  });
+
+  if (!parsed.success) {
+    return { data: null, error: parsed.error.errors[0].message };
+  }
+
+  const { data: existingCategory, error: existingError } = await supabase
+    .from("categories")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (existingError || !existingCategory) {
+    return { data: null, error: existingError?.message || "Category not found" };
+  }
+
+  const { data, error } = await supabase
+    .from("categories")
+    .update({
+      name: parsed.data.name,
+      type: parsed.data.type,
+      emoji: parsed.data.emoji,
+      color: parsed.data.color,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select("*")
+    .single();
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  await supabase
+    .from("expenses")
+    .update({ category: parsed.data.name })
+    .eq("user_id", user.id)
+    .eq("category", existingCategory.name);
+
+  await supabase
+    .from("income")
+    .update({ category: parsed.data.name })
+    .eq("user_id", user.id)
+    .eq("category", existingCategory.name);
+
+  revalidatePath("/dashboard/categories");
+  revalidatePath("/dashboard");
+  return { data, error: null };
+}
+
 export async function deleteCategory(id: string) {
   const supabase = await createClient();
   const {
@@ -53,11 +119,7 @@ export async function deleteCategory(id: string) {
     return { data: null, error: "Unauthorized" };
   }
 
-  const { error } = await supabase
-    .from("categories")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", user.id);
+  const { error } = await supabase.from("categories").delete().eq("id", id).eq("user_id", user.id);
 
   if (error) {
     return { data: null, error: error.message };

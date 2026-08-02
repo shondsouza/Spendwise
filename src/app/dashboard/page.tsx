@@ -6,7 +6,6 @@ import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { MobileDashboard } from "@/components/dashboard/mobile-dashboard";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import ChartsClient from "@/components/dashboard/charts-client";
-import { LoanDashboardWidget } from "@/components/loans/loan-dashboard-widget";
 import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
 import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 import type { UserLoan } from "@/types/loan.types";
@@ -176,8 +175,22 @@ export default async function DashboardPage() {
             <p>Here&apos;s your financial pulse for this month.</p>
           </div>
           <div className="desktop-dashboard-actions">
-            <AddIncomeDialog trigger={<button type="button" className="desktop-secondary-action"><ArrowUpRight className="h-4 w-4" />Add income</button>} />
-            <AddExpenseDialog trigger={<button type="button" className="desktop-primary-action"><Plus className="h-4 w-4" />Add expense</button>} />
+            <AddIncomeDialog
+              trigger={
+                <button type="button" className="desktop-secondary-action">
+                  <ArrowUpRight className="h-4 w-4" />
+                  Add income
+                </button>
+              }
+            />
+            <AddExpenseDialog
+              trigger={
+                <button type="button" className="desktop-primary-action">
+                  <Plus className="h-4 w-4" />
+                  Add expense
+                </button>
+              }
+            />
           </div>
         </header>
 
@@ -192,18 +205,13 @@ export default async function DashboardPage() {
 
         <section className="desktop-analytics-section">
           <div className="desktop-section-title">
-            <div><p>Analytics</p><h2>Spending insights</h2></div>
+            <div>
+              <p>Analytics</p>
+              <h2>Spending insights</h2>
+            </div>
             <span>This month</span>
           </div>
-          <ChartsClient
-            dailyData={dailyData}
-            categoryData={categoryData}
-            sidebar={
-              activeLoans.length > 0 ? (
-                <LoanDashboardWidget loans={activeLoans} monthlyIncome={totalIncomeMonth} />
-              ) : undefined
-            }
-          />
+          <ChartsClient dailyData={dailyData} categoryData={categoryData} />
         </section>
 
         <section className="desktop-transactions-section">
