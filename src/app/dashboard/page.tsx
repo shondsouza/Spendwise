@@ -10,6 +10,8 @@ import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
 import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 import { ArrowUpRight, Plus } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const supabase = await createClient();
 
