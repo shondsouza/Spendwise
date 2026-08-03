@@ -12,6 +12,7 @@ import { AmountDisplay } from "@/components/shared/amount-display";
 import { CreateBudgetDialog } from "@/components/budgets/create-budget-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PieChart } from "lucide-react";
+import { getCategoryDisplayName } from "@/lib/utils/category-aliases";
 
 const MONTH_NAMES = [
   "January",
@@ -109,7 +110,9 @@ export default function BudgetsPage() {
             <Card key={budget.id} className="relative overflow-hidden">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-[17px]">{budget.category}</CardTitle>
+                  <CardTitle className="text-[17px]">
+                    {getCategoryDisplayName(budget.category)}
+                  </CardTitle>
                   <Button
                     variant="ghost"
                     size="icon"

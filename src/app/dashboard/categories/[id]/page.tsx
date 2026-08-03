@@ -22,11 +22,13 @@ import { formatCurrency } from "@/lib/utils/currency";
 import { ArrowLeft, FolderOpen, Target, Pencil, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants/config";
+import { getBudgetCategoryKey, getCategoryAliases } from "@/lib/utils/category-aliases";
 
 interface CategoryInfo {
   name: string;
   emoji: string;
   type: "expense" | "income" | "both";
+  budgetKey: string;
 }
 
 const parseCategoryParam = (rawParam: string) => {
@@ -150,12 +152,20 @@ export default function CategoryDetailPage() {
             throw new Error("Category not found");
           }
 
+          const budgetKey = getBudgetCategoryKey(defaultValue || resolvedCategory.name);
           nextCategoryInfo = {
             name: override?.name ?? resolvedCategory.name,
             emoji: override?.emoji ?? resolvedCategory.emoji,
             type: override?.type ?? resolvedCategory.type,
+            budgetKey,
           };
-          categoryValues = override?.name ? [override.name] : resolvedCategory.queryValues;
+          categoryValues = Array.from(
+            new Set([
+              ...resolvedCategory.queryValues,
+              ...(override?.name ? [override.name] : []),
+              ...getCategoryAliases(budgetKey),
+            ])
+          );
           fetchExpenses = nextCategoryInfo.type !== "income";
           fetchIncome = nextCategoryInfo.type !== "expense";
         } else if (resolvedCategory.kind === "custom") {
@@ -174,6 +184,7 @@ export default function CategoryDetailPage() {
             name: category.name,
             emoji: category.emoji,
             type: category.type,
+            budgetKey: category.name,
           };
           categoryValues = [category.name];
           fetchExpenses = category.type === "expense" || category.type === "both";
@@ -183,8 +194,11 @@ export default function CategoryDetailPage() {
             name: resolvedCategory.name,
             emoji: "📂",
             type: "both",
+            budgetKey: getBudgetCategoryKey(resolvedCategory.name),
           };
-          categoryValues = [resolvedCategory.name];
+          categoryValues = Array.from(
+            new Set([resolvedCategory.name, ...getCategoryAliases(resolvedCategory.name)])
+          );
         }
 
         setCategoryInfo(nextCategoryInfo);
@@ -207,15 +221,17 @@ export default function CategoryDetailPage() {
               .order("date", { ascending: false })
           : Promise.resolve({ data: [], error: null });
 
-        // Load budget for current category + current month
+        // Load budget for current category + current month across aliases
+        // (value/label/renamed default can all exist historically).
         const budgetQuery = supabase
           .from("budgets")
           .select("id, user_id, category, amount, month, year, created_at")
           .eq("user_id", user.id)
-          .eq("category", categoryValues[0])
+          .in("category", categoryValues)
           .eq("month", currentMonth)
           .eq("year", currentYear)
-          .maybeSingle();
+          .order("created_at", { ascending: false })
+          .limit(1);
 
         const [expensesResult, incomeResult, budgetResult] = await Promise.all([
           expensesQuery,
@@ -225,10 +241,18 @@ export default function CategoryDetailPage() {
 
         if (expensesResult.error) throw expensesResult.error;
         if (incomeResult.error) throw incomeResult.error;
+        if (budgetResult.error) throw budgetResult.error;
 
         setExpenses((expensesResult.data as Expense[]) || []);
         setIncome((incomeResult.data as Income[]) || []);
-        setBudget((budgetResult.data as Budget) || null);
+        const loadedBudgetRow = (budgetResult.data as Budget[] | null)?.[0] ?? null;
+        const loadedBudget = loadedBudgetRow
+          ? {
+              ...loadedBudgetRow,
+              amount: Number(loadedBudgetRow.amount) || 0,
+            }
+          : null;
+        setBudget(loadedBudget);
       } catch {
         toast.error("Failed to load category transactions");
         router.push("/dashboard/categories");
@@ -245,14 +269,14 @@ export default function CategoryDetailPage() {
     }
   }, [params.id, categoryParam, fetchData]);
 
-  const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0) || 0;
-  const totalIncome = income.reduce((sum, inc) => sum + (inc.amount || 0), 0) || 0;
+  const totalExpenses = expenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0) || 0;
+  const totalIncome = income.reduce((sum, inc) => sum + (Number(inc.amount) || 0), 0) || 0;
 
   // Current month's spending only (for limit tracking)
   const thisMonthStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
   const spentThisMonth = expenses
     .filter((e) => e.date.startsWith(thisMonthStr))
-    .reduce((sum, e) => sum + (e.amount || 0), 0);
+    .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
   const handleSaveLimit = async () => {
     const amount = parseFloat(limitValue);
@@ -276,18 +300,30 @@ export default function CategoryDetailPage() {
           .select("id, user_id, category, amount, month, year, created_at")
           .single();
         if (error) throw error;
-        setBudget(data as Budget);
+        setBudget({
+          ...(data as Budget),
+          amount: Number((data as Budget).amount) || 0,
+        });
         toast.success("Spending limit updated!");
       } else {
-        // Create new — use category name from categoryInfo
-        const catName = categoryInfo?.name || "";
+        // Create new — store canonical key so Budgets page spent math matches expenses
+        const catKey = categoryInfo?.budgetKey || getBudgetCategoryKey(categoryInfo?.name || "");
         const { data, error } = await supabase
           .from("budgets")
-          .insert({ category: catName, amount, month: currentMonth, year: currentYear, user_id: user.id })
+          .insert({
+            category: catKey,
+            amount,
+            month: currentMonth,
+            year: currentYear,
+            user_id: user.id,
+          })
           .select("id, user_id, category, amount, month, year, created_at")
           .single();
         if (error) throw error;
-        setBudget(data as Budget);
+        setBudget({
+          ...(data as Budget),
+          amount: Number((data as Budget).amount) || 0,
+        });
         toast.success("Spending limit set!");
       }
       setShowLimitInput(false);
@@ -475,8 +511,9 @@ export default function CategoryDetailPage() {
                     <>
                       {/* Progress bar */}
                       {(() => {
-                        const pct = Math.min((spentThisMonth / budget.amount) * 100, 100);
-                        const remaining = budget.amount - spentThisMonth;
+                        const limit = Number(budget.amount) || 0;
+                        const pct = limit > 0 ? Math.min((spentThisMonth / limit) * 100, 100) : 0;
+                        const remaining = limit - spentThisMonth;
                         const overBudget = remaining < 0;
                         return (
                           <div className="space-y-3">
@@ -489,7 +526,7 @@ export default function CategoryDetailPage() {
                               </div>
                               <div className="text-right">
                                 <p className="text-[12px] text-[var(--text-secondary)] mb-0.5">Limit</p>
-                                <p className="text-[15px] font-semibold text-[var(--text-primary)]">{formatCurrency(budget.amount)}</p>
+                                <p className="text-[15px] font-semibold text-[var(--text-primary)]">{formatCurrency(Number(budget.amount) || 0)}</p>
                               </div>
                             </div>
 

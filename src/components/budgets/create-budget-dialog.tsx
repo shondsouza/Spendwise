@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,9 @@ import {
 import { Plus } from "lucide-react";
 import { EXPENSE_CATEGORIES } from "@/lib/constants/config";
 import { addBudget } from "@/app/actions/budget.actions";
+import { getCategories } from "@/app/actions/category.actions";
 import { toast } from "sonner";
+import { Category } from "@/types";
 
 interface CreateBudgetDialogProps {
   onSuccess?: () => void;
@@ -32,6 +34,7 @@ interface CreateBudgetDialogProps {
 export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [customCategories, setCustomCategories] = useState<Category[]>([]);
   const today = new Date();
 
   const [formData, setFormData] = useState({
@@ -40,6 +43,30 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
     month: String(today.getMonth() + 1),
     year: String(today.getFullYear()),
   });
+
+  useEffect(() => {
+    if (!open) return;
+
+    const fetchCategories = async () => {
+      try {
+        const result = await getCategories();
+        if (result.data) {
+          setCustomCategories(
+            result.data.filter(
+              (cat) =>
+                !cat.is_deleted &&
+                (cat.type === "expense" || cat.type === "both") &&
+                !cat.default_key
+            )
+          );
+        }
+      } catch {
+        // Fall back to default categories only
+      }
+    };
+
+    fetchCategories();
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,9 +126,25 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
+                {customCategories.length > 0 && (
+                  <>
+                    <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+                      Custom
+                    </div>
+                    {customCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.emoji} {cat.name}
+                      </SelectItem>
+                    ))}
+                    <div className="my-1 h-px bg-[var(--separator)]" />
+                  </>
+                )}
+                <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+                  Default
+                </div>
                 {EXPENSE_CATEGORIES.map((cat) => (
                   <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
+                    {cat.emoji} {cat.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -114,6 +157,7 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
               id="amount"
               type="number"
               step="0.01"
+              min="0.01"
               placeholder="0.00"
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
@@ -166,7 +210,7 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !formData.category}>
               {loading ? "Creating..." : "Create Budget"}
             </Button>
           </DialogFooter>
