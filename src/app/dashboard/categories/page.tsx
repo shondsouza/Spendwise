@@ -13,7 +13,8 @@ import { Category } from "@/types";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, ExternalLink } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CreateCategoryDialog } from "@/components/categories/create-category-dialog";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants/config";
 
@@ -238,28 +239,37 @@ function CategoryCard({
             </div>
           </div>
           {(category.isCustom || category.defaultKey) && (
-            <div className="flex items-center gap-1">
-              <CreateCategoryDialog
-                initialCategory={category}
-                defaultKey={category.defaultKey}
-                onSuccess={onEditSuccess}
-                trigger={
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-[var(--apple-blue)]">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                }
-              />
-              {(onDelete || onDefaultDelete) && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDefaultDelete ? onDefaultDelete() : onDelete?.(category.id)}
-                  className="h-8 w-8 text-[var(--apple-red)]"
-                >
-                  <Trash2 className="h-4 w-4" />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Category actions</span>
                 </Button>
-              )}
-            </div>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-40 p-1">
+                <CreateCategoryDialog
+                  initialCategory={category}
+                  defaultKey={category.defaultKey}
+                  onSuccess={onEditSuccess}
+                  trigger={
+                    <Button variant="ghost" className="w-full justify-start gap-2">
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Button>
+                  }
+                />
+                {(onDelete || onDefaultDelete) && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => onDefaultDelete ? onDefaultDelete() : onDelete?.(category.id)}
+                    className="w-full justify-start gap-2 text-[var(--apple-red)]"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Remove
+                  </Button>
+                )}
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       </CardHeader>
