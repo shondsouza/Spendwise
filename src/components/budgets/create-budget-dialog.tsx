@@ -20,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, RefreshCw } from "lucide-react";
 import { EXPENSE_CATEGORIES } from "@/lib/constants/config";
 import { addBudget } from "@/app/actions/budget.actions";
 import { getCategories } from "@/app/actions/category.actions";
@@ -40,6 +41,7 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
   const [formData, setFormData] = useState({
     category: "",
     amount: "",
+    repeatsMonthly: true,
   });
 
   useEffect(() => {
@@ -74,15 +76,20 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
       const formDataObj = new FormData();
       formDataObj.append("category", formData.category);
       formDataObj.append("amount", formData.amount);
+      formDataObj.append("repeats_monthly", formData.repeatsMonthly ? "true" : "false");
 
       const result = await addBudget(formDataObj);
 
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Monthly budget set!");
+        toast.success(
+          formData.repeatsMonthly
+            ? "Repeating monthly budget set!"
+            : "This-month budget set!"
+        );
         setOpen(false);
-        setFormData({ category: "", amount: "" });
+        setFormData({ category: "", amount: "", repeatsMonthly: true });
         onSuccess?.();
       }
     } catch {
@@ -104,8 +111,8 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
         <DialogHeader>
           <DialogTitle>Set Monthly Budget</DialogTitle>
           <DialogDescription>
-            Choose a category and monthly limit. Spending resets automatically every month.
-            Tracking starts for {monthLabel}.
+            Choose a category and limit for {monthLabel}. Turn on repeat to reset remaining every
+            month.
           </DialogDescription>
         </DialogHeader>
 
@@ -159,9 +166,35 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
               disabled={loading}
             />
             <p className="text-[12px] text-[var(--text-tertiary)]">
-              Example: Food ₹5,000. If you spend ₹1,000, remaining shows ₹4,000.
+              Example: Food ₹5,000. Spend ₹1,000 → ₹4,000 remaining.
             </p>
           </div>
+
+          <label
+            htmlFor="repeats-monthly"
+            className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[var(--separator)] bg-[rgba(120,120,128,0.06)] p-3.5"
+          >
+            <Checkbox
+              id="repeats-monthly"
+              checked={formData.repeatsMonthly}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, repeatsMonthly: checked === true })
+              }
+              disabled={loading}
+              className="mt-0.5"
+            />
+            <div className="min-w-0 space-y-1">
+              <div className="flex items-center gap-1.5 text-[14px] font-semibold text-[var(--text-primary)]">
+                <RefreshCw className="h-3.5 w-3.5 text-[var(--apple-blue)]" />
+                Repeat every month
+              </div>
+              <p className="text-[12px] leading-relaxed text-[var(--text-secondary)]">
+                {formData.repeatsMonthly
+                  ? "Limit carries to next month and remaining resets automatically."
+                  : "Applies to this month only. It will not continue next month."}
+              </p>
+            </div>
+          </label>
 
           <DialogFooter>
             <Button
@@ -173,7 +206,7 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading || !formData.category}>
-              {loading ? "Saving..." : "Save Monthly Budget"}
+              {loading ? "Saving..." : "Save Budget"}
             </Button>
           </DialogFooter>
         </form>

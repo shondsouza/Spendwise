@@ -27,6 +27,14 @@ export const budgetSchema = z.object({
   amount: z.coerce.number().positive("Amount must be positive"),
   month: z.coerce.number().int().min(1, "Invalid month").max(12, "Invalid month").optional(),
   year: z.coerce.number().int().min(2020, "Invalid year").max(2100, "Invalid year").optional(),
+  repeats_monthly: z
+    .union([z.boolean(), z.literal("true"), z.literal("false"), z.literal("on"), z.literal("1"), z.literal("0")])
+    .optional()
+    .transform((value) => {
+      if (value === undefined) return true;
+      if (typeof value === "boolean") return value;
+      return value === "true" || value === "on" || value === "1";
+    }),
 });
 
 export type BudgetFormData = z.infer<typeof budgetSchema>;

@@ -2,17 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import { PageHeader } from "@/components/shared/page-header";
-import { getBudgets, deleteBudget } from "@/app/actions/budget.actions";
+import {
+  getBudgets,
+  deleteBudget,
+  setBudgetRepeatsMonthly,
+} from "@/app/actions/budget.actions";
 import { Budget } from "@/types";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Trash2, AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
 import { AmountDisplay } from "@/components/shared/amount-display";
 import { CreateBudgetDialog } from "@/components/budgets/create-budget-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PieChart } from "lucide-react";
 import { getCategoryDisplayName } from "@/lib/utils/category-aliases";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const MONTH_NAMES = [
   "January",
@@ -29,11 +34,16 @@ const MONTH_NAMES = [
   "December",
 ];
 
-type BudgetCard = Budget & { spent: number; remaining?: number };
+type BudgetCard = Budget & {
+  spent: number;
+  remaining?: number;
+  repeats_monthly?: boolean;
+};
 
 export default function BudgetsPage() {
   const [budgets, setBudgets] = useState<BudgetCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const now = new Date();
   const currentMonthLabel = `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`;
 
@@ -47,6 +57,8 @@ export default function BudgetsPage() {
       const result = await getBudgets();
       if (result.data) {
         setBudgets(result.data);
+      } else if (result.error) {
+        toast.error(result.error);
       }
     } catch {
       toast.error("Failed to load budgets");
@@ -56,7 +68,7 @@ export default function BudgetsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Remove this monthly budget for this category?")) {
+    if (confirm("Remove this budget for this category?")) {
       try {
         const result = await deleteBudget(id);
         if (result.error) {
@@ -71,11 +83,51 @@ export default function BudgetsPage() {
     }
   };
 
+  const handleToggleRepeat = async (budget: BudgetCard, repeatsMonthly: boolean) => {
+    setTogglingId(budget.id);
+    setBudgets((prev) =>
+      prev.map((item) =>
+        item.id === budget.id ? { ...item, repeats_monthly: repeatsMonthly } : item
+      )
+    );
+
+    try {
+      const result = await setBudgetRepeatsMonthly(budget.id, repeatsMonthly);
+      if (result.error) {
+        toast.error(result.error);
+        setBudgets((prev) =>
+          prev.map((item) =>
+            item.id === budget.id
+              ? { ...item, repeats_monthly: budget.repeats_monthly !== false }
+              : item
+          )
+        );
+      } else {
+        toast.success(
+          repeatsMonthly
+            ? "Will repeat every month"
+            : "This month only — won’t continue next month"
+        );
+      }
+    } catch {
+      toast.error("Failed to update repeat setting");
+      setBudgets((prev) =>
+        prev.map((item) =>
+          item.id === budget.id
+            ? { ...item, repeats_monthly: budget.repeats_monthly !== false }
+            : item
+        )
+      );
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   return (
     <div className="page-enter">
       <PageHeader
         title="🎯 Budgets"
-        description={`Monthly limits for ${currentMonthLabel}. Remaining resets each new month.`}
+        description={`Limits for ${currentMonthLabel}. Enable “Repeat every month” to reset remaining automatically.`}
         action={<CreateBudgetDialog onSuccess={fetchBudgets} />}
       />
 
@@ -89,7 +141,7 @@ export default function BudgetsPage() {
         <EmptyState
           icon={PieChart}
           title="No monthly budgets yet"
-          description="Set a category limit like Food ₹5,000. Spend ₹1,000 and you'll see ₹4,000 remaining."
+          description="Set a category limit like Food ₹5,000. Turn on Repeat every month so it resets next month."
           action={{
             label: "Create Budget",
             onClick: () => fetchBudgets(),
@@ -105,6 +157,7 @@ export default function BudgetsPage() {
             const percentageUsed = limit > 0 ? (spent / limit) * 100 : 0;
             const progressWidth = Math.min(percentageUsed, 100);
             const isOverBudget = remaining < 0;
+            const repeatsMonthly = budget.repeats_monthly !== false;
             const progressColor = isOverBudget
               ? "var(--apple-red)"
               : percentageUsed >= 80
@@ -185,9 +238,29 @@ export default function BudgetsPage() {
                       )}
                       {isOverBudget
                         ? "Budget exceeded this month"
-                        : "Resets automatically next month"}
+                        : repeatsMonthly
+                          ? "Resets automatically next month"
+                          : "This month only"}
                     </div>
                   </div>
+
+                  <label
+                    htmlFor={`repeat-${budget.id}`}
+                    className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-[var(--separator)] bg-[rgba(120,120,128,0.05)] px-3 py-2.5"
+                  >
+                    <Checkbox
+                      id={`repeat-${budget.id}`}
+                      checked={repeatsMonthly}
+                      disabled={togglingId === budget.id}
+                      onCheckedChange={(checked) =>
+                        handleToggleRepeat(budget, checked === true)
+                      }
+                    />
+                    <span className="flex min-w-0 items-center gap-1.5 text-[12px] font-semibold text-[var(--text-primary)]">
+                      <RefreshCw className="h-3.5 w-3.5 shrink-0 text-[var(--apple-blue)]" />
+                      Repeat every month
+                    </span>
+                  </label>
                 </CardContent>
               </Card>
             );

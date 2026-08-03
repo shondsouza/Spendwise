@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -102,16 +101,6 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
-
-          <div className="mt-6 text-center text-[13px]">
-            <span className="text-[var(--text-secondary)]">Don&apos;t have an account? </span>
-            <Link
-              href="/auth/signup"
-              className="font-medium text-[var(--apple-blue)] hover:underline"
-            >
-              Sign up
-            </Link>
-          </div>
         </div>
       </div>
       <p className="mt-6 text-center text-xs text-[var(--text-secondary)]">Built by Shon Dsouza</p>

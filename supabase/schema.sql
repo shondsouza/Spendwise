@@ -66,6 +66,7 @@ CREATE TABLE budgets (
   amount      NUMERIC(10, 2) NOT NULL CHECK (amount > 0),
   month       SMALLINT NOT NULL CHECK (month BETWEEN 1 AND 12),
   year        SMALLINT NOT NULL CHECK (year BETWEEN 2020 AND 2100),
+  repeats_monthly BOOLEAN NOT NULL DEFAULT TRUE,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(user_id, category, month, year)
 );

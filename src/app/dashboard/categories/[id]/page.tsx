@@ -225,7 +225,7 @@ export default function CategoryDetailPage() {
         // Prefer current month; otherwise carry forward the latest previous limit.
         const budgetQuery = supabase
           .from("budgets")
-          .select("id, user_id, category, amount, month, year, created_at")
+          .select("id, user_id, category, amount, month, year, repeats_monthly, created_at")
           .eq("user_id", user.id)
           .in("category", categoryValues)
           .order("year", { ascending: false })
@@ -261,33 +261,41 @@ export default function CategoryDetailPage() {
           };
         } else if (latestBudget) {
           // Carry the monthly limit into the new month with a fresh spend counter.
-          const { data: carried, error: carryError } = await supabase
-            .from("budgets")
-            .upsert(
-              {
-                user_id: user.id,
-                category: nextCategoryInfo.budgetKey,
+          const shouldRepeat = latestBudget.repeats_monthly !== false;
+          if (!shouldRepeat) {
+            loadedBudget = null;
+          } else {
+            const { data: carried, error: carryError } = await supabase
+              .from("budgets")
+              .upsert(
+                {
+                  user_id: user.id,
+                  category: nextCategoryInfo.budgetKey,
+                  amount: Number(latestBudget.amount) || 0,
+                  month: currentMonth,
+                  year: currentYear,
+                  repeats_monthly: true,
+                },
+                { onConflict: "user_id,category,month,year" }
+              )
+              .select("id, user_id, category, amount, month, year, repeats_monthly, created_at")
+              .single();
+
+            if (!carryError && carried) {
+              loadedBudget = {
+                ...(carried as Budget),
+                amount: Number((carried as Budget).amount) || 0,
+                repeats_monthly: true,
+              };
+            } else {
+              loadedBudget = {
+                ...latestBudget,
                 amount: Number(latestBudget.amount) || 0,
                 month: currentMonth,
                 year: currentYear,
-              },
-              { onConflict: "user_id,category,month,year" }
-            )
-            .select("id, user_id, category, amount, month, year, created_at")
-            .single();
-
-          if (!carryError && carried) {
-            loadedBudget = {
-              ...(carried as Budget),
-              amount: Number((carried as Budget).amount) || 0,
-            };
-          } else {
-            loadedBudget = {
-              ...latestBudget,
-              amount: Number(latestBudget.amount) || 0,
-              month: currentMonth,
-              year: currentYear,
-            };
+                repeats_monthly: true,
+              };
+            }
           }
         }
 
@@ -339,15 +347,17 @@ export default function CategoryDetailPage() {
             amount,
             month: currentMonth,
             year: currentYear,
+            repeats_monthly: true,
           },
           { onConflict: "user_id,category,month,year" }
         )
-        .select("id, user_id, category, amount, month, year, created_at")
+        .select("id, user_id, category, amount, month, year, repeats_monthly, created_at")
         .single();
       if (error) throw error;
       setBudget({
         ...(data as Budget),
         amount: Number((data as Budget).amount) || 0,
+        repeats_monthly: true,
       });
       toast.success("Monthly spending limit saved!");
       setShowLimitInput(false);

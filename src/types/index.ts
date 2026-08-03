@@ -29,6 +29,7 @@ export interface Budget {
   amount: number;
   month: number;
   year: number;
+  repeats_monthly?: boolean;
   created_at: string;
 }
 
