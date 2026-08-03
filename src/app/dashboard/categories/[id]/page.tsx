@@ -221,17 +221,17 @@ export default function CategoryDetailPage() {
               .order("date", { ascending: false })
           : Promise.resolve({ data: [], error: null });
 
-        // Load budget for current category + current month across aliases
-        // (value/label/renamed default can all exist historically).
+        // Load recurring monthly budget for this category.
+        // Prefer current month; otherwise carry forward the latest previous limit.
         const budgetQuery = supabase
           .from("budgets")
           .select("id, user_id, category, amount, month, year, created_at")
           .eq("user_id", user.id)
           .in("category", categoryValues)
-          .eq("month", currentMonth)
-          .eq("year", currentYear)
+          .order("year", { ascending: false })
+          .order("month", { ascending: false })
           .order("created_at", { ascending: false })
-          .limit(1);
+          .limit(12);
 
         const [expensesResult, incomeResult, budgetResult] = await Promise.all([
           expensesQuery,
@@ -245,13 +245,52 @@ export default function CategoryDetailPage() {
 
         setExpenses((expensesResult.data as Expense[]) || []);
         setIncome((incomeResult.data as Income[]) || []);
-        const loadedBudgetRow = (budgetResult.data as Budget[] | null)?.[0] ?? null;
-        const loadedBudget = loadedBudgetRow
-          ? {
-              ...loadedBudgetRow,
-              amount: Number(loadedBudgetRow.amount) || 0,
-            }
-          : null;
+
+        const budgetRows = (budgetResult.data as Budget[] | null) ?? [];
+        const currentMonthBudget =
+          budgetRows.find(
+            (row) => Number(row.month) === currentMonth && Number(row.year) === currentYear
+          ) ?? null;
+        const latestBudget = budgetRows[0] ?? null;
+
+        let loadedBudget: Budget | null = null;
+        if (currentMonthBudget) {
+          loadedBudget = {
+            ...currentMonthBudget,
+            amount: Number(currentMonthBudget.amount) || 0,
+          };
+        } else if (latestBudget) {
+          // Carry the monthly limit into the new month with a fresh spend counter.
+          const { data: carried, error: carryError } = await supabase
+            .from("budgets")
+            .upsert(
+              {
+                user_id: user.id,
+                category: nextCategoryInfo.budgetKey,
+                amount: Number(latestBudget.amount) || 0,
+                month: currentMonth,
+                year: currentYear,
+              },
+              { onConflict: "user_id,category,month,year" }
+            )
+            .select("id, user_id, category, amount, month, year, created_at")
+            .single();
+
+          if (!carryError && carried) {
+            loadedBudget = {
+              ...(carried as Budget),
+              amount: Number((carried as Budget).amount) || 0,
+            };
+          } else {
+            loadedBudget = {
+              ...latestBudget,
+              amount: Number(latestBudget.amount) || 0,
+              month: currentMonth,
+              year: currentYear,
+            };
+          }
+        }
+
         setBudget(loadedBudget);
       } catch {
         toast.error("Failed to load category transactions");
@@ -290,42 +329,27 @@ export default function CategoryDetailPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Unauthorized");
 
-      if (budget) {
-        // Update existing
-        const { data, error } = await supabase
-          .from("budgets")
-          .update({ amount })
-          .eq("id", budget.id)
-          .eq("user_id", user.id)
-          .select("id, user_id, category, amount, month, year, created_at")
-          .single();
-        if (error) throw error;
-        setBudget({
-          ...(data as Budget),
-          amount: Number((data as Budget).amount) || 0,
-        });
-        toast.success("Spending limit updated!");
-      } else {
-        // Create new — store canonical key so Budgets page spent math matches expenses
-        const catKey = categoryInfo?.budgetKey || getBudgetCategoryKey(categoryInfo?.name || "");
-        const { data, error } = await supabase
-          .from("budgets")
-          .insert({
+      const catKey = categoryInfo?.budgetKey || getBudgetCategoryKey(categoryInfo?.name || "");
+      const { data, error } = await supabase
+        .from("budgets")
+        .upsert(
+          {
+            user_id: user.id,
             category: catKey,
             amount,
             month: currentMonth,
             year: currentYear,
-            user_id: user.id,
-          })
-          .select("id, user_id, category, amount, month, year, created_at")
-          .single();
-        if (error) throw error;
-        setBudget({
-          ...(data as Budget),
-          amount: Number((data as Budget).amount) || 0,
-        });
-        toast.success("Spending limit set!");
-      }
+          },
+          { onConflict: "user_id,category,month,year" }
+        )
+        .select("id, user_id, category, amount, month, year, created_at")
+        .single();
+      if (error) throw error;
+      setBudget({
+        ...(data as Budget),
+        amount: Number((data as Budget).amount) || 0,
+      });
+      toast.success("Monthly spending limit saved!");
       setShowLimitInput(false);
       setLimitValue("");
     } catch {
@@ -336,14 +360,19 @@ export default function CategoryDetailPage() {
   };
 
   const handleRemoveLimit = async () => {
-    if (!budget) return;
-    if (!confirm("Remove the spending limit for this category?")) return;
+    if (!budget || !categoryInfo) return;
+    if (!confirm("Remove the monthly spending limit for this category?")) return;
     try {
       const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Unauthorized");
+
+      const aliases = getCategoryAliases(categoryInfo.budgetKey);
       const { error } = await supabase
         .from("budgets")
         .delete()
-        .eq("id", budget.id);
+        .eq("user_id", user.id)
+        .in("category", aliases);
       if (error) throw error;
       setBudget(null);
       toast.success("Spending limit removed");
@@ -519,14 +548,19 @@ export default function CategoryDetailPage() {
                           <div className="space-y-3">
                             <div className="flex items-end justify-between">
                               <div>
-                                <p className="text-[12px] text-[var(--text-secondary)] mb-0.5">Spent this month</p>
+                                <p className="text-[12px] text-[var(--text-secondary)] mb-0.5">
+                                  {overBudget ? "Over by" : "Remaining"}
+                                </p>
                                 <p className={`text-[22px] font-bold tabular-nums ${
-                                  overBudget ? "text-[var(--apple-red)]" : "text-[var(--text-primary)]"
-                                }`}>{formatCurrency(spentThisMonth)}</p>
+                                  overBudget ? "text-[var(--apple-red)]" : "text-[var(--apple-green)]"
+                                }`}>{formatCurrency(Math.abs(remaining))}</p>
                               </div>
                               <div className="text-right">
-                                <p className="text-[12px] text-[var(--text-secondary)] mb-0.5">Limit</p>
-                                <p className="text-[15px] font-semibold text-[var(--text-primary)]">{formatCurrency(Number(budget.amount) || 0)}</p>
+                                <p className="text-[12px] text-[var(--text-secondary)] mb-0.5">Monthly limit</p>
+                                <p className="text-[15px] font-semibold text-[var(--text-primary)]">{formatCurrency(limit)}</p>
+                                <p className="mt-1 text-[11px] text-[var(--text-tertiary)]">
+                                  {formatCurrency(spentThisMonth)} spent
+                                </p>
                               </div>
                             </div>
 
@@ -552,8 +586,8 @@ export default function CategoryDetailPage() {
                                 : "text-[var(--apple-green)]"
                             }`}>
                               {overBudget
-                                ? `⚠️ Over budget by ${formatCurrency(Math.abs(remaining))}`
-                                : `✅ ${formatCurrency(remaining)} remaining (${(100 - pct).toFixed(0)}% left)`}
+                                ? `Budget exceeded this month`
+                                : `${formatCurrency(remaining)} left this month · resets next month`}
                             </p>
                           </div>
                         );

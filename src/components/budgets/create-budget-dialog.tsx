@@ -35,13 +35,11 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
-  const today = new Date();
+  const monthLabel = new Date().toLocaleString("en-IN", { month: "long", year: "numeric" });
 
   const [formData, setFormData] = useState({
     category: "",
     amount: "",
-    month: String(today.getMonth() + 1),
-    year: String(today.getFullYear()),
   });
 
   useEffect(() => {
@@ -76,22 +74,15 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
       const formDataObj = new FormData();
       formDataObj.append("category", formData.category);
       formDataObj.append("amount", formData.amount);
-      formDataObj.append("month", formData.month);
-      formDataObj.append("year", formData.year);
 
       const result = await addBudget(formDataObj);
 
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Budget created successfully!");
+        toast.success("Monthly budget set!");
         setOpen(false);
-        setFormData({
-          category: "",
-          amount: "",
-          month: String(today.getMonth() + 1),
-          year: String(today.getFullYear()),
-        });
+        setFormData({ category: "", amount: "" });
         onSuccess?.();
       }
     } catch {
@@ -111,8 +102,11 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Create New Budget</DialogTitle>
-          <DialogDescription>Set a spending limit for a category</DialogDescription>
+          <DialogTitle>Set Monthly Budget</DialogTitle>
+          <DialogDescription>
+            Choose a category and monthly limit. Spending resets automatically every month.
+            Tracking starts for {monthLabel}.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -152,53 +146,21 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Budget Limit (₹)</Label>
+            <Label htmlFor="amount">Monthly Limit (₹)</Label>
             <Input
               id="amount"
               type="number"
               step="0.01"
               min="0.01"
-              placeholder="0.00"
+              placeholder="e.g. 5000"
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
               required
               disabled={loading}
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="month">Month</Label>
-              <Select
-                value={formData.month}
-                onValueChange={(value) => setFormData({ ...formData, month: value })}
-              >
-                <SelectTrigger id="month" disabled={loading}>
-                  <SelectValue placeholder="Select month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 12 }, (_, index) => (
-                    <SelectItem key={index + 1} value={String(index + 1)}>
-                      {new Date(2024, index, 1).toLocaleString("en-IN", { month: "long" })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="year">Year</Label>
-              <Input
-                id="year"
-                type="number"
-                min="2020"
-                max="2100"
-                value={formData.year}
-                onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                required
-                disabled={loading}
-              />
-            </div>
+            <p className="text-[12px] text-[var(--text-tertiary)]">
+              Example: Food ₹5,000. If you spend ₹1,000, remaining shows ₹4,000.
+            </p>
           </div>
 
           <DialogFooter>
@@ -211,7 +173,7 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading || !formData.category}>
-              {loading ? "Creating..." : "Create Budget"}
+              {loading ? "Saving..." : "Save Monthly Budget"}
             </Button>
           </DialogFooter>
         </form>

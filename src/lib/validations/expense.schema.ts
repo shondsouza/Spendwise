@@ -25,8 +25,8 @@ export type IncomeFormData = z.infer<typeof incomeSchema>;
 export const budgetSchema = z.object({
   category: z.string().min(1, "Category is required").max(40, "Category too long"),
   amount: z.coerce.number().positive("Amount must be positive"),
-  month: z.coerce.number().int().min(1, "Invalid month").max(12, "Invalid month"),
-  year: z.coerce.number().int().min(2020, "Invalid year").max(2100, "Invalid year"),
+  month: z.coerce.number().int().min(1, "Invalid month").max(12, "Invalid month").optional(),
+  year: z.coerce.number().int().min(2020, "Invalid year").max(2100, "Invalid year").optional(),
 });
 
 export type BudgetFormData = z.infer<typeof budgetSchema>;
