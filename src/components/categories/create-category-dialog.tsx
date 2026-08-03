@@ -21,7 +21,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { createCategory, updateCategory } from "@/app/actions/category.actions";
+import {
+  createCategory,
+  updateCategory,
+  updateDefaultCategory,
+} from "@/app/actions/category.actions";
 import { toast } from "sonner";
 
 interface CategoryFormValues {
@@ -36,6 +40,7 @@ interface CreateCategoryDialogProps {
   onSuccess?: () => void;
   initialCategory?: CategoryFormValues | null;
   trigger?: React.ReactNode;
+  defaultKey?: string;
 }
 
 const EMOJI_OPTIONS = [
@@ -79,6 +84,7 @@ export function CreateCategoryDialog({
   onSuccess,
   initialCategory,
   trigger,
+  defaultKey,
 }: CreateCategoryDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -109,7 +115,9 @@ export function CreateCategoryDialog({
       formDataObj.append("emoji", formData.emoji);
       formDataObj.append("color", formData.color);
 
-      const result = initialCategory?.id
+      const result = defaultKey
+        ? await updateDefaultCategory(defaultKey, formDataObj)
+        : initialCategory?.id
         ? await updateCategory(initialCategory.id, formDataObj)
         : await createCategory(formDataObj);
 
@@ -117,7 +125,9 @@ export function CreateCategoryDialog({
         toast.error(result.error);
       } else {
         toast.success(
-          initialCategory?.id ? "Category updated successfully!" : "Category created successfully!"
+          initialCategory?.id || defaultKey
+            ? "Category updated successfully!"
+            : "Category created successfully!"
         );
         setOpen(false);
         setFormData(getDefaultValues(undefined));
@@ -130,7 +140,7 @@ export function CreateCategoryDialog({
     }
   };
 
-  const isEditMode = Boolean(initialCategory?.id);
+  const isEditMode = Boolean(initialCategory?.id || defaultKey);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

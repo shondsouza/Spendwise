@@ -138,14 +138,26 @@ export default function CategoryDetailPage() {
         let fetchIncome = true;
 
         if (resolvedCategory.kind === "default") {
+          const [, defaultType, defaultValue] = rawParam.split("::");
+          const { data: override } = await supabase
+            .from("categories")
+            .select("name, type, emoji, is_deleted")
+            .eq("user_id", user.id)
+            .eq("default_key", `${defaultType}:${defaultValue}`)
+            .maybeSingle();
+
+          if (override?.is_deleted) {
+            throw new Error("Category not found");
+          }
+
           nextCategoryInfo = {
-            name: resolvedCategory.name,
-            emoji: resolvedCategory.emoji,
-            type: resolvedCategory.type,
+            name: override?.name ?? resolvedCategory.name,
+            emoji: override?.emoji ?? resolvedCategory.emoji,
+            type: override?.type ?? resolvedCategory.type,
           };
-          categoryValues = resolvedCategory.queryValues;
-          fetchExpenses = resolvedCategory.type !== "income";
-          fetchIncome = resolvedCategory.type !== "expense";
+          categoryValues = override?.name ? [override.name] : resolvedCategory.queryValues;
+          fetchExpenses = nextCategoryInfo.type !== "income";
+          fetchIncome = nextCategoryInfo.type !== "expense";
         } else if (resolvedCategory.kind === "custom") {
           const { data: category, error: categoryError } = await supabase
             .from("categories")

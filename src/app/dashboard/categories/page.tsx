@@ -7,6 +7,7 @@ import {
   getCategories,
   getUsedCategoryNames,
   deleteCategory,
+  deleteDefaultCategory,
 } from "@/app/actions/category.actions";
 import { Category } from "@/types";
 import { toast } from "sonner";
@@ -24,6 +25,7 @@ interface DisplayCategory {
   emoji: string;
   color: string;
   isCustom: boolean;
+  defaultKey?: string;
 }
 
 export default function CategoriesPage() {
@@ -71,28 +73,32 @@ export default function CategoriesPage() {
   const usedNames = new Set(usedCategoryNames);
   const isUsed = (name: string, alternateName?: string) =>
     usedNames.has(name) || (alternateName ? usedNames.has(alternateName) : false);
+  const isDefaultVisible = (defaultKey: string) =>
+    !customCategories.some((item) => item.default_key === defaultKey && item.is_deleted);
 
   // Combine only categories that have at least one income or expense.
   const allCategories: DisplayCategory[] = [
-    ...EXPENSE_CATEGORIES.filter((cat) => isUsed(cat.value, cat.label)).map((cat) => ({
+    ...EXPENSE_CATEGORIES.filter((cat) => isUsed(cat.value, cat.label) && isDefaultVisible(`expense:${cat.value}`)).map((cat) => ({
       id: `expense-default-${cat.value}`,
       routeId: `default::expense::${cat.value}`,
-      name: cat.label,
-      type: "expense" as const,
-      emoji: cat.emoji,
-      color: cat.color,
+      name: customCategories.find((item) => item.default_key === `expense:${cat.value}`)?.name ?? cat.label,
+      type: customCategories.find((item) => item.default_key === `expense:${cat.value}`)?.type ?? ("expense" as const),
+      emoji: customCategories.find((item) => item.default_key === `expense:${cat.value}`)?.emoji ?? cat.emoji,
+      color: customCategories.find((item) => item.default_key === `expense:${cat.value}`)?.color ?? cat.color,
       isCustom: false,
+      defaultKey: `expense:${cat.value}`,
     })),
-    ...INCOME_CATEGORIES.filter((cat) => isUsed(cat.value, cat.label)).map((cat) => ({
+    ...INCOME_CATEGORIES.filter((cat) => isUsed(cat.value, cat.label) && isDefaultVisible(`income:${cat.value}`)).map((cat) => ({
       id: `income-default-${cat.value}`,
       routeId: `default::income::${cat.value}`,
-      name: cat.label,
-      type: "income" as const,
-      emoji: cat.emoji,
-      color: cat.color,
+      name: customCategories.find((item) => item.default_key === `income:${cat.value}`)?.name ?? cat.label,
+      type: customCategories.find((item) => item.default_key === `income:${cat.value}`)?.type ?? ("income" as const),
+      emoji: customCategories.find((item) => item.default_key === `income:${cat.value}`)?.emoji ?? cat.emoji,
+      color: customCategories.find((item) => item.default_key === `income:${cat.value}`)?.color ?? cat.color,
       isCustom: false,
+      defaultKey: `income:${cat.value}`,
     })),
-    ...customCategories.filter((cat) => isUsed(cat.name)).map((cat) => ({
+    ...customCategories.filter((cat) => isUsed(cat.name) && !cat.default_key).map((cat) => ({
       id: cat.id,
       routeId: `custom::${cat.id}`,
       name: cat.name,
@@ -137,6 +143,12 @@ export default function CategoriesPage() {
                     key={category.id}
                     category={category}
                     onDelete={category.isCustom ? handleDelete : undefined}
+                    onDefaultDelete={category.defaultKey ? async () => {
+                      if (!confirm("Remove this category?")) return;
+                      const result = await deleteDefaultCategory(category.defaultKey!);
+                      if (result.error) toast.error(result.error);
+                      else { toast.success("Category removed!"); fetchCategories(); }
+                    } : undefined}
                     onEditSuccess={fetchCategories}
                   />
                 ))}
@@ -156,6 +168,12 @@ export default function CategoriesPage() {
                     key={category.id}
                     category={category}
                     onDelete={category.isCustom ? handleDelete : undefined}
+                    onDefaultDelete={category.defaultKey ? async () => {
+                      if (!confirm("Remove this category?")) return;
+                      const result = await deleteDefaultCategory(category.defaultKey!);
+                      if (result.error) toast.error(result.error);
+                      else { toast.success("Category removed!"); fetchCategories(); }
+                    } : undefined}
                     onEditSuccess={fetchCategories}
                   />
                 ))}
@@ -174,6 +192,12 @@ export default function CategoriesPage() {
                     key={category.id}
                     category={category}
                     onDelete={category.isCustom ? handleDelete : undefined}
+                    onDefaultDelete={category.defaultKey ? async () => {
+                      if (!confirm("Remove this category?")) return;
+                      const result = await deleteDefaultCategory(category.defaultKey!);
+                      if (result.error) toast.error(result.error);
+                      else { toast.success("Category removed!"); fetchCategories(); }
+                    } : undefined}
                     onEditSuccess={fetchCategories}
                   />
                 ))}
@@ -189,10 +213,12 @@ export default function CategoriesPage() {
 function CategoryCard({
   category,
   onDelete,
+  onDefaultDelete,
   onEditSuccess,
 }: {
   category: DisplayCategory;
   onDelete?: (id: string) => void;
+  onDefaultDelete?: () => void;
   onEditSuccess?: () => void;
 }) {
   return (
@@ -211,10 +237,11 @@ function CategoryCard({
               <p className="text-[13px] text-[var(--text-secondary)] capitalize">{category.type}</p>
             </div>
           </div>
-          {category.isCustom && (
+          {(category.isCustom || category.defaultKey) && (
             <div className="flex items-center gap-1">
               <CreateCategoryDialog
                 initialCategory={category}
+                defaultKey={category.defaultKey}
                 onSuccess={onEditSuccess}
                 trigger={
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-[var(--apple-blue)]">
@@ -222,11 +249,11 @@ function CategoryCard({
                   </Button>
                 }
               />
-              {onDelete && (
+              {(onDelete || onDefaultDelete) && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => onDelete(category.id)}
+                  onClick={() => onDefaultDelete ? onDefaultDelete() : onDelete?.(category.id)}
                   className="h-8 w-8 text-[var(--apple-red)]"
                 >
                   <Trash2 className="h-4 w-4" />

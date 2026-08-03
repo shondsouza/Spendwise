@@ -48,4 +48,6 @@ export interface Category {
   emoji: string;
   color: string;
   created_at: string;
+  default_key?: string | null;
+  is_deleted?: boolean;
 }
