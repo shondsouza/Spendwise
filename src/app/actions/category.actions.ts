@@ -153,6 +153,38 @@ export async function getCategories() {
   return { data, error: null };
 }
 
+export async function getUsedCategoryNames() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { data: [], error: "Unauthorized" };
+  }
+
+  const [{ data: expenses, error: expensesError }, { data: income, error: incomeError }] =
+    await Promise.all([
+      supabase.from("expenses").select("category").eq("user_id", user.id),
+      supabase.from("income").select("category").eq("user_id", user.id),
+    ]);
+
+  if (expensesError || incomeError) {
+    return {
+      data: [],
+      error: expensesError?.message || incomeError?.message || "Failed to load used categories",
+    };
+  }
+
+  return {
+    data: [
+      ...(expenses ?? []).map((expense) => expense.category),
+      ...(income ?? []).map((entry) => entry.category),
+    ],
+    error: null,
+  };
+}
+
 export async function getCategoryWithTransactions(id: string) {
   const supabase = await createClient();
   const {

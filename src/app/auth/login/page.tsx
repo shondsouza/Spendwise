@@ -114,6 +114,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      <p className="mt-6 text-center text-xs text-[var(--text-secondary)]">Built by Shon Dsouza</p>
     </div>
   );
 }

@@ -3,7 +3,11 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/shared/page-header";
-import { getCategories, deleteCategory } from "@/app/actions/category.actions";
+import {
+  getCategories,
+  getUsedCategoryNames,
+  deleteCategory,
+} from "@/app/actions/category.actions";
 import { Category } from "@/types";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +28,7 @@ interface DisplayCategory {
 
 export default function CategoriesPage() {
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
+  const [usedCategoryNames, setUsedCategoryNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,10 +38,13 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const result = await getCategories();
-      if (result.data) {
-        setCustomCategories(result.data);
-      }
+      const [categoriesResult, usedCategoriesResult] = await Promise.all([
+        getCategories(),
+        getUsedCategoryNames(),
+      ]);
+
+      if (categoriesResult.data) setCustomCategories(categoriesResult.data);
+      if (usedCategoriesResult.data) setUsedCategoryNames(usedCategoriesResult.data);
     } catch {
       toast.error("Failed to load categories");
     } finally {
@@ -60,9 +68,13 @@ export default function CategoriesPage() {
     }
   };
 
-  // Combine default and custom categories
+  const usedNames = new Set(usedCategoryNames);
+  const isUsed = (name: string, alternateName?: string) =>
+    usedNames.has(name) || (alternateName ? usedNames.has(alternateName) : false);
+
+  // Combine only categories that have at least one income or expense.
   const allCategories: DisplayCategory[] = [
-    ...EXPENSE_CATEGORIES.map((cat) => ({
+    ...EXPENSE_CATEGORIES.filter((cat) => isUsed(cat.value, cat.label)).map((cat) => ({
       id: `expense-default-${cat.value}`,
       routeId: `default::expense::${cat.value}`,
       name: cat.label,
@@ -71,7 +83,7 @@ export default function CategoriesPage() {
       color: cat.color,
       isCustom: false,
     })),
-    ...INCOME_CATEGORIES.map((cat) => ({
+    ...INCOME_CATEGORIES.filter((cat) => isUsed(cat.value, cat.label)).map((cat) => ({
       id: `income-default-${cat.value}`,
       routeId: `default::income::${cat.value}`,
       name: cat.label,
@@ -80,7 +92,7 @@ export default function CategoriesPage() {
       color: cat.color,
       isCustom: false,
     })),
-    ...customCategories.map((cat) => ({
+    ...customCategories.filter((cat) => isUsed(cat.name)).map((cat) => ({
       id: cat.id,
       routeId: `custom::${cat.id}`,
       name: cat.name,
