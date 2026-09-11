@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Income } from "@/types";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
-import { TrendingUp, Plus, Trash2 } from "lucide-react";
+import { TrendingUp, Plus, Trash2, Pencil } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -25,6 +25,7 @@ import { MobileLedgerPage } from "@/components/shared/mobile-ledger-page";
 export default function IncomePage() {
   const [incomeList, setIncomeList] = useState<Income[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingIncome, setEditingIncome] = useState<Income | undefined>();
 
   useEffect(() => {
     fetchIncome();
@@ -68,6 +69,12 @@ export default function IncomePage() {
           entries={incomeList.map((income) => ({ ...income, detail: income.source }))}
           loading={loading}
           onDelete={handleDelete}
+          onEdit={(entry) => {
+            const income = incomeList.find((item) => item.id === entry.id);
+            if (income) {
+              setEditingIncome(income);
+            }
+          }}
           addAction={
             <AddIncomeDialog
               onSuccess={fetchIncome}
@@ -75,6 +82,13 @@ export default function IncomePage() {
             />
           }
         />
+        {editingIncome && (
+          <AddIncomeDialog
+            income={editingIncome}
+            onSuccess={fetchIncome}
+            onClose={() => setEditingIncome(undefined)}
+          />
+        )}
       </div>
 
       <div className="hidden md:block">
@@ -122,6 +136,15 @@ export default function IncomePage() {
                       <AmountDisplay amount={income.amount} variant="success" />
                     </TableCell>
                     <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Edit ${income.title}`}
+                        onClick={() => setEditingIncome(income)}
+                        className="h-8 w-8 text-[var(--apple-blue)]"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"

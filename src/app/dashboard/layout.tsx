@@ -19,5 +19,5 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
 
   const userName = user.user_metadata?.name || user.email?.split("@")[0] || "User";
 
-  return <DashboardShell userName={userName}>{children}</DashboardShell>;
+  return <DashboardShell userName={userName} isGuest={!!user.is_anonymous}>{children}</DashboardShell>;
 }

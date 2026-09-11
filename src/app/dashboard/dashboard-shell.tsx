@@ -18,6 +18,7 @@ import {
   Wallet,
   PieChart,
   MoreHorizontal,
+  RotateCcw,
 } from "lucide-react";
 
 import { Sidebar } from "@/components/shared/sidebar";
@@ -28,10 +29,12 @@ import { useHaptic } from "@/hooks/use-haptic";
 
 import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/client";
+import { resetGuestData } from "@/app/actions/auth.actions";
 
 interface DashboardShellProps {
   children: React.ReactNode;
   userName: string;
+  isGuest: boolean;
 }
 
 const mainNav = [
@@ -73,7 +76,7 @@ function getPageTitle(pathname: string): string {
   return "SpendWise";
 }
 
-export default function DashboardShell({ children, userName }: DashboardShellProps) {
+export default function DashboardShell({ children, userName, isGuest }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { haptic } = useHaptic();
@@ -85,6 +88,20 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/auth/login");
+  };
+
+  const handleResetGuestData = async () => {
+    if (!window.confirm("Reset all guest demo data? This cannot be undone.")) {
+      return;
+    }
+
+    const result = await resetGuestData();
+    if (result.error) {
+      window.alert(result.error);
+      return;
+    }
+
+    window.location.reload();
   };
 
   const isActive = (href: string) => {
@@ -279,6 +296,22 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
           isCollapsed ? "md:ml-[72px]" : "md:ml-64"
         )}
       >
+        {isGuest && (
+          <div className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[rgba(0,122,255,0.18)] bg-[rgba(0,122,255,0.07)] px-4 py-3 text-[13px] text-[var(--text-secondary)] md:mx-8">
+            <p>
+              <span className="font-semibold text-[var(--apple-blue)]">Guest demo</span>
+              {" "}— explore the tracker without entering real financial information.
+            </p>
+            <button
+              type="button"
+              onClick={handleResetGuestData}
+              className="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-semibold text-[var(--apple-blue)] transition-colors hover:bg-[rgba(0,122,255,0.1)]"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Reset
+            </button>
+          </div>
+        )}
         <header
           className="mobile-app-header sticky top-0 z-30 flex items-center justify-between px-5 py-4 md:hidden"
           style={{

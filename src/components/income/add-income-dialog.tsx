@@ -21,30 +21,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { INCOME_CATEGORIES } from "@/lib/constants/config";
-import { addIncome } from "@/app/actions/income.actions";
+import { addIncome, updateIncome } from "@/app/actions/income.actions";
 import { getCategories } from "@/app/actions/category.actions";
 import { toast } from "sonner";
-import { Category } from "@/types";
+import { Category, Income } from "@/types";
 
 interface AddIncomeDialogProps {
   onSuccess?: () => void;
+  income?: Income;
   trigger?: React.ReactNode;
+  onClose?: () => void;
 }
 
-export function AddIncomeDialog({ onSuccess, trigger }: AddIncomeDialogProps) {
+const emptyForm = {
+  title: "",
+  amount: "",
+  category: "",
+  date: new Date().toISOString().split("T")[0],
+  source: "",
+  notes: "",
+};
+
+export function AddIncomeDialog({ onSuccess, income, trigger, onClose }: AddIncomeDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
-  const [formData, setFormData] = useState({
-    title: "",
-    amount: "",
-    category: "",
-    date: new Date().toISOString().split("T")[0],
-    source: "",
-    notes: "",
-  });
+  const isEditing = !!income;
+  const [formData, setFormData] = useState(emptyForm);
+
+  useEffect(() => {
+    if (income) {
+      setOpen(true);
+    }
+  }, [income]);
+
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        title: income?.title || "",
+        amount: income?.amount.toString() || "",
+        category: income?.category || "",
+        date: income?.date || new Date().toISOString().split("T")[0],
+        source: income?.source || "",
+        notes: income?.notes || "",
+      });
+    }
+  }, [open, income]);
 
   // Fetch custom categories when dialog opens
   useEffect(() => {
@@ -76,21 +100,16 @@ export function AddIncomeDialog({ onSuccess, trigger }: AddIncomeDialogProps) {
       formDataObj.append("source", formData.source);
       formDataObj.append("notes", formData.notes);
 
-      const result = await addIncome(formDataObj);
+      const result = isEditing
+        ? await updateIncome(income!.id, formDataObj)
+        : await addIncome(formDataObj);
 
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Income added successfully!");
+        toast.success(isEditing ? "Income updated successfully!" : "Income added successfully!");
         setOpen(false);
-        setFormData({
-          title: "",
-          amount: "",
-          category: "",
-          date: new Date().toISOString().split("T")[0],
-          source: "",
-          notes: "",
-        });
+        setFormData(emptyForm);
         onSuccess?.();
       }
     } catch {
@@ -100,20 +119,29 @@ export function AddIncomeDialog({ onSuccess, trigger }: AddIncomeDialogProps) {
     }
   };
 
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      onClose?.();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {trigger ?? (
           <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Income
+            {isEditing ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {isEditing ? "Edit Income" : "Add Income"}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Income</DialogTitle>
-          <DialogDescription>Record your income and stay updated</DialogDescription>
+          <DialogTitle>{isEditing ? "Edit Income" : "Add New Income"}</DialogTitle>
+          <DialogDescription>
+            {isEditing ? "Update your income details" : "Record your income and stay updated"}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -225,7 +253,7 @@ export function AddIncomeDialog({ onSuccess, trigger }: AddIncomeDialogProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save Income"}
+              {loading ? "Saving..." : isEditing ? "Update Income" : "Save Income"}
             </Button>
           </DialogFooter>
         </form>
