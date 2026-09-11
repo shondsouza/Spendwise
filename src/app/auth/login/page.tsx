@@ -141,9 +141,6 @@ export default function LoginPage() {
             <UserRound className="h-4 w-4" />
             Continue as guest
           </Button>
-          <p className="mt-3 text-center text-xs text-[var(--text-tertiary)]">
-            Your demo data stays separate from other accounts.
-          </p>
         </div>
       </div>
     </div>
