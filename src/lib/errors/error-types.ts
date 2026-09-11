@@ -10,7 +10,7 @@ export class AppError extends Error {
     public code: string,
     public message: string,
     public statusCode: number = 400,
-    public details?: Record<string, any>
+    public details?: Record<string, unknown>
   ) {
     super(message);
     this.name = "AppError";
@@ -19,14 +19,14 @@ export class AppError extends Error {
 
 // Authentication & Authorization Errors
 export class AuthenticationError extends AppError {
-  constructor(message: string = "Authentication required", details?: Record<string, any>) {
+  constructor(message: string = "Authentication required", details?: Record<string, unknown>) {
     super("AUTH_REQUIRED", message, 401, details);
     this.name = "AuthenticationError";
   }
 }
 
 export class AuthorizationError extends AppError {
-  constructor(message: string = "Permission denied", details?: Record<string, any>) {
+  constructor(message: string = "Permission denied", details?: Record<string, unknown>) {
     super("AUTH_FORBIDDEN", message, 403, details);
     this.name = "AuthorizationError";
   }
@@ -53,7 +53,7 @@ export class NotFoundError extends AppError {
 }
 
 export class ConflictError extends AppError {
-  constructor(message: string, details?: Record<string, any>) {
+  constructor(message: string, details?: Record<string, unknown>) {
     super("CONFLICT", message, 409, details);
     this.name = "ConflictError";
   }
@@ -135,7 +135,7 @@ export function isAppError(error: unknown): error is AppError {
  */
 export function isErrorType<T extends AppError>(
   error: unknown,
-  ErrorClass: new (...args: any[]) => T
+  ErrorClass: new (...args: never[]) => T
 ): error is T {
   return error instanceof ErrorClass;
 }

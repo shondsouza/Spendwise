@@ -12,12 +12,7 @@ import {
   AuthorizationError,
   ValidationError,
   NotFoundError,
-  ConflictError,
-  InvalidStateError,
-  InsufficientFundsError,
-  ExternalServiceError,
   DatabaseError,
-  RateLimitError,
   InternalServerError,
   toAppError,
 } from "./error-types";
@@ -28,7 +23,7 @@ export interface ErrorResponse {
     code: string;
     message: string;
     statusCode: number;
-    details?: Record<string, any>;
+    details?: Record<string, unknown>;
     fields?: Record<string, string[]>; // For validation errors
   };
 }
@@ -78,7 +73,7 @@ export function formatSuccessResponse<T>(data: T): SuccessResponse<T> {
  * );
  * ```
  */
-export function withErrorHandling<T extends (...args: any[]) => Promise<any>>(
+export function withErrorHandling<T extends (...args: never[]) => Promise<unknown>>(
   handler: T,
   options: {
     logErrors?: boolean;
@@ -86,7 +81,7 @@ export function withErrorHandling<T extends (...args: any[]) => Promise<any>>(
     action?: string;
   } = {}
 ): T {
-  return (async (...args: any[]) => {
+  return (async (...args: Parameters<T>) => {
     try {
       const result = await handler(...args);
       return formatSuccessResponse(result);
@@ -227,11 +222,26 @@ export async function validateInput<T>(
 ): Promise<T> {
   try {
     return await schema.parseAsync(data);
-  } catch (error: any) {
+  } catch (error: unknown) {
     const fieldErrors: Record<string, string[]> = {};
 
-    if (error.issues) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "issues" in error &&
+      Array.isArray(error.issues)
+    ) {
       for (const issue of error.issues) {
+        if (
+          typeof issue !== "object" ||
+          issue === null ||
+          !("path" in issue) ||
+          !("message" in issue) ||
+          !Array.isArray(issue.path) ||
+          typeof issue.message !== "string"
+        ) {
+          continue;
+        }
         const path = issue.path.join(".");
         if (!fieldErrors[path]) {
           fieldErrors[path] = [];

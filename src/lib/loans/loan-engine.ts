@@ -12,8 +12,7 @@
  * All calculations use Decimal.js for precision with financial data.
  */
 
-import Decimal from "decimal.js";
-import type { Loan } from "@/types/loan.types";
+import Decimal from "decimal.js-light";
 
 // Configure Decimal for financial calculations
 Decimal.set({ precision: 10, rounding: Decimal.ROUND_HALF_UP });
@@ -204,7 +203,7 @@ export class LoanCalculationEngine {
     const payment = new Decimal(emi);
     const monthlyRate = new Decimal(annualRate).div(12).div(100);
 
-    if (payment.isLessThanOrEqualTo(balance.mul(monthlyRate))) {
+    if (payment.lessThanOrEqualTo(balance.mul(monthlyRate))) {
       return -1; // EMI insufficient to cover interest
     }
 
@@ -216,8 +215,8 @@ export class LoanCalculationEngine {
       return -1;
     }
 
-    const numerator = Decimal.ln(rateComponent).negated();
-    const denominator = Decimal.ln(new Decimal(1).plus(monthlyRate));
+    const numerator = rateComponent.ln().negated();
+    const denominator = new Decimal(1).plus(monthlyRate).ln();
 
     return Math.ceil(numerator.div(denominator).toNumber());
   }
@@ -241,7 +240,6 @@ export class LoanCalculationEngine {
       onTimePaymentPercentage,
       outstandingBalance,
       totalPrincipal,
-      monthsRemaining,
     } = loanData;
 
     // Deduct points for overdue payments
@@ -307,11 +305,11 @@ export class LoanCalculationEngine {
     let totalInterest = new Decimal(0);
     const maxMonths = 1200; // Safety limit (100 years)
 
-    while (balance.isGreaterThan(0) && monthCount < maxMonths) {
+    while (balance.greaterThan(0) && monthCount < maxMonths) {
       const interestCharge = balance.mul(monthlyRate);
       const principalPayment = payment.minus(interestCharge);
 
-      if (principalPayment.isLessThanOrEqualTo(0)) {
+      if (principalPayment.lessThanOrEqualTo(0)) {
         // Payment doesn't cover interest
         return {
           totalInterestAccrued: totalInterest,

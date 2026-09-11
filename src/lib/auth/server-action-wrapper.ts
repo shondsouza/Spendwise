@@ -32,11 +32,11 @@ export class AuthorizationError extends Error {
  * Wraps a server action to ensure user is authenticated.
  * Automatically handles auth check and provides userId.
  */
-export function protectedAction<T extends any[], R>(
+export function protectedAction<T extends unknown[], R>(
   handler: (userId: string, ...args: T) => Promise<R>
 ) {
   return async (...args: T): Promise<R> => {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
       error,
@@ -62,11 +62,11 @@ export function protectedAction<T extends any[], R>(
  * Wraps a server action with optional user context.
  * Returns null if user is not authenticated.
  */
-export function optionalAuthAction<T extends any[], R>(
+export function optionalAuthAction<T extends unknown[], R>(
   handler: (userId: string | null, ...args: T) => Promise<R>
 ) {
   return async (...args: T): Promise<R> => {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -80,7 +80,7 @@ export function optionalAuthAction<T extends any[], R>(
  * Useful for individual use in actions that already have their own wrapper.
  */
 export async function getAuthenticatedUser() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
     error,
