@@ -48,6 +48,7 @@ export function AddIncomeDialog({ onSuccess, income, trigger, onClose }: AddInco
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
+  const [isGuest, setIsGuest] = useState(false);
   const isEditing = !!income;
   const [formData, setFormData] = useState(emptyForm);
 
@@ -79,6 +80,7 @@ export function AddIncomeDialog({ onSuccess, income, trigger, onClose }: AddInco
           if (result.data) {
             setCustomCategories(result.data.filter(cat => cat.type === "income" || cat.type === "both"));
           }
+          setIsGuest(result.isGuest ?? false);
         } catch {
           // Ignore errors, just use default categories
         }
@@ -211,11 +213,17 @@ export function AddIncomeDialog({ onSuccess, income, trigger, onClose }: AddInco
                 <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
                   Default
                 </div>
-                {INCOME_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.emoji} {cat.label}
-                  </SelectItem>
-                ))}
+                {!isGuest &&
+                  INCOME_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.emoji} {cat.label}
+                    </SelectItem>
+                  ))}
+                {isGuest && customCategories.length === 0 && (
+                  <div className="px-2 py-2 text-xs text-[var(--text-secondary)]">
+                    Create a category first from the Categories page.
+                  </div>
+                )}
               </SelectContent>
             </Select>
           </div>

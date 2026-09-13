@@ -12,6 +12,9 @@ function createFallbackQueryBuilder() {
     eq() {
       return builder;
     },
+    in() {
+      return builder;
+    },
     gte() {
       return builder;
     },

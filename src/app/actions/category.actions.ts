@@ -221,7 +221,7 @@ export async function getCategories() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { data: [], error: "Unauthorized" };
+    return { data: [], error: "Unauthorized", isGuest: false };
   }
 
   const { data, error } = await supabase
@@ -231,10 +231,10 @@ export async function getCategories() {
     .order("name");
 
   if (error) {
-    return { data: [], error: error.message };
+    return { data: [], error: error.message, isGuest: !!user.is_anonymous };
   }
 
-  return { data, error: null };
+  return { data, error: null, isGuest: !!user.is_anonymous };
 }
 
 export async function getUsedCategoryNames() {

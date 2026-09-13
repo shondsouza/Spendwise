@@ -8,6 +8,7 @@ import {
   X,
   Bell,
   LogOut,
+  AlertTriangle,
   FolderTree,
   Settings,
   Target,
@@ -297,11 +298,14 @@ export default function DashboardShell({ children, userName, isGuest }: Dashboar
         )}
       >
         {isGuest && (
-          <div className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[rgba(0,122,255,0.18)] bg-[rgba(0,122,255,0.07)] px-4 py-3 text-[13px] text-[var(--text-secondary)] md:mx-8">
-            <p>
-              <span className="font-semibold text-[var(--apple-blue)]">Guest demo</span>
-              {" "}— explore the tracker without entering real financial information.
-            </p>
+          <div className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[rgba(255,149,0,0.3)] bg-[rgba(255,149,0,0.1)] px-4 py-3 text-[13px] text-[var(--text-secondary)] md:mx-8">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--apple-orange)]" />
+              <p>
+                <span className="font-semibold text-[var(--apple-orange)]">Guest account warning</span>
+                {" "}— this is demo data. Do not enter real financial information; guest data may be reset.
+              </p>
+            </div>
             <button
               type="button"
               onClick={handleResetGuestData}

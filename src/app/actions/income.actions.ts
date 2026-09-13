@@ -4,6 +4,22 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { incomeSchema } from "@/lib/validations/expense.schema";
 
+async function validateGuestCategory(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  user: { id: string; is_anonymous?: boolean },
+  category: string
+) {
+  if (!user.is_anonymous) return null;
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("name", category)
+    .in("type", ["income", "both"])
+    .maybeSingle();
+  return error ? error.message : data ? null : "Guest accounts must create a category before adding income.";
+}
+
 export async function addIncome(formData: FormData) {
   const supabase = await createClient();
   const {
@@ -26,6 +42,8 @@ export async function addIncome(formData: FormData) {
   if (!parsed.success) {
     return { data: null, error: parsed.error.errors[0].message };
   }
+  const categoryError = await validateGuestCategory(supabase, user, parsed.data.category);
+  if (categoryError) return { data: null, error: categoryError };
 
   const { data, error } = await supabase
     .from("income")
@@ -65,6 +83,8 @@ export async function updateIncome(id: string, formData: FormData) {
   if (!parsed.success) {
     return { data: null, error: parsed.error.errors[0].message };
   }
+  const categoryError = await validateGuestCategory(supabase, user, parsed.data.category);
+  if (categoryError) return { data: null, error: categoryError };
 
   const { data, error } = await supabase
     .from("income")
