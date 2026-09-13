@@ -9,6 +9,7 @@ import ChartsClient from "@/components/dashboard/charts-client";
 import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
 import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 import { ArrowUpRight, Plus } from "lucide-react";
+import { DashboardChat } from "@/components/dashboard/dashboard-chat";
 
 export const dynamic = "force-dynamic";
 
@@ -211,6 +212,7 @@ export default async function DashboardPage() {
           <RecentTransactions transactions={allTransactions} />
         </section>
       </div>
+      <DashboardChat />
     </div>
   );
 }
