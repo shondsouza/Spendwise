@@ -223,7 +223,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="page-enter">
+      <div className="settings-page page-enter">
         <PageHeader title="⚙️ Settings" description="Manage your account preferences" />
         <div className="max-w-2xl space-y-6">
           {[0, 1, 2, 3].map((i) => (
@@ -249,7 +249,7 @@ export default function SettingsPage() {
       />
 
       <div className="max-w-4xl space-y-6">
-        <section className="relative overflow-hidden rounded-[28px] border border-[var(--glass-border)] bg-[var(--glass-bg)] p-5 shadow-[0_14px_36px_rgba(30,38,68,0.07)] sm:p-6">
+        <section className="settings-hero relative overflow-hidden rounded-[28px] border p-5 sm:p-6">
           <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[rgba(0,122,255,0.13)] blur-3xl" />
           <div className="pointer-events-none absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-[rgba(175,82,222,0.08)] blur-3xl" />
           <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -282,7 +282,7 @@ export default function SettingsPage() {
         <div className="grid gap-6 lg:grid-cols-2">
         
         {/* Profile Section */}
-        <Card>
+        <Card className="settings-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(0,122,255,0.1)]"><UserRound className="h-4 w-4 text-[var(--apple-blue)]" /></span>Profile</CardTitle>
             <CardDescription>Your account information</CardDescription>
@@ -317,7 +317,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* Preferences Section */}
-        <Card>
+        <Card className="settings-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(175,82,222,0.1)]"><Palette className="h-4 w-4 text-[var(--apple-purple)]" /></span>Preferences</CardTitle>
             <CardDescription>Customize your experience</CardDescription>
@@ -362,7 +362,7 @@ export default function SettingsPage() {
 
         <div className="grid gap-6 lg:grid-cols-2">
         {/* Security Section */}
-        <Card>
+        <Card className="settings-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-[var(--apple-blue)]" />
@@ -388,7 +388,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* Data Management Section */}
-        <Card>
+        <Card className="settings-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Download className="h-5 w-5 text-[var(--apple-green)]" />
@@ -409,7 +409,7 @@ export default function SettingsPage() {
 
         <div className="grid gap-6 lg:grid-cols-2">
         {/* Database Health Section */}
-        <Card>
+        <Card className="settings-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(90,200,250,0.12)]"><Database className="h-4 w-4 text-[var(--apple-teal)]" /></span>Database Health</CardTitle>
             <CardDescription>Supabase free tier storage usage</CardDescription>
@@ -451,7 +451,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* Theme Section */}
-        <Card>
+        <Card className="settings-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(88,86,214,0.1)]"><Moon className="h-4 w-4 text-[var(--apple-indigo)]" /></span>Appearance</CardTitle>
             <CardDescription>Choose your preferred theme</CardDescription>
@@ -469,7 +469,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Danger Zone */}
-        <Card className="border-[rgba(255,59,48,0.2)]">
+        <Card className="settings-card border-[rgba(255,59,48,0.2)]">
           <CardHeader>
             <CardTitle className="text-[var(--apple-red)]">🚨 Danger Zone</CardTitle>
             <CardDescription>Irreversible actions</CardDescription>

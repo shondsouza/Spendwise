@@ -78,7 +78,7 @@ export function DashboardChat() {
           <header className="flex items-center justify-between border-b border-[var(--separator)] px-5 py-4">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--gradient-blue)] text-white">
-                <Sparkles className="h-5 w-5" />
+                <Sparkles className="h-5 w-5 text-black dark:text-white" />
               </span>
               <div>
                 <h2 className="text-[16px] font-bold">SpendWise AI</h2>
