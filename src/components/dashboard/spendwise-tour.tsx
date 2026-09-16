@@ -9,25 +9,25 @@ const steps = [
     icon: CircleDollarSign,
     title: "Track expenses",
     text: "Use the Add button to record what you spend, with a category, date, and payment method.",
-    image: "/wallet.jpg",
+    image: "/images/person.png",
   },
   {
     icon: WalletCards,
     title: "Record income",
     text: "Add salary, freelance payments, or any other income to keep your balance accurate.",
-    image: "/spendwise.png",
+    image: "/images/person.png",
   },
   {
     icon: ListChecks,
     title: "Plan your money",
     text: "Create categories and set budgets to organize your spending and stay on track.",
-    image: "/spendwise-light.png",
+    image: "/images/person.png",
   },
   {
     icon: BarChart3,
     title: "Understand your finances",
     text: "Review the dashboard and Analytics to see patterns and make better decisions.",
-    image: "/logo/desktop.png",
+    image: "/images/person.png",
   },
 ];
 
@@ -63,7 +63,7 @@ export function SpendwiseTour({ onClose }: { onClose: () => void }) {
             alt=""
             fill
             sizes="(max-width: 640px) 100vw, 400px"
-            className="object-contain p-5"
+            className="object-cover"
           />
         </div>
         <div className="mt-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[rgba(0,122,255,0.12)] text-[var(--apple-blue)]">
