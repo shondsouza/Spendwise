@@ -6,13 +6,14 @@ SpendWise is a fast and intuitive expense tracking application that helps you ma
 
 ## Authentication
 
-SpendWise uses Supabase email and password authentication. New users receive
-an email confirmation link before they can sign in. Configure these Supabase
-**Authentication > URL Configuration** values:
+SpendWise uses Supabase email and password authentication for existing users.
+New accounts are created and managed separately in Supabase. Configure these
+Supabase **Authentication > URL Configuration** values:
 
 - **Site URL:** `https://spendwiseshon.vercel.app`
 - **Redirect URLs:** `https://spendwiseshon.vercel.app/auth/callback` and
   `http://localhost:3000/auth/callback`
 
-The login page uses `signUp` for registration and `signInWithPassword` for
-login. The callback route exchanges the email confirmation code for a session.
+The login page uses `signInWithPassword`. Email confirmation remains enforced
+by Supabase, so only confirmed users can access the dashboard and application
+data.
