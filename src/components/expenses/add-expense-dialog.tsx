@@ -27,6 +27,7 @@ import { addExpense, updateExpense } from "@/app/actions/expense.actions";
 import { getCategories } from "@/app/actions/category.actions";
 import { toast } from "sonner";
 import { Expense, Category } from "@/types";
+import { useGuestData } from "@/lib/guest-data";
 
 interface AddExpenseDialogProps {
   onSuccess?: () => void;
@@ -48,20 +49,24 @@ export function AddExpenseDialog({ onSuccess, expense, trigger, onClose }: AddEx
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
-  const [isGuest, setIsGuest] = useState(false);
   const isEditing = !!expense;
   const [formData, setFormData] = useState(emptyForm);
+  const guestData = useGuestData();
+  const isGuest = guestData.isGuest;
 
   // Fetch custom categories when dialog opens
   useEffect(() => {
     if (open) {
       const fetchCategories = async () => {
         try {
+          if (isGuest) {
+            setCustomCategories(guestData.categories.filter((cat) => cat.type === "expense" || cat.type === "both"));
+            return;
+          }
           const result = await getCategories();
           if (result.data) {
             setCustomCategories(result.data.filter(cat => cat.type === "expense" || cat.type === "both"));
           }
-          setIsGuest(result.isGuest ?? false);
         } catch {
           // Ignore errors, just use default categories
         }
@@ -103,9 +108,24 @@ export function AddExpenseDialog({ onSuccess, expense, trigger, onClose }: AddEx
       formDataObj.append("payment_method", formData.payment_method);
       formDataObj.append("notes", formData.notes);
 
-      const result = isEditing
-        ? await updateExpense(expense!.id, formDataObj)
-        : await addExpense(formDataObj);
+      const result = isGuest
+        ? {
+            data: guestData.saveExpense(
+              {
+                title: formData.title,
+                amount: Number(formData.amount),
+                category: formData.category,
+                date: formData.date,
+                payment_method: formData.payment_method,
+                notes: formData.notes,
+              },
+              isEditing ? expense!.id : undefined
+            ),
+            error: null,
+          }
+        : isEditing
+          ? await updateExpense(expense!.id, formDataObj)
+          : await addExpense(formDataObj);
 
       if (result.error) {
         toast.error(result.error);
@@ -216,17 +236,11 @@ export function AddExpenseDialog({ onSuccess, expense, trigger, onClose }: AddEx
                 <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
                   Default
                 </div>
-                {!isGuest &&
-                  EXPENSE_CATEGORIES.map((cat) => (
+                {EXPENSE_CATEGORIES.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {cat.emoji} {cat.label}
                     </SelectItem>
                   ))}
-                {isGuest && customCategories.length === 0 && (
-                  <div className="px-2 py-2 text-xs text-[var(--text-secondary)]">
-                    Create a category first from the Categories page.
-                  </div>
-                )}
               </SelectContent>
             </Select>
           </div>

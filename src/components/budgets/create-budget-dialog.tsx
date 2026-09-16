@@ -27,6 +27,7 @@ import { addBudget } from "@/app/actions/budget.actions";
 import { getCategories } from "@/app/actions/category.actions";
 import { toast } from "sonner";
 import { Category } from "@/types";
+import { useGuestData } from "@/lib/guest-data";
 
 interface CreateBudgetDialogProps {
   onSuccess?: () => void;
@@ -36,6 +37,7 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
+  const guestData = useGuestData();
   const monthLabel = new Date().toLocaleString("en-IN", { month: "long", year: "numeric" });
 
   const [formData, setFormData] = useState({
@@ -49,6 +51,10 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
 
     const fetchCategories = async () => {
       try {
+        if (guestData.isGuest) {
+          setCustomCategories(guestData.categories.filter((cat) => !cat.is_deleted && (cat.type === "expense" || cat.type === "both")));
+          return;
+        }
         const result = await getCategories();
         if (result.data) {
           setCustomCategories(
@@ -78,7 +84,19 @@ export function CreateBudgetDialog({ onSuccess }: CreateBudgetDialogProps) {
       formDataObj.append("amount", formData.amount);
       formDataObj.append("repeats_monthly", formData.repeatsMonthly ? "true" : "false");
 
-      const result = await addBudget(formDataObj);
+      const now = new Date();
+      const result = guestData.isGuest
+        ? {
+            data: guestData.saveBudget({
+              category: formData.category,
+              amount: Number(formData.amount),
+              month: now.getMonth() + 1,
+              year: now.getFullYear(),
+              repeats_monthly: formData.repeatsMonthly,
+            }),
+            error: null,
+          }
+        : await addBudget(formDataObj);
 
       if (result.error) {
         toast.error(result.error);

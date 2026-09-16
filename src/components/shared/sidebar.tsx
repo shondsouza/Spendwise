@@ -31,13 +31,16 @@ const mainNav = [
   { href: "/dashboard/expenses", label: "Expenses", icon: CreditCard },
   { href: "/dashboard/income", label: "Income", icon: Wallet },
   { href: "/dashboard/lent", label: "Lent", icon: Handshake },
+  { href: "/dashboard/borrowed", label: "Borrowed", icon: Handshake },
   { href: "/dashboard/loan", label: "Loans", icon: Building2 },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/dashboard/budgets", label: "Budgets", icon: Target },
   { href: "/dashboard/categories", label: "Categories", icon: FolderOpen },
 ];
 
-const bottomNav = [{ href: "/dashboard/settings", label: "Settings", icon: Settings }];
+const bottomNav = [
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+];
 
 export function Sidebar({
   currentPath,

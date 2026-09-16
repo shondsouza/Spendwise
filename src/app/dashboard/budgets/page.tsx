@@ -18,6 +18,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PieChart } from "lucide-react";
 import { getCategoryDisplayName } from "@/lib/utils/category-aliases";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useGuestData } from "@/lib/guest-data";
 
 const MONTH_NAMES = [
   "January",
@@ -44,12 +45,27 @@ export default function BudgetsPage() {
   const [budgets, setBudgets] = useState<BudgetCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const guestData = useGuestData();
   const now = new Date();
   const currentMonthLabel = `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`;
 
   useEffect(() => {
-    fetchBudgets();
-  }, []);
+    if (guestData.isGuest) {
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      setBudgets(
+        guestData.budgets
+          .filter((budget) => budget.month === currentMonth && budget.year === currentYear)
+          .map((budget) => {
+            const spent = guestData.expenses
+              .filter((expense) => expense.category === budget.category && new Date(expense.date).getMonth() + 1 === currentMonth && new Date(expense.date).getFullYear() === currentYear)
+              .reduce((sum, expense) => sum + Number(expense.amount), 0);
+            return { ...budget, spent, remaining: Number(budget.amount) - spent };
+          })
+      );
+      setLoading(false);
+    } else fetchBudgets();
+  }, [guestData.isGuest, guestData.budgets, guestData.expenses]);
 
   const fetchBudgets = async () => {
     setLoading(true);
@@ -70,7 +86,9 @@ export default function BudgetsPage() {
   const handleDelete = async (id: string) => {
     if (confirm("Remove this budget for this category?")) {
       try {
-        const result = await deleteBudget(id);
+        const result = guestData.isGuest
+          ? (guestData.deleteBudget(id), { error: null })
+          : await deleteBudget(id);
         if (result.error) {
           toast.error(result.error);
         } else {
@@ -92,7 +110,15 @@ export default function BudgetsPage() {
     );
 
     try {
-      const result = await setBudgetRepeatsMonthly(budget.id, repeatsMonthly);
+      const result = guestData.isGuest
+        ? (guestData.saveBudget({
+            category: budget.category,
+            amount: budget.amount,
+            month: budget.month,
+            year: budget.year,
+            repeats_monthly: repeatsMonthly,
+          }, budget.id), { error: null })
+        : await setBudgetRepeatsMonthly(budget.id, repeatsMonthly);
       if (result.error) {
         toast.error(result.error);
         setBudgets((prev) =>

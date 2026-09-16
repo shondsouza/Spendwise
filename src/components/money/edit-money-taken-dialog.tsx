@@ -26,6 +26,7 @@ import {
 } from '../ui/select';
 import { MoneyTaken } from '@/types/money.types';
 import { updateMoneyTaken } from '@/app/actions/money.actions';
+import { useGuestData } from '@/lib/guest-data';
 
 interface EditMoneyTakenDialogProps {
   entry: MoneyTaken;
@@ -38,6 +39,7 @@ export function EditMoneyTakenDialog({
 }: EditMoneyTakenDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const guestData = useGuestData();
   const [hasInterest, setHasInterest] = useState(entry.has_interest || false);
   const [formData, setFormData] = useState({
     person_name: entry.person_name,
@@ -83,7 +85,25 @@ export function EditMoneyTakenDialog({
         );
         fd.append('total_tenure_years', formData.total_tenure_years.toString());
       }
-      const result = await updateMoneyTaken(entry.id, fd);
+      const result = guestData.isGuest
+        ? {
+            data: guestData.saveMoneyTaken({
+              ...entry,
+              person_name: formData.person_name,
+              amount: Number(formData.amount),
+              taken_date: formData.taken_date,
+              reason: formData.reason || null,
+              due_date: formData.due_date || null,
+              has_interest: hasInterest,
+              simple_interest_rate: Number(formData.simple_interest_rate) || undefined,
+              simple_interest_years: Number(formData.simple_interest_years) || undefined,
+              compound_interest_rate: Number(formData.compound_interest_rate) || undefined,
+              compounding_frequency: Number(formData.compounding_frequency) || undefined,
+              total_tenure_years: Number(formData.total_tenure_years) || undefined,
+            }, entry.id),
+            error: null,
+          }
+        : await updateMoneyTaken(entry.id, fd);
 
       if (result.error) {
         toast.error(result.error);

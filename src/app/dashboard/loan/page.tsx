@@ -25,6 +25,7 @@ import { DebtFreedomWidget } from '@/components/loans/debt-freedom-widget';
 import { LoanHealthScoreCard } from '@/components/loans/loan-health-score-card';
 import { computeLoanBalance } from '@/lib/loans/loan-calculator';
 import { formatCurrency } from '@/lib/utils/currency';
+import { useGuestData } from '@/lib/guest-data';
 
 export default function LoanPage() {
   const [loans, setLoans] = useState<UserLoan[]>([]);
@@ -38,6 +39,7 @@ export default function LoanPage() {
   const [editLoan, setEditLoan] = useState<UserLoan | null>(null);
   const [addPaymentLoan, setAddPaymentLoan] = useState<UserLoan | null>(null);
   const [detailLoan, setDetailLoan] = useState<UserLoan | null>(null);
+  const guestData = useGuestData();
 
   useEffect(() => {
     fetchData();
@@ -53,10 +55,22 @@ export default function LoanPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [loansResult, paymentsResult] = await Promise.all([
-        getLoans(),
-        getAllLoanPayments(),
-      ]);
+      if (guestData.isGuest) {
+        setLoans(guestData.loans);
+        const payments: Record<string, LoanPayment[]> = {};
+        guestData.loans.forEach((loan) => {
+          payments[loan.id] = guestData.loanPayments.filter((payment) => payment.loan_id === loan.id);
+        });
+        setAllPayments(payments);
+        const today = new Date();
+        setMonthlyIncome(guestData.income.filter((entry) => {
+          const date = new Date(entry.date);
+          return date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+        }).reduce((sum, entry) => sum + Number(entry.amount), 0));
+        setLoading(false);
+        return;
+      }
+      const [loansResult, paymentsResult] = await Promise.all([getLoans(), getAllLoanPayments()]);
 
       if (loansResult.data) setLoans(loansResult.data);
       if (paymentsResult.data) setAllPayments(paymentsResult.data);

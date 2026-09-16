@@ -17,6 +17,7 @@ import { MoreHorizontal, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CreateCategoryDialog } from "@/components/categories/create-category-dialog";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants/config";
+import { useGuestData } from "@/lib/guest-data";
 
 interface DisplayCategory {
   id: string;
@@ -33,10 +34,18 @@ export default function CategoriesPage() {
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
   const [usedCategoryNames, setUsedCategoryNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const guestData = useGuestData();
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    if (guestData.isGuest) {
+      setCustomCategories(guestData.categories);
+      setUsedCategoryNames([
+        ...guestData.expenses.map((item) => item.category),
+        ...guestData.income.map((item) => item.category),
+      ]);
+      setLoading(false);
+    } else fetchCategories();
+  }, [guestData.isGuest, guestData.categories, guestData.expenses, guestData.income]);
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -58,17 +67,32 @@ export default function CategoriesPage() {
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this category?")) {
       try {
-        const result = await deleteCategory(id);
+        const result = guestData.isGuest
+          ? (guestData.deleteCategory(id), { error: null })
+          : await deleteCategory(id);
         if (result.error) {
           toast.error(result.error);
         } else {
           toast.success("Category deleted!");
-          setCustomCategories(customCategories.filter((c) => c.id !== id));
+          setCustomCategories(guestData.isGuest ? guestData.categories.filter((c) => c.id !== id) : customCategories.filter((c) => c.id !== id));
         }
       } catch {
         toast.error("Failed to delete category");
       }
     }
+  };
+
+  const handleDefaultDelete = async (defaultKey: string) => {
+    if (!confirm("Remove this category?")) return;
+    if (guestData.isGuest) {
+      const category = guestData.categories.find((item) => item.default_key === defaultKey);
+      if (category) guestData.deleteCategory(category.id);
+      toast.success("Category removed!");
+      return;
+    }
+    const result = await deleteDefaultCategory(defaultKey);
+    if (result.error) toast.error(result.error);
+    else { toast.success("Category removed!"); fetchCategories(); }
   };
 
   const usedNames = new Set(usedCategoryNames);
@@ -99,7 +123,7 @@ export default function CategoriesPage() {
       isCustom: false,
       defaultKey: `income:${cat.value}`,
     })),
-    ...customCategories.filter((cat) => isUsed(cat.name) && !cat.default_key).map((cat) => ({
+    ...customCategories.filter((cat) => (guestData.isGuest || isUsed(cat.name)) && !cat.default_key && !cat.is_deleted).map((cat) => ({
       id: cat.id,
       routeId: `custom::${cat.id}`,
       name: cat.name,
@@ -144,12 +168,7 @@ export default function CategoriesPage() {
                     key={category.id}
                     category={category}
                     onDelete={category.isCustom ? handleDelete : undefined}
-                    onDefaultDelete={category.defaultKey ? async () => {
-                      if (!confirm("Remove this category?")) return;
-                      const result = await deleteDefaultCategory(category.defaultKey!);
-                      if (result.error) toast.error(result.error);
-                      else { toast.success("Category removed!"); fetchCategories(); }
-                    } : undefined}
+                    onDefaultDelete={category.defaultKey ? () => handleDefaultDelete(category.defaultKey!) : undefined}
                     onEditSuccess={fetchCategories}
                   />
                 ))}
@@ -169,12 +188,7 @@ export default function CategoriesPage() {
                     key={category.id}
                     category={category}
                     onDelete={category.isCustom ? handleDelete : undefined}
-                    onDefaultDelete={category.defaultKey ? async () => {
-                      if (!confirm("Remove this category?")) return;
-                      const result = await deleteDefaultCategory(category.defaultKey!);
-                      if (result.error) toast.error(result.error);
-                      else { toast.success("Category removed!"); fetchCategories(); }
-                    } : undefined}
+                    onDefaultDelete={category.defaultKey ? () => handleDefaultDelete(category.defaultKey!) : undefined}
                     onEditSuccess={fetchCategories}
                   />
                 ))}
@@ -193,12 +207,7 @@ export default function CategoriesPage() {
                     key={category.id}
                     category={category}
                     onDelete={category.isCustom ? handleDelete : undefined}
-                    onDefaultDelete={category.defaultKey ? async () => {
-                      if (!confirm("Remove this category?")) return;
-                      const result = await deleteDefaultCategory(category.defaultKey!);
-                      if (result.error) toast.error(result.error);
-                      else { toast.success("Category removed!"); fetchCategories(); }
-                    } : undefined}
+                    onDefaultDelete={category.defaultKey ? () => handleDefaultDelete(category.defaultKey!) : undefined}
                     onEditSuccess={fetchCategories}
                   />
                 ))}

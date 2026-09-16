@@ -24,6 +24,7 @@ import { calculateMoratoriumOutstanding, computeMoratoriumEndDate } from '@/lib/
 import { formatCurrency } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils/cn';
 import { Info, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
+import { useGuestData } from '@/lib/guest-data';
 
 type Step = 1 | 2 | 3;
 
@@ -39,6 +40,7 @@ export function EditLoanDialog({ loan, open, onOpenChange, onSuccess }: EditLoan
   const [submitting, setSubmitting] = useState(false);
   const [previewEmi, setPreviewEmi] = useState<number | null>(null);
   const [previewOutstanding, setPreviewOutstanding] = useState<number | null>(null);
+  const guestData = useGuestData();
 
   const form = useForm<UpdateLoanInput>({
     resolver: zodResolver(updateLoanSchema),
@@ -106,7 +108,25 @@ export function EditLoanDialog({ loan, open, onOpenChange, onSuccess }: EditLoan
       }
     });
 
-    const result = await updateLoan(loan.id, fd);
+    const result = guestData.isGuest
+      ? {
+          data: guestData.saveLoan({
+            ...loan,
+            loan_name: values.loan_name ?? loan.loan_name,
+            lender_name: values.lender_name ?? loan.lender_name,
+            loan_type: values.loan_type ?? loan.loan_type,
+            original_principal: Number(values.original_principal),
+            current_outstanding: Number(values.current_outstanding ?? values.original_principal),
+            interest_type: values.interest_type ?? loan.interest_type,
+            interest_rate: Number(values.interest_rate),
+            loan_start_date: values.loan_start_date ?? loan.loan_start_date,
+            loan_end_date: values.loan_end_date || null,
+            notes: values.notes || null,
+            emi_amount: values.emi_amount ? Number(values.emi_amount) : loan.emi_amount,
+          }, loan.id),
+          error: null,
+        }
+      : await updateLoan(loan.id, fd);
     setSubmitting(false);
 
     if (result.error) {

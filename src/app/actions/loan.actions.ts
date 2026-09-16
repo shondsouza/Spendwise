@@ -15,7 +15,7 @@ import { format, parseISO } from 'date-fns';
 export async function getLoans(): Promise<{ data: UserLoan[] | null; error: string | null }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { data: null, error: 'Unauthorized' };
+  if (!user || user.is_anonymous) return { data: null, error: 'Unauthorized' };
 
   const { data, error } = await supabase
     .from('user_loans')
@@ -30,7 +30,7 @@ export async function getLoans(): Promise<{ data: UserLoan[] | null; error: stri
 export async function getLoanById(id: string): Promise<{ data: UserLoan | null; error: string | null }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { data: null, error: 'Unauthorized' };
+  if (!user || user.is_anonymous) return { data: null, error: 'Unauthorized' };
 
   const { data, error } = await supabase
     .from('user_loans')
@@ -50,7 +50,7 @@ export async function getLoanById(id: string): Promise<{ data: UserLoan | null; 
 export async function createLoan(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { data: null, error: 'Unauthorized' };
+  if (!user || user.is_anonymous) return { data: null, error: 'Unauthorized' };
 
   const raw: Record<string, unknown> = Object.fromEntries(formData);
   // Disbursements come in as JSON string
@@ -220,7 +220,7 @@ export async function createLoan(formData: FormData) {
 export async function updateLoan(id: string, formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { data: null, error: 'Unauthorized' };
+  if (!user || user.is_anonymous) return { data: null, error: 'Unauthorized' };
 
   const raw = { ...Object.fromEntries(formData), id };
   // Handle disbursements JSON
@@ -299,7 +299,7 @@ export async function updateLoan(id: string, formData: FormData) {
 export async function deleteLoan(id: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Unauthorized' };
+  if (!user || user.is_anonymous) return { success: false, error: 'Unauthorized' };
 
   const { error } = await supabase
     .from('user_loans')
@@ -322,7 +322,7 @@ export async function deleteLoan(id: string) {
 export async function getLoanPayments(loanId: string): Promise<{ data: LoanPayment[] | null; error: string | null }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { data: null, error: 'Unauthorized' };
+  if (!user || user.is_anonymous) return { data: null, error: 'Unauthorized' };
 
   const { data, error } = await supabase
     .from('loan_payments')
@@ -338,7 +338,7 @@ export async function getLoanPayments(loanId: string): Promise<{ data: LoanPayme
 export async function addLoanPayment(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { data: null, error: 'Unauthorized' };
+  if (!user || user.is_anonymous) return { data: null, error: 'Unauthorized' };
 
   const raw = Object.fromEntries(formData);
   const parsed = addPaymentSchema.safeParse(raw);
@@ -444,7 +444,7 @@ export async function addLoanPayment(formData: FormData) {
 export async function deleteLoanPayment(paymentId: string, loanId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Unauthorized' };
+  if (!user || user.is_anonymous) return { success: false, error: 'Unauthorized' };
 
   // Fetch payment details first
   const { data: payment } = await supabase
@@ -504,7 +504,7 @@ export async function deleteLoanPayment(paymentId: string, loanId: string) {
 export async function getLoanSnapshots(loanId: string): Promise<{ data: LoanSnapshot[] | null; error: string | null }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { data: null, error: 'Unauthorized' };
+  if (!user || user.is_anonymous) return { data: null, error: 'Unauthorized' };
 
   const { data, error } = await supabase
     .from('loan_snapshots')
@@ -524,7 +524,7 @@ export async function getLoanSnapshots(loanId: string): Promise<{ data: LoanSnap
 export async function getAllLoanPayments(): Promise<{ data: Record<string, LoanPayment[]> | null; error: string | null }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { data: null, error: 'Unauthorized' };
+  if (!user || user.is_anonymous) return { data: null, error: 'Unauthorized' };
 
   const { data, error } = await supabase
     .from('loan_payments')

@@ -17,7 +17,7 @@ export async function getMoneyGiven(limit = 50, offset = 0) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized", count: 0 };
   }
 
@@ -41,7 +41,7 @@ export async function addMoneyGiven(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -71,7 +71,7 @@ export async function deleteMoneyGiven(id: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { success: false, error: "Unauthorized" };
   }
 
@@ -98,7 +98,7 @@ export async function getGivenRepayments(givenId: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -122,7 +122,7 @@ export async function addGivenRepayment(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -174,7 +174,7 @@ export async function getMoneyTaken(limit = 50, offset = 0) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized", count: 0 };
   }
 
@@ -198,7 +198,7 @@ export async function addMoneyTaken(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -229,7 +229,7 @@ export async function updateMoneyTaken(id: string, formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -261,7 +261,7 @@ export async function deleteMoneyTaken(id: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { success: false, error: "Unauthorized" };
   }
 
@@ -288,7 +288,7 @@ export async function getTakenRepayments(takenId: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -312,7 +312,7 @@ export async function addTakenRepayment(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 

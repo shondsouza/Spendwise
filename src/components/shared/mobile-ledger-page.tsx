@@ -2,7 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, ChevronLeft, Pencil, Plus, Trash2, Wallet } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronLeft,
+  MoreVertical,
+  Pencil,
+  Plus,
+  Trash2,
+  Wallet,
+} from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatDateShort } from "@/lib/utils/date";
 import { CURRENCY_SYMBOL } from "@/lib/constants/config";
@@ -41,6 +50,7 @@ export function MobileLedgerPage({ title, entries, addAction, onDelete, onEdit, 
   const router = useRouter();
   const isIncome = title === "Income";
   const [range, setRange] = useState<"Week" | "Month" | "Year">("Week");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const periodEntries = useMemo(() => {
     const now = new Date();
     const start = new Date(now);
@@ -115,12 +125,44 @@ export function MobileLedgerPage({ title, entries, addAction, onDelete, onEdit, 
                 <h3>{entry.title}</h3>
                 <p>{entry.category} · {formatDateShort(entry.date)}{entry.detail ? ` · ${entry.detail}` : ""}</p>
               </div>
-              <div className="mobile-ledger-entry-actions">
+              <div className="mobile-ledger-entry-actions relative">
                 <strong className={isIncome ? "income" : "expense"}>{isIncome ? "+" : "-"}{formatCurrency(entry.amount)}</strong>
-                <div>
-                  {onEdit && <button type="button" aria-label={`Edit ${entry.title}`} onClick={() => onEdit(entry)}><Pencil className="h-3 w-3" /></button>}
-                  <button type="button" aria-label={`Delete ${entry.title}`} onClick={() => onDelete(entry.id)}><Trash2 className="h-3 w-3" /></button>
-                </div>
+                <button
+                  type="button"
+                  aria-label={`Actions for ${entry.title}`}
+                  aria-expanded={openMenuId === entry.id}
+                  onClick={() => setOpenMenuId(openMenuId === entry.id ? null : entry.id)}
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+                {openMenuId === entry.id && (
+                  <div className="absolute right-0 top-full z-20 mt-1 min-w-28 rounded-xl border border-[var(--separator)] bg-[var(--bg-secondary)] p-1 shadow-lg">
+                    {onEdit && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          onEdit(entry);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold text-[var(--apple-blue)]"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        onDelete(entry.id);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold text-[var(--apple-red)]"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
             </article>
           ))}

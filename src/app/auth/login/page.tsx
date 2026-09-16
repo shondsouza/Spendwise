@@ -64,6 +64,25 @@ export default function LoginPage() {
     }
   };
 
+  const handleGuestLogin = async () => {
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInAnonymously();
+
+      if (error) {
+        toast.error(error.message);
+      } else if (data.user) {
+        toast.success("Guest session started!");
+        router.push("/dashboard");
+      }
+    } catch {
+      toast.error("Unable to start a guest session. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page-enter">
       <div className="apple-card overflow-hidden border border-[var(--separator)] shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
@@ -114,6 +133,22 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[var(--separator)]" />
+            <span className="text-xs text-[var(--text-tertiary)]">or</span>
+            <div className="h-px flex-1 bg-[var(--separator)]" />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 w-full"
+            onClick={handleGuestLogin}
+            disabled={loading}
+          >
+            {loading ? "Starting guest session..." : "Continue as guest"}
+          </Button>
         </div>
       </div>
     </div>

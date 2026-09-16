@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Expense } from "@/types";
 import {
   Table,
@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Edit2 } from "lucide-react";
+import { Trash2, Edit2, MoreVertical } from "lucide-react";
 import { AmountDisplay } from "@/components/shared/amount-display";
 import { CategoryBadge } from "@/components/shared/category-badge";
 import { formatDate, formatDateShort } from "@/lib/utils/date";
@@ -32,6 +32,8 @@ function getCategoryColor(category: string): string {
 }
 
 export function ExpenseTable({ expenses, onEdit, onDelete }: ExpenseTableProps) {
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
   return (
     <div className="apple-card overflow-hidden">
       {/* Mobile: card rows */}
@@ -56,26 +58,47 @@ export function ExpenseTable({ expenses, onEdit, onDelete }: ExpenseTableProps) 
                   {expense.payment_method && ` · ${expense.payment_method}`}
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-1.5">
+              <div className="relative flex flex-col items-end gap-1.5">
                 <AmountDisplay amount={expense.amount} variant="danger" className="text-[15px] font-bold" />
-                <div className="flex gap-1">
-                  {onEdit && (
-                    <button
-                      onClick={() => onEdit(expense)}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg bg-[rgba(0,122,255,0.1)] text-[var(--apple-blue)] transition-all active:scale-90"
-                    >
-                      <Edit2 className="h-3 w-3" />
-                    </button>
-                  )}
-                  {onDelete && (
-                    <button
-                      onClick={() => onDelete(expense.id)}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg bg-[rgba(255,59,48,0.1)] text-[var(--apple-red)] transition-all active:scale-90"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  aria-label={`Actions for ${expense.title}`}
+                  aria-expanded={openMenuId === expense.id}
+                  onClick={() => setOpenMenuId(openMenuId === expense.id ? null : expense.id)}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-all active:scale-90"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+                {openMenuId === expense.id && (
+                  <div className="absolute right-0 top-full z-20 mt-1 min-w-28 rounded-xl border border-[var(--separator)] bg-[var(--bg-secondary)] p-1 shadow-lg">
+                    {onEdit && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          onEdit(expense);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold text-[var(--apple-blue)] hover:bg-[rgba(0,122,255,0.1)]"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                        Edit
+                      </button>
+                    )}
+                    {onDelete && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          onDelete(expense.id);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold text-[var(--apple-red)] hover:bg-[rgba(255,59,48,0.1)]"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           );

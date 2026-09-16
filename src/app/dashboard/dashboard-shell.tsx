@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { Sidebar } from "@/components/shared/sidebar";
+import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { PullToRefresh } from "@/components/shared/pull-to-refresh";
 import { PWAInstallBanner } from "@/components/shared/pwa-install-banner";
@@ -28,10 +29,13 @@ import { useHaptic } from "@/hooks/use-haptic";
 
 import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/client";
+import { GuestDataProvider } from "@/lib/guest-data";
+import { SpendwiseTour } from "@/components/dashboard/spendwise-tour";
 
 interface DashboardShellProps {
   children: React.ReactNode;
   userName: string;
+  isGuest: boolean;
 }
 
 const mainNav = [
@@ -43,6 +47,7 @@ const mainNav = [
 
 const moreNav = [
   { href: "/dashboard/lent", label: "Lent Money", icon: Handshake },
+  { href: "/dashboard/borrowed", label: "Borrowed", icon: Handshake },
   { href: "/dashboard/loan", label: "Loans", icon: Building2 },
   { href: "/dashboard/budgets", label: "Budgets", icon: Target },
   { href: "/dashboard/categories", label: "Categories", icon: FolderTree },
@@ -54,6 +59,7 @@ const sidebarNav = [
   { href: "/dashboard/expenses", label: "Expenses", icon: CreditCard },
   { href: "/dashboard/income", label: "Income", icon: Wallet },
   { href: "/dashboard/lent", label: "Lent", icon: Handshake },
+  { href: "/dashboard/borrowed", label: "Borrowed", icon: Handshake },
   { href: "/dashboard/loan", label: "Loan", icon: Building2 },
   { href: "/dashboard/analytics", label: "Analytics", icon: PieChart },
   { href: "/dashboard/budgets", label: "Budgets", icon: Target },
@@ -66,6 +72,7 @@ function getPageTitle(pathname: string): string {
   if (pathname.startsWith("/dashboard/income")) return "Income";
   if (pathname.startsWith("/dashboard/analytics")) return "Analytics";
   if (pathname.startsWith("/dashboard/lent")) return "Lent Money";
+  if (pathname.startsWith("/dashboard/borrowed")) return "Borrowed";
   if (pathname.startsWith("/dashboard/loan")) return "Loans";
   if (pathname.startsWith("/dashboard/budgets")) return "Budgets";
   if (pathname.startsWith("/dashboard/categories")) return "Categories";
@@ -73,13 +80,22 @@ function getPageTitle(pathname: string): string {
   return "SpendWise";
 }
 
-export default function DashboardShell({ children, userName }: DashboardShellProps) {
+export default function DashboardShell({ children, userName, isGuest }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { haptic } = useHaptic();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    const key = "spendwise-guide-shown";
+    if (!window.localStorage.getItem(key)) {
+      window.localStorage.setItem(key, "true");
+      setShowTour(true);
+    }
+  }, []);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -97,7 +113,9 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
   const userInitial = (userName || "U").charAt(0).toUpperCase();
 
   return (
-    <div className="dashboard-app-shell flex h-screen min-h-dvh bg-[var(--bg-primary)]">
+    <GuestDataProvider enabled={isGuest}>
+      <div className="dashboard-app-shell flex h-screen min-h-dvh bg-[var(--bg-primary)]">
+      {showTour && <SpendwiseTour onClose={() => setShowTour(false)} />}
       <Sidebar
         currentPath={pathname}
         userName={userName}
@@ -347,15 +365,19 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
                 </Link>
               );
             })}
-            <Link
-              href="/dashboard/expenses"
-              aria-label="Add transaction"
-              className="mobile-add-button"
-              onClick={() => haptic("medium")}
-            >
-              <span>+</span>
-              <small>Add</small>
-            </Link>
+            <AddExpenseDialog
+              trigger={
+                <button
+                  type="button"
+                  aria-label="Add expense"
+                  className="mobile-add-button"
+                  onClick={() => haptic("medium")}
+                >
+                  <span>+</span>
+                  <small>Add</small>
+                </button>
+              }
+            />
             <Link
               href="/dashboard/income"
               aria-current={pathname.startsWith("/dashboard/income") ? "page" : undefined}
@@ -404,6 +426,7 @@ export default function DashboardShell({ children, userName }: DashboardShellPro
           </div>
         </nav>
       </main>
-    </div>
+      </div>
+    </GuestDataProvider>
   );
 }

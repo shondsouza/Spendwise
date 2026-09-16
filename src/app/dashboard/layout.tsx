@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || !user.email_confirmed_at) {
+  if (!user || (!user.is_anonymous && !user.email_confirmed_at)) {
     redirect("/auth/login");
   }
 
@@ -21,7 +21,12 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     user.user_metadata?.full_name ||
     user.user_metadata?.name ||
     user.email?.split("@")[0] ||
+    (user.is_anonymous ? "Guest" : undefined) ||
     "User";
 
-  return <DashboardShell userName={userName}>{children}</DashboardShell>;
+  return (
+    <DashboardShell userName={userName} isGuest={!!user.is_anonymous}>
+      {children}
+    </DashboardShell>
+  );
 }

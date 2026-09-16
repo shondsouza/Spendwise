@@ -27,6 +27,7 @@ import { addIncome, updateIncome } from "@/app/actions/income.actions";
 import { getCategories } from "@/app/actions/category.actions";
 import { toast } from "sonner";
 import { Category, Income } from "@/types";
+import { useGuestData } from "@/lib/guest-data";
 
 interface AddIncomeDialogProps {
   onSuccess?: () => void;
@@ -48,9 +49,10 @@ export function AddIncomeDialog({ onSuccess, income, trigger, onClose }: AddInco
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customCategories, setCustomCategories] = useState<Category[]>([]);
-  const [isGuest, setIsGuest] = useState(false);
   const isEditing = !!income;
   const [formData, setFormData] = useState(emptyForm);
+  const guestData = useGuestData();
+  const isGuest = guestData.isGuest;
 
   useEffect(() => {
     if (income) {
@@ -76,11 +78,14 @@ export function AddIncomeDialog({ onSuccess, income, trigger, onClose }: AddInco
     if (open) {
       const fetchCategories = async () => {
         try {
+          if (isGuest) {
+            setCustomCategories(guestData.categories.filter((cat) => cat.type === "income" || cat.type === "both"));
+            return;
+          }
           const result = await getCategories();
           if (result.data) {
             setCustomCategories(result.data.filter(cat => cat.type === "income" || cat.type === "both"));
           }
-          setIsGuest(result.isGuest ?? false);
         } catch {
           // Ignore errors, just use default categories
         }
@@ -102,9 +107,24 @@ export function AddIncomeDialog({ onSuccess, income, trigger, onClose }: AddInco
       formDataObj.append("source", formData.source);
       formDataObj.append("notes", formData.notes);
 
-      const result = isEditing
-        ? await updateIncome(income!.id, formDataObj)
-        : await addIncome(formDataObj);
+      const result = isGuest
+        ? {
+            data: guestData.saveIncome(
+              {
+                title: formData.title,
+                amount: Number(formData.amount),
+                category: formData.category,
+                date: formData.date,
+                source: formData.source,
+                notes: formData.notes,
+              },
+              isEditing ? income!.id : undefined
+            ),
+            error: null,
+          }
+        : isEditing
+          ? await updateIncome(income!.id, formDataObj)
+          : await addIncome(formDataObj);
 
       if (result.error) {
         toast.error(result.error);
@@ -213,17 +233,11 @@ export function AddIncomeDialog({ onSuccess, income, trigger, onClose }: AddInco
                 <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
                   Default
                 </div>
-                {!isGuest &&
-                  INCOME_CATEGORIES.map((cat) => (
+                {INCOME_CATEGORIES.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {cat.emoji} {cat.label}
                     </SelectItem>
                   ))}
-                {isGuest && customCategories.length === 0 && (
-                  <div className="px-2 py-2 text-xs text-[var(--text-secondary)]">
-                    Create a category first from the Categories page.
-                  </div>
-                )}
               </SelectContent>
             </Select>
           </div>

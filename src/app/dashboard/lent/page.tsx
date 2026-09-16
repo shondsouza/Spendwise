@@ -13,16 +13,26 @@ import { HandCoins, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { MoneyGiven, GivenRepayment } from "@/types/money.types";
+import { useGuestData } from "@/lib/guest-data";
 
 export default function LentPage() {
   const [entries, setEntries] = useState<MoneyGiven[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [repayments, setRepayments] = useState<Record<string, GivenRepayment[]>>({});
+  const guestData = useGuestData();
 
   useEffect(() => {
-    fetchEntries();
-  }, []);
+    if (guestData.isGuest) {
+      setEntries(guestData.moneyGiven);
+      const map: Record<string, GivenRepayment[]> = {};
+      guestData.moneyGiven.forEach((entry) => {
+        map[entry.id] = guestData.givenRepayments.filter((repayment) => repayment.given_id === entry.id);
+      });
+      setRepayments(map);
+      setLoading(false);
+    } else fetchEntries();
+  }, [guestData.isGuest, guestData.moneyGiven, guestData.givenRepayments]);
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -46,16 +56,18 @@ export default function LentPage() {
     setExpandedId(id);
 
     if (!repayments[id]) {
-      const result = await getGivenRepayments(id);
-      if (result.data) {
-        setRepayments({ ...repayments, [id]: result.data });
+      if (!guestData.isGuest) {
+        const result = await getGivenRepayments(id);
+        if (result.data) setRepayments({ ...repayments, [id]: result.data });
       }
     }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("Delete this entry? Repayments will also be deleted.")) {
-      const result = await deleteMoneyGiven(id);
+      const result = guestData.isGuest
+        ? (guestData.deleteMoneyGiven(id), { error: null })
+        : await deleteMoneyGiven(id);
       if (result.error) {
         toast.error(result.error);
       } else {

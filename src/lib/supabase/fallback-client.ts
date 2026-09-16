@@ -54,6 +54,10 @@ export function createFallbackClient() {
         data: { user: null },
         error: createFallbackError("Supabase is not configured. Please add your environment variables."),
       }),
+      signInAnonymously: async () => ({
+        data: { user: null, session: null },
+        error: createFallbackError("Supabase is not configured. Please add your environment variables."),
+      }),
       signInWithOtp: async () => ({
         data: { user: null, session: null },
         error: createFallbackError("Supabase is not configured. Please add your environment variables."),

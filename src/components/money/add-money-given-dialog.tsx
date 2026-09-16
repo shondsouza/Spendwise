@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 import { addMoneyGiven } from "@/app/actions/money.actions";
 import { toast } from "sonner";
+import { useGuestData } from "@/lib/guest-data";
 
 interface AddMoneyGivenDialogProps {
   onSuccess?: () => void;
@@ -25,6 +26,7 @@ interface AddMoneyGivenDialogProps {
 export function AddMoneyGivenDialog({ onSuccess }: AddMoneyGivenDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const guestData = useGuestData();
   const [formData, setFormData] = useState({
     person_name: "",
     amount: "",
@@ -45,7 +47,19 @@ export function AddMoneyGivenDialog({ onSuccess }: AddMoneyGivenDialogProps) {
       fd.append("reason", formData.reason);
       fd.append("expected_return", formData.expected_return);
 
-      const result = await addMoneyGiven(fd);
+      const result = guestData.isGuest
+        ? {
+            data: guestData.saveMoneyGiven({
+              person_name: formData.person_name,
+              amount: Number(formData.amount),
+              given_date: formData.given_date,
+              reason: formData.reason || null,
+              expected_return: formData.expected_return || null,
+              status: "Pending",
+            }),
+            error: null,
+          }
+        : await addMoneyGiven(fd);
 
       if (result.error) {
         toast.error(result.error);

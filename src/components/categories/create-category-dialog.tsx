@@ -27,6 +27,7 @@ import {
   updateDefaultCategory,
 } from "@/app/actions/category.actions";
 import { toast } from "sonner";
+import { useGuestData } from "@/lib/guest-data";
 
 interface CategoryFormValues {
   id?: string;
@@ -88,6 +89,7 @@ export function CreateCategoryDialog({
 }: CreateCategoryDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const guestData = useGuestData();
 
   const getDefaultValues = (category?: CategoryFormValues | null) => ({
     name: category?.name ?? "",
@@ -115,11 +117,26 @@ export function CreateCategoryDialog({
       formDataObj.append("emoji", formData.emoji);
       formDataObj.append("color", formData.color);
 
-      const result = defaultKey
-        ? await updateDefaultCategory(defaultKey, formDataObj)
-        : initialCategory?.id
-        ? await updateCategory(initialCategory.id, formDataObj)
-        : await createCategory(formDataObj);
+      const result = guestData.isGuest
+        ? {
+            data: guestData.saveCategory(
+              {
+                name: formData.name,
+                type: formData.type,
+                emoji: formData.emoji,
+                color: formData.color,
+                default_key: defaultKey,
+                is_deleted: false,
+              },
+              initialCategory?.id
+            ),
+            error: null,
+          }
+        : defaultKey
+          ? await updateDefaultCategory(defaultKey, formDataObj)
+          : initialCategory?.id
+            ? await updateCategory(initialCategory.id, formDataObj)
+            : await createCategory(formDataObj);
 
       if (result.error) {
         toast.error(result.error);

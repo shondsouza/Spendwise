@@ -18,7 +18,7 @@ export async function createCategory(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -57,7 +57,7 @@ export async function updateCategory(id: string, formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -123,7 +123,7 @@ export async function deleteCategory(id: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -141,7 +141,7 @@ export async function deleteCategory(id: string) {
 export async function updateDefaultCategory(defaultKey: string, formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { data: null, error: "Unauthorized" };
+  if (!user || user.is_anonymous) return { data: null, error: "Unauthorized" };
 
   const defaultCategory = getDefaultCategory(defaultKey);
   if (!defaultCategory) return { data: null, error: "Default category not found" };
@@ -187,7 +187,7 @@ export async function updateDefaultCategory(defaultKey: string, formData: FormDa
 export async function deleteDefaultCategory(defaultKey: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { data: null, error: "Unauthorized" };
+  if (!user || user.is_anonymous) return { data: null, error: "Unauthorized" };
 
   const defaultCategory = getDefaultCategory(defaultKey);
   if (!defaultCategory) return { data: null, error: "Default category not found" };
@@ -220,7 +220,7 @@ export async function getCategories() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: [], error: "Unauthorized", isGuest: false };
   }
 
@@ -243,7 +243,7 @@ export async function getUsedCategoryNames() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: [], error: "Unauthorized" };
   }
 
@@ -275,7 +275,7 @@ export async function getCategoryWithTransactions(id: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 

@@ -22,6 +22,7 @@ import type { UserLoan, PaymentType } from '@/types/loan.types';
 import { PAYMENT_TYPE_LABELS } from '@/types/loan.types';
 import { Info, Building2, RotateCcw } from 'lucide-react';
 import { useDraftPersist } from '@/hooks/use-draft-persist';
+import { useGuestData } from '@/lib/guest-data';
 
 interface AddPaymentDialogProps {
   loan: UserLoan;
@@ -50,6 +51,7 @@ export function AddPaymentDialog({ loan, open, onOpenChange, onSuccess }: AddPay
   const [paymentType, setPaymentType] = useState<PaymentType>('emi');
   const [note, setNote] = useState('');
   const [showDraftBanner, setShowDraftBanner] = useState(false);
+  const guestData = useGuestData();
 
   // Show restore banner when dialog opens and a draft exists
   useEffect(() => {
@@ -123,7 +125,21 @@ export function AddPaymentDialog({ loan, open, onOpenChange, onSuccess }: AddPay
     fd.append('payment_type', paymentType);
     if (note) fd.append('note', note);
 
-    const result = await addLoanPayment(fd);
+    const result = guestData.isGuest
+      ? {
+          data: guestData.saveLoanPayment({
+            loan_id: loan.id,
+            payment_date: paymentDate,
+            amount: amountNum,
+            payment_type: paymentType,
+            principal_component: split.principal,
+            interest_component: split.interest,
+            balance_after: Math.max(0, currentOutstanding - split.principal),
+            note: note || null,
+          }),
+          error: null,
+        }
+      : await addLoanPayment(fd);
     setSubmitting(false);
 
     if (result.error) {

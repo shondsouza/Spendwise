@@ -24,6 +24,7 @@ import { computeLoanBalance } from '@/lib/loans/loan-calculator';
 import { getEducationLoanPhase } from '@/lib/loans/education-loan-calculator';
 import { toast } from 'sonner';
 import { deleteLoan } from '@/app/actions/loan.actions';
+import { useGuestData } from '@/lib/guest-data';
 
 
 interface LoanCardProps {
@@ -47,6 +48,7 @@ export function LoanCard({
 }: LoanCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const guestData = useGuestData();
 
   const balance = computeLoanBalance(loan);
   const config = LOAN_TYPE_CONFIG[loan.loan_type];
@@ -74,7 +76,9 @@ export function LoanCard({
   const handleDelete = async () => {
     if (!confirm(`Delete "${loan.loan_name}"? All payment history will also be deleted.`)) return;
     setDeleting(true);
-    const result = await deleteLoan(loan.id);
+    const result = guestData.isGuest
+      ? (guestData.deleteLoan(loan.id), { error: null })
+      : await deleteLoan(loan.id);
     setDeleting(false);
     if (result.error) {
       toast.error(result.error);

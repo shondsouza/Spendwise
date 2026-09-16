@@ -21,15 +21,20 @@ import { CategoryBadge } from "@/components/shared/category-badge";
 import { formatDate } from "@/lib/utils/date";
 import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 import { MobileLedgerPage } from "@/components/shared/mobile-ledger-page";
+import { useGuestData } from "@/lib/guest-data";
 
 export default function IncomePage() {
   const [incomeList, setIncomeList] = useState<Income[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingIncome, setEditingIncome] = useState<Income | undefined>();
+  const guestData = useGuestData();
 
   useEffect(() => {
-    fetchIncome();
-  }, []);
+    if (guestData.isGuest) {
+      setIncomeList(guestData.income);
+      setLoading(false);
+    } else fetchIncome();
+  }, [guestData.isGuest, guestData.income]);
 
   const fetchIncome = async () => {
     setLoading(true);
@@ -48,12 +53,14 @@ export default function IncomePage() {
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this income entry?")) {
       try {
-        const result = await deleteIncome(id);
+        const result = guestData.isGuest
+          ? (guestData.deleteIncome(id), { error: null })
+          : await deleteIncome(id);
         if (result.error) {
           toast.error(result.error);
         } else {
           toast.success("Income deleted successfully!");
-          setIncomeList(incomeList.filter((e) => e.id !== id));
+          setIncomeList(guestData.isGuest ? guestData.income.filter((e) => e.id !== id) : incomeList.filter((e) => e.id !== id));
         }
       } catch {
         toast.error("Failed to delete income");

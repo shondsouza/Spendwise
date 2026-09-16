@@ -27,6 +27,7 @@ import {
   SUPABASE_FREE_TIER_BYTES,
   SUPABASE_STORAGE_WARNING_BYTES,
 } from "@/lib/utils/db-health";
+import { useGuestData } from "@/lib/guest-data";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -46,6 +47,7 @@ export default function SettingsPage() {
   const [exporting, setExporting] = useState(false);
   const [clearingData, setClearingData] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const guestData = useGuestData();
 
   const router = useRouter();
 
@@ -67,13 +69,13 @@ export default function SettingsPage() {
         setPaymentMethod(user.user_metadata?.paymentMethod || "cash");
       }
 
-      const size = await checkDatabaseSize(supabase);
+      const size = guestData.isGuest ? null : await checkDatabaseSize(supabase);
       setDatabaseSize(size);
       setLoading(false);
     };
 
     getUser();
-  }, []);
+  }, [guestData.isGuest]);
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -142,10 +144,9 @@ export default function SettingsPage() {
     setExporting(true);
     try {
       const supabase = createClient();
-      const [{ data: expenses }, { data: incomes }] = await Promise.all([
-        supabase.from("expenses").select("*"),
-        supabase.from("income").select("*"),
-      ]);
+      const [{ data: expenses }, { data: incomes }] = guestData.isGuest
+        ? [{ data: guestData.expenses }, { data: guestData.income }]
+        : await Promise.all([supabase.from("expenses").select("*"), supabase.from("income").select("*")]);
       
       const allData = [
         ...(expenses || []).map(e => ({ ...e, record_type: 'expense' })),
@@ -189,13 +190,16 @@ export default function SettingsPage() {
     }
     setClearingData(true);
     try {
-      const supabase = createClient();
-      // Execute in parallel
-      await Promise.all([
-        supabase.from("expenses").delete().eq("user_id", user.id),
-        supabase.from("income").delete().eq("user_id", user.id),
-        supabase.from("budgets").delete().eq("user_id", user.id),
-      ]);
+      if (guestData.isGuest) {
+        guestData.deleteAll();
+      } else {
+        const supabase = createClient();
+        await Promise.all([
+          supabase.from("expenses").delete().eq("user_id", user.id),
+          supabase.from("income").delete().eq("user_id", user.id),
+          supabase.from("budgets").delete().eq("user_id", user.id),
+        ]);
+      }
       toast.success("All data cleared successfully");
     } catch (err) {
       console.error("Clear data error:", err);

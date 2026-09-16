@@ -21,6 +21,7 @@ import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { deleteLoanPayment } from '@/app/actions/loan.actions';
 import { toast } from 'sonner';
+import { useGuestData } from '@/lib/guest-data';
 
 interface LoanDetailSheetProps {
   loan: UserLoan | null;
@@ -37,6 +38,7 @@ export function LoanDetailSheet({
   onOpenChange,
   onPaymentDeleted,
 }: LoanDetailSheetProps) {
+  const guestData = useGuestData();
   if (!loan) return null;
 
   const balance = computeLoanBalance(loan);
@@ -47,7 +49,9 @@ export function LoanDetailSheet({
 
   const handleDeletePayment = async (paymentId: string) => {
     if (!confirm('Delete this payment? The loan balance will be reversed.')) return;
-    const result = await deleteLoanPayment(paymentId, loan.id);
+    const result = guestData.isGuest
+      ? (guestData.deleteLoanPayment(paymentId), { error: null })
+      : await deleteLoanPayment(paymentId, loan.id);
     if (result.error) {
       toast.error(result.error);
     } else {

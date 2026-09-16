@@ -26,7 +26,7 @@ export async function addIncome(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -67,7 +67,7 @@ export async function updateIncome(id: string, formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -110,7 +110,7 @@ export async function deleteIncome(id: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { success: false, error: "Unauthorized" };
   }
 
@@ -142,7 +142,7 @@ export async function getIncome(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized", count: 0 };
   }
 

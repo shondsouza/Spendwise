@@ -18,6 +18,7 @@ import { Banknote } from "lucide-react";
 import { addGivenRepayment, addTakenRepayment } from "@/app/actions/money.actions";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils/currency";
+import { useGuestData } from "@/lib/guest-data";
 
 interface AddRepaymentDialogProps {
   type: "given" | "taken";
@@ -36,6 +37,7 @@ export function AddRepaymentDialog({
 }: AddRepaymentDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const guestData = useGuestData();
   const [formData, setFormData] = useState({
     amount: "",
     date: new Date().toISOString().split("T")[0],
@@ -51,7 +53,21 @@ export function AddRepaymentDialog({
       fd.append("amount", formData.amount);
       fd.append("note", formData.note);
 
-      if (type === "given") {
+      if (guestData.isGuest) {
+        const amount = Number(formData.amount);
+        if (amount > remaining) {
+          toast.error(`Amount exceeds remaining balance of ${formatCurrency(remaining)}`);
+        } else {
+          if (type === "given") {
+            guestData.saveGivenRepayment({ given_id: parentId, amount, received_date: formData.date, note: formData.note || null });
+          } else {
+            guestData.saveTakenRepayment({ taken_id: parentId, amount, paid_date: formData.date, note: formData.note || null });
+          }
+          toast.success(type === "given" ? "Repayment recorded!" : "Payment recorded!");
+          resetAndClose();
+          onSuccess?.();
+        }
+      } else if (type === "given") {
         fd.append("given_id", parentId);
         fd.append("received_date", formData.date);
         const result = await addGivenRepayment(fd);

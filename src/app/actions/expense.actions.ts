@@ -26,7 +26,7 @@ export async function addExpense(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -68,7 +68,7 @@ export async function updateExpense(id: string, formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -112,7 +112,7 @@ export async function deleteExpense(id: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { success: false, error: "Unauthorized" };
   }
 
@@ -146,7 +146,7 @@ export async function getExpenses(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized", count: 0 };
   }
 

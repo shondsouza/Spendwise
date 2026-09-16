@@ -10,15 +10,20 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Wallet, Plus } from "lucide-react";
 import { MobileLedgerPage } from "@/components/shared/mobile-ledger-page";
+import { useGuestData } from "@/lib/guest-data";
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const guestData = useGuestData();
 
   useEffect(() => {
-    fetchExpenses();
-  }, []);
+    if (guestData.isGuest) {
+      setExpenses(guestData.expenses);
+      setLoading(false);
+    } else fetchExpenses();
+  }, [guestData.isGuest, guestData.expenses]);
 
   const fetchExpenses = async () => {
     setLoading(true);
@@ -37,12 +42,14 @@ export default function ExpensesPage() {
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this expense?")) {
       try {
-        const result = await deleteExpense(id);
+        const result = guestData.isGuest
+          ? (guestData.deleteExpense(id), { error: null })
+          : await deleteExpense(id);
         if (result.error) {
           toast.error(result.error);
         } else {
           toast.success("Expense deleted successfully!");
-          setExpenses(expenses.filter((e) => e.id !== id));
+          setExpenses(guestData.isGuest ? guestData.expenses.filter((e) => e.id !== id) : expenses.filter((e) => e.id !== id));
         }
       } catch {
         toast.error("Failed to delete expense");

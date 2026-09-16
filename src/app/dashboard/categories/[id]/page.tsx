@@ -23,6 +23,7 @@ import { ArrowLeft, FolderOpen, Target, Pencil, Trash2, X, Check } from "lucide-
 import { Button } from "@/components/ui/button";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants/config";
 import { getBudgetCategoryKey, getCategoryAliases } from "@/lib/utils/category-aliases";
+import { useGuestData } from "@/lib/guest-data";
 
 interface CategoryInfo {
   name: string;
@@ -113,6 +114,7 @@ export default function CategoryDetailPage() {
   const [showLimitInput, setShowLimitInput] = useState(false);
   const [limitValue, setLimitValue] = useState("");
   const [savingLimit, setSavingLimit] = useState(false);
+  const guestData = useGuestData();
   const categoryParam = decodeURIComponent(params.id as string);
 
   const now = new Date();
@@ -123,6 +125,29 @@ export default function CategoryDetailPage() {
     async (rawParam: string) => {
       setLoading(true);
       try {
+        const resolvedCategory = parseCategoryParam(rawParam);
+        if (guestData.isGuest) {
+          let name: string;
+          let emoji = "📂";
+          let type: "expense" | "income" | "both" = "both";
+          if (resolvedCategory.kind === "custom") {
+            const category = guestData.categories.find((item) => item.id === resolvedCategory.id);
+            if (!category) throw new Error("Category not found");
+            name = category.name;
+            emoji = category.emoji;
+            type = category.type;
+          } else if (resolvedCategory.kind === "default") {
+            name = resolvedCategory.name;
+            emoji = resolvedCategory.emoji;
+            type = resolvedCategory.type;
+          } else name = resolvedCategory.name;
+          setCategoryInfo({ name, emoji, type, budgetKey: getBudgetCategoryKey(name) });
+          setExpenses(guestData.expenses.filter((item) => item.category === name || getCategoryAliases(name).includes(item.category)));
+          setIncome(guestData.income.filter((item) => item.category === name || getCategoryAliases(name).includes(item.category)));
+          const budgetRow = guestData.budgets.find((item) => item.category === name && item.month === currentMonth && item.year === currentYear);
+          setBudget(budgetRow ?? null);
+          return;
+        }
         const supabase = createClient();
         const {
           data: { user },
@@ -131,8 +156,6 @@ export default function CategoryDetailPage() {
         if (!user) {
           throw new Error("Unauthorized");
         }
-
-        const resolvedCategory = parseCategoryParam(rawParam);
 
         let nextCategoryInfo: CategoryInfo;
         let categoryValues: string[] = [];
@@ -307,7 +330,7 @@ export default function CategoryDetailPage() {
         setLoading(false);
       }
     },
-    [router, currentMonth, currentYear]
+    [router, currentMonth, currentYear, guestData.isGuest, guestData.categories, guestData.expenses, guestData.income, guestData.budgets]
   );
 
   useEffect(() => {
@@ -333,6 +356,15 @@ export default function CategoryDetailPage() {
     }
     setSavingLimit(true);
     try {
+      if (guestData.isGuest) {
+        const catKey = categoryInfo?.budgetKey || getBudgetCategoryKey(categoryInfo?.name || "");
+        const saved = guestData.saveBudget({ category: catKey, amount, month: currentMonth, year: currentYear, repeats_monthly: true }, budget?.id);
+        setBudget(saved);
+        toast.success("Monthly spending limit saved!");
+        setShowLimitInput(false);
+        setLimitValue("");
+        return;
+      }
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Unauthorized");
@@ -373,6 +405,12 @@ export default function CategoryDetailPage() {
     if (!budget || !categoryInfo) return;
     if (!confirm("Remove the monthly spending limit for this category?")) return;
     try {
+      if (guestData.isGuest) {
+        guestData.deleteBudget(budget.id);
+        setBudget(null);
+        toast.success("Spending limit removed");
+        return;
+      }
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Unauthorized");

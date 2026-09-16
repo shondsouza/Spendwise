@@ -65,7 +65,7 @@ export async function addBudget(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -120,7 +120,7 @@ export async function updateBudget(id: string, formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -169,7 +169,7 @@ export async function setBudgetRepeatsMonthly(id: string, repeatsMonthly: boolea
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 
@@ -196,7 +196,7 @@ export async function deleteBudget(id: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { success: false, error: "Unauthorized" };
   }
 
@@ -257,7 +257,7 @@ export async function getBudgets() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || user.is_anonymous) {
     return { data: null, error: "Unauthorized" };
   }
 

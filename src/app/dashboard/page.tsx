@@ -11,6 +11,7 @@ import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 import { ArrowUpRight, Plus } from "lucide-react";
 import { DashboardChat } from "@/components/dashboard/dashboard-chat";
 import { canUseChatbot } from "@/lib/constants/chatbot";
+import { GuestDashboard } from "@/components/dashboard/guest-dashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -21,8 +22,11 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || !user.email_confirmed_at) {
+  if (!user || (!user.is_anonymous && !user.email_confirmed_at)) {
     redirect("/auth/login");
+  }
+  if (user.is_anonymous) {
+    return <GuestDashboard displayName="Guest" />;
   }
 
   const today = new Date();
@@ -153,6 +157,7 @@ export default async function DashboardPage() {
     user.user_metadata?.full_name ||
     user.user_metadata?.name ||
     user.email?.split("@")[0] ||
+    (user.is_anonymous ? "Guest" : undefined) ||
     "there";
   const firstName = displayName.split(" ")[0];
 

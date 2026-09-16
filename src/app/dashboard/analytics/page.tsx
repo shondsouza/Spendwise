@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { AmountDisplay } from "@/components/shared/amount-display";
 import { format, subMonths } from "date-fns";
+import { useGuestData } from "@/lib/guest-data";
 
 const AnalyticsLineChart = dynamic(
   () => import("@/components/dashboard/analytics-chart").then((mod) => mod.AnalyticsLineChart),
@@ -46,10 +47,37 @@ export default function AnalyticsPage() {
     },
   });
   const [loading, setLoading] = useState(true);
+  const guestData = useGuestData();
 
   useEffect(() => {
-    fetchAnalytics();
-  }, []);
+    if (guestData.isGuest) {
+      const monthlyTrend: MonthlyTrendItem[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const date = subMonths(new Date(), i);
+        const month = date.getMonth();
+        const year = date.getFullYear();
+        monthlyTrend.push({
+          month: format(date, "MMM"),
+          expenses: guestData.expenses.filter((item) => {
+            const value = new Date(item.date);
+            return value.getMonth() === month && value.getFullYear() === year;
+          }).reduce((sum, item) => sum + Number(item.amount), 0),
+          income: guestData.income.filter((item) => {
+            const value = new Date(item.date);
+            return value.getMonth() === month && value.getFullYear() === year;
+          }).reduce((sum, item) => sum + Number(item.amount), 0),
+        });
+      }
+      const now = new Date();
+      const currentExpenses = guestData.expenses.filter((item) => {
+        const value = new Date(item.date);
+        return value.getMonth() === now.getMonth() && value.getFullYear() === now.getFullYear();
+      });
+      const total = currentExpenses.reduce((sum, item) => sum + Number(item.amount), 0);
+      setData({ monthlyTrend, stats: { dailyAverage: Math.round(total / new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()), biggestExpense: Math.max(0, ...currentExpenses.map((item) => Number(item.amount))), monthOverMonthChange: 0 } });
+      setLoading(false);
+    } else fetchAnalytics();
+  }, [guestData.isGuest, guestData.expenses, guestData.income]);
 
   const fetchAnalytics = async () => {
     const supabase = createClient();

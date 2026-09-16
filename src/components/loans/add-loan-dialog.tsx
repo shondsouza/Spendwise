@@ -32,6 +32,7 @@ import { formatCurrency } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils/cn';
 import { Info, ChevronRight, ChevronLeft, Sparkles, PlusCircle, Trash2, RotateCcw } from 'lucide-react';
 import { useDraftPersist } from '@/hooks/use-draft-persist';
+import { useGuestData } from '@/lib/guest-data';
 
 type Step = 1 | 2 | 3;
 
@@ -50,6 +51,7 @@ interface AddLoanDialogProps {
 export function AddLoanDialog({ open, onOpenChange, onSuccess }: AddLoanDialogProps) {
   const [step, setStep] = useState<Step>(1);
   const [submitting, setSubmitting] = useState(false);
+  const guestData = useGuestData();
 
   // Live preview state
   const [previewEmi, setPreviewEmi] = useState<number | null>(null);
@@ -141,7 +143,38 @@ export function AddLoanDialog({ open, onOpenChange, onSuccess }: AddLoanDialogPr
       }
     });
 
-    const result = await createLoan(fd);
+    const localLoan = guestData.isGuest
+      ? guestData.saveLoan({
+          loan_name: values.loan_name,
+          lender_name: values.lender_name,
+          loan_type: values.loan_type,
+          original_principal: Number(values.original_principal),
+          current_outstanding: Number(values.current_outstanding ?? values.original_principal),
+          outstanding_as_of_date: null,
+          accrued_interest: 0,
+          total_interest_paid: 0,
+          total_principal_paid: 0,
+          bank_emi_amount: values.bank_emi_amount ? Number(values.bank_emi_amount) : null,
+          interest_type: values.interest_type,
+          interest_rate: Number(values.interest_rate),
+          loan_start_date: values.loan_start_date,
+          loan_end_date: values.loan_end_date || null,
+          moratorium_course_start: values.moratorium_course_start || null,
+          moratorium_course_end: values.moratorium_course_end || null,
+          grace_period_months: values.grace_period_months ?? null,
+          moratorium_si_rate: values.moratorium_si_rate ?? null,
+          moratorium_end_date: values.moratorium_end_date || null,
+          emi_start_date: values.emi_start_date || null,
+          emi_amount: values.emi_amount ? Number(values.emi_amount) : (previewEmi ?? null),
+          loan_tenure_months: values.loan_tenure_months ?? null,
+          ci_rate: values.ci_rate ?? null,
+          compounding_frequency: values.compounding_frequency ?? 'monthly',
+          status: 'active',
+          notes: values.notes || null,
+          disbursements: values.disbursements ?? null,
+        })
+      : null;
+    const result = guestData.isGuest ? { data: localLoan, error: null } : await createLoan(fd);
     setSubmitting(false);
 
     if (result.error) {
