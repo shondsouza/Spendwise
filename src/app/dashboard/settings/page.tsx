@@ -57,7 +57,12 @@ export default function SettingsPage() {
       } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
-        setName(user.user_metadata?.name || user.email?.split("@")[0] || "");
+        setName(
+          user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            user.email?.split("@")[0] ||
+            ""
+        );
         setCurrency(user.user_metadata?.currency || "INR");
         setPaymentMethod(user.user_metadata?.paymentMethod || "cash");
       }
@@ -77,7 +82,7 @@ export default function SettingsPage() {
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.updateUser({
-        data: { name },
+        data: { full_name: name.trim(), name: name.trim() },
       });
 
       if (error) {

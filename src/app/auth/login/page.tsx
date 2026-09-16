@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 export default function LoginPage() {
   const [isCreateAccount, setIsCreateAccount] = useState(false);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -60,6 +61,9 @@ export default function LoginPage() {
           email,
           password,
           options: {
+            data: {
+              full_name: name.trim(),
+            },
             emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
@@ -179,6 +183,22 @@ export default function LoginPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
+              {isCreateAccount && (
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    disabled={loading}
+                    required
+                    autoComplete="name"
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">

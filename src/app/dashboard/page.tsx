@@ -149,7 +149,12 @@ export default async function DashboardPage() {
       date: income.date,
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const firstName = user.user_metadata?.name?.split(" ")[0] || user.email?.split("@")[0] || "there";
+  const displayName =
+    user.user_metadata?.full_name ||
+    user.user_metadata?.name ||
+    user.email?.split("@")[0] ||
+    "there";
+  const firstName = displayName.split(" ")[0];
 
   return (
     <div className="page-enter space-y-8">

@@ -17,7 +17,11 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     redirect("/auth/login");
   }
 
-  const userName = user.user_metadata?.name || user.email?.split("@")[0] || "User";
+  const userName =
+    user.user_metadata?.full_name ||
+    user.user_metadata?.name ||
+    user.email?.split("@")[0] ||
+    "User";
 
   return <DashboardShell userName={userName}>{children}</DashboardShell>;
 }
