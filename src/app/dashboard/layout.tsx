@@ -17,9 +17,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     redirect("/auth/login");
   }
 
-  const userName = user.is_anonymous
-    ? "Guest"
-    : user.user_metadata?.name || user.email?.split("@")[0] || "User";
+  const userName = user.user_metadata?.name || user.email?.split("@")[0] || "User";
 
-  return <DashboardShell userName={userName} isGuest={!!user.is_anonymous}>{children}</DashboardShell>;
+  return <DashboardShell userName={userName}>{children}</DashboardShell>;
 }

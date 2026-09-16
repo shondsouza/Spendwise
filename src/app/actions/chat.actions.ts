@@ -3,6 +3,7 @@
 import { endOfMonth, format, startOfDay, startOfMonth, subDays } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils/currency";
+import { canUseChatbot } from "@/lib/constants/chatbot";
 
 type ChatResponse = {
   data: string | null;
@@ -189,6 +190,10 @@ export async function answerDashboardQuestion(message: string): Promise<ChatResp
 
   if (!user) {
     return { data: null, error: "You need to be signed in to use the dashboard assistant." };
+  }
+
+  if (!canUseChatbot(user.email)) {
+    return { data: null, error: "The dashboard assistant is not available for this account." };
   }
 
   const normalized = question.toLowerCase();

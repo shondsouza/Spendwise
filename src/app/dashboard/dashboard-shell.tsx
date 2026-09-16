@@ -8,7 +8,6 @@ import {
   X,
   Bell,
   LogOut,
-  AlertTriangle,
   FolderTree,
   Settings,
   Target,
@@ -19,7 +18,6 @@ import {
   Wallet,
   PieChart,
   MoreHorizontal,
-  RotateCcw,
 } from "lucide-react";
 
 import { Sidebar } from "@/components/shared/sidebar";
@@ -30,12 +28,10 @@ import { useHaptic } from "@/hooks/use-haptic";
 
 import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/client";
-import { resetGuestData } from "@/app/actions/auth.actions";
 
 interface DashboardShellProps {
   children: React.ReactNode;
   userName: string;
-  isGuest: boolean;
 }
 
 const mainNav = [
@@ -77,7 +73,7 @@ function getPageTitle(pathname: string): string {
   return "SpendWise";
 }
 
-export default function DashboardShell({ children, userName, isGuest }: DashboardShellProps) {
+export default function DashboardShell({ children, userName }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { haptic } = useHaptic();
@@ -89,20 +85,6 @@ export default function DashboardShell({ children, userName, isGuest }: Dashboar
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/auth/login");
-  };
-
-  const handleResetGuestData = async () => {
-    if (!window.confirm("Reset all guest demo data? This cannot be undone.")) {
-      return;
-    }
-
-    const result = await resetGuestData();
-    if (result.error) {
-      window.alert(result.error);
-      return;
-    }
-
-    window.location.reload();
   };
 
   const isActive = (href: string) => {
@@ -297,25 +279,6 @@ export default function DashboardShell({ children, userName, isGuest }: Dashboar
           isCollapsed ? "md:ml-[72px]" : "md:ml-64"
         )}
       >
-        {isGuest && (
-          <div className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[rgba(255,149,0,0.3)] bg-[rgba(255,149,0,0.1)] px-4 py-3 text-[13px] text-[var(--text-secondary)] md:mx-8">
-            <div className="flex items-start gap-2.5">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--apple-orange)]" />
-              <p>
-                <span className="font-semibold text-[var(--apple-orange)]">Guest account warning</span>
-                {" "}— this is demo data. Do not enter real financial information; guest data may be reset.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleResetGuestData}
-              className="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-semibold text-[var(--apple-blue)] transition-colors hover:bg-[rgba(0,122,255,0.1)]"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              Reset
-            </button>
-          </div>
-        )}
         <header
           className="mobile-app-header sticky top-0 z-30 flex items-center justify-between px-5 py-4 md:hidden"
           style={{
