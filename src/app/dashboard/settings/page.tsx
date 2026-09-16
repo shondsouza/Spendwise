@@ -19,7 +19,20 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { toast } from "sonner";
-import { AlertCircle, Download, Shield, UserRound, Palette, Database, Moon, Mail, BadgeCheck } from "lucide-react";
+import {
+  AlertCircle,
+  Download,
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  Shield,
+  UserRound,
+  Palette,
+  Database,
+  Moon,
+  Mail,
+  BadgeCheck,
+} from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   checkDatabaseSize,
@@ -38,6 +51,7 @@ export default function SettingsPage() {
   const [currency, setCurrency] = useState("INR");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [databaseSize, setDatabaseSize] = useState<number | null>(null);
 
   // Loading states
@@ -382,13 +396,29 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                placeholder="••••••••"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
+              <div className="relative">
+                <Input
+                  id="newPassword"
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="pl-10 pr-10"
+                />
+                <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                <button
+                  type="button"
+                  aria-label={showNewPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowNewPassword((visible) => !visible)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)]"
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
             <Button onClick={handleChangePassword} disabled={changingPassword || !newPassword}>
               {changingPassword ? "Updating..." : "Update Password"}
