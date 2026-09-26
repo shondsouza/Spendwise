@@ -1,5 +1,8 @@
-import React from "react";
+"use client";
+
+import React, { useSyncExternalStore } from "react";
 import { formatCurrency } from "@/lib/utils/currency";
+import { DEFAULT_PREFERENCES, getPreferences, subscribePreferences } from "@/lib/preferences";
 import { cn } from "@/lib/utils/cn";
 
 interface AmountDisplayProps {
@@ -9,6 +12,7 @@ interface AmountDisplayProps {
 }
 
 export function AmountDisplay({ amount, className, variant = "default" }: AmountDisplayProps) {
+  useSyncExternalStore(subscribePreferences, getPreferences, () => DEFAULT_PREFERENCES);
   const variantClasses = {
     default: "text-[var(--text-primary)]",
     success: "text-[var(--apple-green)]",

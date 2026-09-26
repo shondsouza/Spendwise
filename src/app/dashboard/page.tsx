@@ -15,6 +15,29 @@ import { GuestDashboard } from "@/components/dashboard/guest-dashboard";
 
 export const dynamic = "force-dynamic";
 
+async function sumAmounts(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  table: "expenses" | "income",
+  userId: string,
+  range?: { from: string; to: string }
+) {
+  const pageSize = 1000;
+  let start = 0;
+  let total = 0;
+
+  for (;;) {
+    let query = supabase.from(table).select("amount").eq("user_id", userId);
+    if (range) query = query.gte("date", range.from).lte("date", range.to);
+    const { data, error } = await query.range(start, start + pageSize - 1);
+    if (error || !data?.length) break;
+    total += data.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+    if (data.length < pageSize) break;
+    start += pageSize;
+  }
+
+  return total;
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
 
@@ -39,13 +62,12 @@ export default async function DashboardPage() {
   const monthStartDate = format(monthStart, "yyyy-MM-dd");
   const monthEndDate = format(monthEnd, "yyyy-MM-dd");
   const prevMonthDate = format(prevMonthStart, "yyyy-MM-dd");
-
   const [
     { data: todayExpensesData },
     { data: monthExpensesData },
     { data: monthExpenseSummaryData },
     { data: prevMonthExpenseSummary },
-    { data: monthIncomeData },
+    monthIncomeTotal,
     { data: recentExpensesData },
     { data: recentIncomeData },
   ] = await Promise.all([
@@ -74,13 +96,7 @@ export default async function DashboardPage() {
       .eq("user_id", user.id)
       .eq("month", prevMonthDate)
       .range(0, 99),
-    supabase
-      .from("income")
-      .select("amount")
-      .eq("user_id", user.id)
-      .gte("date", monthStartDate)
-      .lte("date", monthEndDate)
-      .range(0, 99),
+    sumAmounts(supabase, "income", user.id, { from: monthStartDate, to: monthEndDate }),
     supabase
       .from("expenses")
       .select("id, title, amount, category, date")
@@ -99,22 +115,23 @@ export default async function DashboardPage() {
   const monthExpenses = monthExpensesData ?? [];
   const monthExpenseSummary = monthExpenseSummaryData ?? [];
   const prevMonthExpenses = prevMonthExpenseSummary ?? [];
-  const monthIncome = monthIncomeData ?? [];
   const recentExpenses = recentExpensesData ?? [];
   const recentIncome = recentIncomeData ?? [];
 
   const totalSpentToday = todayExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
-  const totalSpentMonth = monthExpenseSummary.reduce(
+  const summarySpentMonth = monthExpenseSummary.reduce(
     (sum, item) => sum + (Number(item.total) || 0),
     0
   );
+  const totalSpentMonth =
+    summarySpentMonth ||
+    monthExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
   const totalSpentPrevMonth = prevMonthExpenses.reduce(
     (sum, item) => sum + (Number(item.total) || 0),
     0
   );
-  const totalIncomeMonth = monthIncome.reduce((sum, income) => sum + (income.amount || 0), 0);
+  const totalIncomeMonth = monthIncomeTotal;
   const netBalance = totalIncomeMonth - totalSpentMonth;
-
   let monthOverMonthChange = 0;
   if (totalSpentPrevMonth > 0) {
     monthOverMonthChange = ((totalSpentPrevMonth - totalSpentMonth) / totalSpentPrevMonth) * 100;

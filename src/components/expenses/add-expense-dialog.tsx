@@ -28,6 +28,7 @@ import { getCategories } from "@/app/actions/category.actions";
 import { toast } from "sonner";
 import { Expense, Category } from "@/types";
 import { useGuestData } from "@/lib/guest-data";
+import { getPreferences } from "@/lib/preferences";
 
 interface AddExpenseDialogProps {
   onSuccess?: () => void;
@@ -82,7 +83,7 @@ export function AddExpenseDialog({ onSuccess, expense, trigger, onClose }: AddEx
         amount: expense?.amount.toString() || "",
         category: expense?.category || "",
         date: expense?.date || new Date().toISOString().split("T")[0],
-        payment_method: expense?.payment_method || "",
+        payment_method: expense?.payment_method || getPreferences().paymentMethod || "",
         notes: expense?.notes || "",
       });
     }

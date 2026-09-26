@@ -86,7 +86,7 @@ export function SummaryCards({
 
   return (
     <section>
-      <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-[0.4em] text-[var(--text-tertiary)]">
+      <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-[0.15em] text-[var(--text-tertiary)]">
         Overview
       </h2>
 

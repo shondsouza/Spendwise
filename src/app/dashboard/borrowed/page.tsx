@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils/date";
 import { HandCoins, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
+import { confirmIfNeeded } from "@/lib/preferences";
 
 export default function BorrowedPage() {
   const [entries, setEntries] = useState<MoneyTaken[]>([]);
@@ -51,7 +52,7 @@ export default function BorrowedPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Delete this borrowed-money entry?")) return;
+    if (!confirmIfNeeded("Delete this borrowed-money entry?")) return;
     const result = guestData.isGuest ? (guestData.deleteMoneyTaken(id), { error: null }) : await deleteMoneyTaken(id);
     if (result.error) toast.error(result.error);
     else { toast.success("Entry deleted"); refresh(); }

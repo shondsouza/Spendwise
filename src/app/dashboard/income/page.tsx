@@ -22,6 +22,7 @@ import { formatDate } from "@/lib/utils/date";
 import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 import { MobileLedgerPage } from "@/components/shared/mobile-ledger-page";
 import { useGuestData } from "@/lib/guest-data";
+import { confirmIfNeeded } from "@/lib/preferences";
 
 export default function IncomePage() {
   const [incomeList, setIncomeList] = useState<Income[]>([]);
@@ -51,7 +52,7 @@ export default function IncomePage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this income entry?")) {
+    if (confirmIfNeeded("Are you sure you want to delete this income entry?")) {
       try {
         const result = guestData.isGuest
           ? (guestData.deleteIncome(id), { error: null })

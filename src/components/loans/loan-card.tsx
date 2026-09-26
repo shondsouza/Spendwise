@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils/currency';
+import { confirmIfNeeded } from '@/lib/preferences';
 import { formatDate } from '@/lib/utils/date';
 import { cn } from '@/lib/utils/cn';
 import { LoanProgressBar } from './loan-progress-bar';
@@ -74,7 +75,7 @@ export function LoanCard({
           : 'orange';
 
   const handleDelete = async () => {
-    if (!confirm(`Delete "${loan.loan_name}"? All payment history will also be deleted.`)) return;
+    if (!confirmIfNeeded(`Delete "${loan.loan_name}"? All payment history will also be deleted.`)) return;
     setDeleting(true);
     const result = guestData.isGuest
       ? (guestData.deleteLoan(loan.id), { error: null })

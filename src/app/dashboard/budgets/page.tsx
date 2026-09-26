@@ -19,6 +19,7 @@ import { PieChart } from "lucide-react";
 import { getCategoryDisplayName } from "@/lib/utils/category-aliases";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useGuestData } from "@/lib/guest-data";
+import { confirmIfNeeded, getPreferences } from "@/lib/preferences";
 
 const MONTH_NAMES = [
   "January",
@@ -84,7 +85,7 @@ export default function BudgetsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Remove this budget for this category?")) {
+    if (confirmIfNeeded("Remove this budget for this category?")) {
       try {
         const result = guestData.isGuest
           ? (guestData.deleteBudget(id), { error: null })
@@ -184,9 +185,12 @@ export default function BudgetsPage() {
             const progressWidth = Math.min(percentageUsed, 100);
             const isOverBudget = remaining < 0;
             const repeatsMonthly = budget.repeats_monthly !== false;
+            const { budgetAlerts, budgetAlertPercent } = getPreferences();
+            const isNearLimit =
+              budgetAlerts && !isOverBudget && percentageUsed >= budgetAlertPercent;
             const progressColor = isOverBudget
               ? "var(--apple-red)"
-              : percentageUsed >= 80
+              : isNearLimit
                 ? "var(--apple-orange)"
                 : "var(--apple-green)";
 
@@ -254,19 +258,25 @@ export default function BudgetsPage() {
 
                     <div
                       className={`mt-3 flex items-center gap-1.5 text-[11px] font-semibold ${
-                        isOverBudget ? "text-[var(--apple-red)]" : "text-[var(--text-tertiary)]"
+                        isOverBudget
+                          ? "text-[var(--apple-red)]"
+                          : isNearLimit
+                            ? "text-[var(--apple-orange)]"
+                            : "text-[var(--text-tertiary)]"
                       }`}
                     >
-                      {isOverBudget ? (
+                      {isOverBudget || isNearLimit ? (
                         <AlertTriangle className="h-3.5 w-3.5" />
                       ) : (
                         <CheckCircle2 className="h-3.5 w-3.5 text-[var(--apple-green)]" />
                       )}
                       {isOverBudget
                         ? "Budget exceeded this month"
-                        : repeatsMonthly
-                          ? "Resets automatically next month"
-                          : "This month only"}
+                        : isNearLimit
+                          ? `${Math.round(percentageUsed)}% used · alert set at ${budgetAlertPercent}%`
+                          : repeatsMonthly
+                            ? "Resets automatically next month"
+                            : "This month only"}
                     </div>
                   </div>
 

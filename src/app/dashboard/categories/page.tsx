@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CreateCategoryDialog } from "@/components/categories/create-category-dialog";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants/config";
 import { useGuestData } from "@/lib/guest-data";
+import { confirmIfNeeded } from "@/lib/preferences";
 
 interface DisplayCategory {
   id: string;
@@ -65,7 +66,7 @@ export default function CategoriesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this category?")) {
+    if (confirmIfNeeded("Are you sure you want to delete this category?")) {
       try {
         const result = guestData.isGuest
           ? (guestData.deleteCategory(id), { error: null })
@@ -83,7 +84,7 @@ export default function CategoriesPage() {
   };
 
   const handleDefaultDelete = async (defaultKey: string) => {
-    if (!confirm("Remove this category?")) return;
+    if (!confirmIfNeeded("Remove this category?")) return;
     if (guestData.isGuest) {
       const category = guestData.categories.find((item) => item.default_key === defaultKey);
       if (category) guestData.deleteCategory(category.id);

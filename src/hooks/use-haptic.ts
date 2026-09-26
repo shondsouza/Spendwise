@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { getPreferences } from '@/lib/preferences';
 
 type HapticFeedbackType = 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error';
 
@@ -10,7 +11,7 @@ type HapticFeedbackType = 'light' | 'medium' | 'heavy' | 'success' | 'warning' |
  */
 export function useHaptic() {
   const trigger = useCallback((type: HapticFeedbackType = 'medium') => {
-    if (typeof window === 'undefined' || !navigator.vibrate) {
+    if (typeof window === 'undefined' || !navigator.vibrate || !getPreferences().haptics) {
       return;
     }
 

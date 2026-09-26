@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatCurrency } from '@/lib/utils/currency';
+import { confirmIfNeeded } from '@/lib/preferences';
 import { formatDate } from '@/lib/utils/date';
 import { AmortizationTable } from './amortization-table';
 import { LoanProgressBar } from './loan-progress-bar';
@@ -48,7 +49,7 @@ export function LoanDetailSheet({
   const showEduStats = isEducation && (balance.phase === 'moratorium' || eduPhase?.outstandingAtEmiStart);
 
   const handleDeletePayment = async (paymentId: string) => {
-    if (!confirm('Delete this payment? The loan balance will be reversed.')) return;
+    if (!confirmIfNeeded('Delete this payment? The loan balance will be reversed.')) return;
     const result = guestData.isGuest
       ? (guestData.deleteLoanPayment(paymentId), { error: null })
       : await deleteLoanPayment(paymentId, loan.id);

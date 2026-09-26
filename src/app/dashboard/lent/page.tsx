@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { MoneyGiven, GivenRepayment } from "@/types/money.types";
 import { useGuestData } from "@/lib/guest-data";
+import { confirmIfNeeded } from "@/lib/preferences";
 
 export default function LentPage() {
   const [entries, setEntries] = useState<MoneyGiven[]>([]);
@@ -64,7 +65,7 @@ export default function LentPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Delete this entry? Repayments will also be deleted.")) {
+    if (confirmIfNeeded("Delete this entry? Repayments will also be deleted.")) {
       const result = guestData.isGuest
         ? (guestData.deleteMoneyGiven(id), { error: null })
         : await deleteMoneyGiven(id);

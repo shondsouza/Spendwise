@@ -9,6 +9,7 @@ import { AddExpenseDialog } from "@/components/expenses/add-expense-dialog";
 import { AddIncomeDialog } from "@/components/income/add-income-dialog";
 import { ArrowUpRight, Plus } from "lucide-react";
 import { useGuestData } from "@/lib/guest-data";
+import { DashboardChat } from "./dashboard-chat";
 
 export function GuestDashboard({ displayName = "Guest" }: { displayName?: string }) {
   const { expenses, income } = useGuestData();
@@ -53,6 +54,22 @@ export function GuestDashboard({ displayName = "Guest" }: { displayName?: string
         <SummaryCards totalSpentToday={monthExpenses.filter((item) => item.date === format(today, "yyyy-MM-dd")).reduce((sum, item) => sum + Number(item.amount), 0)} totalSpentMonth={totalSpent} totalIncome={totalIncome} netBalance={totalIncome - totalSpent} monthOverMonthChange={0} categoryData={categoryData} />
         <RecentTransactions transactions={transactions} />
       </div>
+      <DashboardChat
+        guestData={{
+          expenses: expenses.map(({ title, amount, category, date }) => ({
+            title,
+            amount: Number(amount),
+            category,
+            date,
+          })),
+          income: income.map(({ title, amount, category, date }) => ({
+            title,
+            amount: Number(amount),
+            category,
+            date,
+          })),
+        }}
+      />
     </div>
   );
 }

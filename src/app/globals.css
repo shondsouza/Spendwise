@@ -1524,6 +1524,14 @@ caption,
   }
 }
 
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
 .page-enter {
   animation: fadeSlideUp 0.45s var(--ease-out-expo) both;
 }

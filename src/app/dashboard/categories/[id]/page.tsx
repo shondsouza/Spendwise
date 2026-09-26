@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants/config";
 import { getBudgetCategoryKey, getCategoryAliases } from "@/lib/utils/category-aliases";
 import { useGuestData } from "@/lib/guest-data";
+import { confirmIfNeeded } from "@/lib/preferences";
 
 interface CategoryInfo {
   name: string;
@@ -403,7 +404,7 @@ export default function CategoryDetailPage() {
 
   const handleRemoveLimit = async () => {
     if (!budget || !categoryInfo) return;
-    if (!confirm("Remove the monthly spending limit for this category?")) return;
+    if (!confirmIfNeeded("Remove the monthly spending limit for this category?")) return;
     try {
       if (guestData.isGuest) {
         guestData.deleteBudget(budget.id);

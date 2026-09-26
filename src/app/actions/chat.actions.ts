@@ -10,7 +10,47 @@ type ChatResponse = {
   error: string | null;
 };
 
-async function askGemini(question: string, userId: string): Promise<ChatResponse> {
+type GuestFinancialRecord = {
+  title: string;
+  amount: number;
+  category: string;
+  date: string;
+};
+
+type GuestChatData = {
+  expenses: GuestFinancialRecord[];
+  income: GuestFinancialRecord[];
+};
+
+function sanitizeGuestRecords(records: unknown): GuestFinancialRecord[] {
+  if (!Array.isArray(records)) return [];
+  return records.slice(0, 100).flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const record = row as Partial<GuestFinancialRecord>;
+    if (
+      typeof record.title !== "string" ||
+      typeof record.category !== "string" ||
+      typeof record.date !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(record.date) ||
+      typeof record.amount !== "number" ||
+      !Number.isFinite(record.amount)
+    ) {
+      return [];
+    }
+    return [{
+      title: record.title.slice(0, 120),
+      amount: record.amount,
+      category: record.category.slice(0, 80),
+      date: record.date,
+    }];
+  });
+}
+
+async function askGemini(
+  question: string,
+  userId: string | null,
+  guestData?: GuestChatData
+): Promise<ChatResponse> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return {
@@ -19,25 +59,37 @@ async function askGemini(question: string, userId: string): Promise<ChatResponse
     };
   }
 
-  const supabase = await createClient();
-  const [{ data: expenses, error: expensesError }, { data: income, error: incomeError }] =
-    await Promise.all([
-      supabase
-        .from("expenses")
-        .select("title, amount, category, date")
-        .eq("user_id", userId)
-        .order("date", { ascending: false })
-        .range(0, 99),
-      supabase
-        .from("income")
-        .select("title, amount, category, date")
-        .eq("user_id", userId)
-        .order("date", { ascending: false })
-        .range(0, 99),
-    ]);
+  let expenses: GuestFinancialRecord[];
+  let income: GuestFinancialRecord[];
+  if (guestData) {
+    expenses = guestData.expenses;
+    income = guestData.income;
+  } else {
+    if (!userId) {
+      return { data: null, error: "Unable to load your financial data." };
+    }
+    const supabase = await createClient();
+    const [{ data: expenseRows, error: expensesError }, { data: incomeRows, error: incomeError }] =
+      await Promise.all([
+        supabase
+          .from("expenses")
+          .select("title, amount, category, date")
+          .eq("user_id", userId)
+          .order("date", { ascending: false })
+          .range(0, 99),
+        supabase
+          .from("income")
+          .select("title, amount, category, date")
+          .eq("user_id", userId)
+          .order("date", { ascending: false })
+          .range(0, 99),
+      ]);
 
-  if (expensesError || incomeError) {
-    return { data: null, error: expensesError?.message || incomeError?.message || "Unable to load your data." };
+    if (expensesError || incomeError) {
+      return { data: null, error: expensesError?.message || incomeError?.message || "Unable to load your data." };
+    }
+    expenses = (expenseRows ?? []) as GuestFinancialRecord[];
+    income = (incomeRows ?? []) as GuestFinancialRecord[];
   }
 
   const prompt = `You are the SpendWise dashboard assistant. Answer only questions about this web app and the user's personal financial data. Do not answer general knowledge, news, medical, legal, coding, or unrelated questions. If unrelated, say you can only help with SpendWise. Be concise and do not invent data. Use the supplied records when relevant.
@@ -46,10 +98,10 @@ User question: ${question}
 Today's date is ${new Date().toISOString().slice(0, 10)}. Interpret relative dates such as "yesterday" from this date. Expense dates are stored as YYYY-MM-DD.
 
 Recent expense records:
-${JSON.stringify(expenses ?? [])}
+${JSON.stringify(expenses)}
 
 Recent income records:
-${JSON.stringify(income ?? [])}
+${JSON.stringify(income)}
 
 For a total or calculation question, reply with one complete short sentence containing the final amount. Never stop mid-sentence. If there are no matching records, say the total is ₹0.00 rather than only saying 0.`;
 
@@ -177,7 +229,10 @@ async function getExpenseTotal(
   };
 }
 
-export async function answerDashboardQuestion(message: string): Promise<ChatResponse> {
+export async function answerDashboardQuestion(
+  message: string,
+  guestRecords?: { expenses?: unknown; income?: unknown }
+): Promise<ChatResponse> {
   const question = message.trim();
   if (!question) {
     return { data: null, error: "Ask me a question about your finances." };
@@ -192,10 +247,16 @@ export async function answerDashboardQuestion(message: string): Promise<ChatResp
     return { data: null, error: "You need to be signed in to use the dashboard assistant." };
   }
 
-  if (!canUseChatbot(user.email)) {
+  if (!user.is_anonymous && !canUseChatbot(user.email)) {
     return { data: null, error: "The dashboard assistant is not available for this account." };
   }
 
+  const guestData = user.is_anonymous
+    ? {
+        expenses: sanitizeGuestRecords(guestRecords?.expenses),
+        income: sanitizeGuestRecords(guestRecords?.income),
+      }
+    : undefined;
   const normalized = question.toLowerCase();
   const unrelatedTopicPattern =
     /\b(vscode|visual studio code|javascript|typescript|python|programming|coding|weather|news|movie|music|sports|recipe|joke|history|math|science|politics|medical|法律|legal)\b/;
@@ -206,22 +267,24 @@ export async function answerDashboardQuestion(message: string): Promise<ChatResp
     };
   }
 
-  if (/\b(balance|current balance|net balance)\b/i.test(question)) {
-    return getCurrentBalance(user.id);
+  if (!user.is_anonymous) {
+    if (/\b(balance|current balance|net balance)\b/i.test(question)) {
+      return getCurrentBalance(user.id);
+    }
+
+    const now = new Date();
+    if (
+      /\b(total|how much|spent|spend|expense|expenses)\b/.test(normalized) &&
+      /\bthis month\b/.test(normalized)
+    ) {
+      return getExpenseTotal(user.id, startOfMonth(now), endOfMonth(now), "this month");
+    }
+
+    if (/\b(spent|spend|expense|expenses)\b/.test(normalized) && /\byesterday\b/.test(normalized)) {
+      const yesterday = subDays(startOfDay(now), 1);
+      return getExpenseTotal(user.id, yesterday, yesterday, "yesterday");
+    }
   }
 
-  const now = new Date();
-  if (
-    /\b(total|how much|spent|spend|expense|expenses)\b/.test(normalized) &&
-    /\bthis month\b/.test(normalized)
-  ) {
-    return getExpenseTotal(user.id, startOfMonth(now), endOfMonth(now), "this month");
-  }
-
-  if (/\b(spent|spend|expense|expenses)\b/.test(normalized) && /\byesterday\b/.test(normalized)) {
-    const yesterday = subDays(startOfDay(now), 1);
-    return getExpenseTotal(user.id, yesterday, yesterday, "yesterday");
-  }
-
-  return askGemini(question, user.id);
+  return askGemini(question, user.is_anonymous ? null : user.id, guestData);
 }

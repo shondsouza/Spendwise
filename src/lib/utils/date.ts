@@ -1,8 +1,10 @@
 import { format, startOfMonth, endOfMonth, parseISO } from "date-fns";
+import { getDatePattern } from "@/lib/preferences";
 
 export function formatDate(date: string | Date, formatStr: string = "dd MMM yyyy"): string {
   const dateObj = typeof date === "string" ? parseISO(date) : date;
-  return format(dateObj, formatStr);
+  const pattern = formatStr === "dd MMM yyyy" ? getDatePattern() : formatStr;
+  return format(dateObj, pattern);
 }
 
 export function formatDateShort(date: string | Date): string {

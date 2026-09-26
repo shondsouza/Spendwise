@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Wallet, Plus } from "lucide-react";
 import { MobileLedgerPage } from "@/components/shared/mobile-ledger-page";
 import { useGuestData } from "@/lib/guest-data";
+import { confirmIfNeeded } from "@/lib/preferences";
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -40,7 +41,7 @@ export default function ExpensesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this expense?")) {
+    if (confirmIfNeeded("Are you sure you want to delete this expense?")) {
       try {
         const result = guestData.isGuest
           ? (guestData.deleteExpense(id), { error: null })

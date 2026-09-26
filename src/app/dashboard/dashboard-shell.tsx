@@ -95,6 +95,9 @@ export default function DashboardShell({ children, userName, isGuest }: Dashboar
       window.localStorage.setItem(key, "true");
       setShowTour(true);
     }
+    const replay = () => setShowTour(true);
+    window.addEventListener("spendwise-replay-tour", replay);
+    return () => window.removeEventListener("spendwise-replay-tour", replay);
   }, []);
 
   const handleLogout = async () => {

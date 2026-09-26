@@ -11,9 +11,14 @@ interface ChatMessage {
   content: string;
 }
 
+interface GuestChatData {
+  expenses: Array<{ title: string; amount: number; category: string; date: string }>;
+  income: Array<{ title: string; amount: number; category: string; date: string }>;
+}
+
 const suggestions = ["Total expenses this month", "How much did I spend today?", "What is my balance?"];
 
-export function DashboardChat() {
+export function DashboardChat({ guestData }: { guestData?: GuestChatData }) {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -43,7 +48,7 @@ export function DashboardChat() {
     startTransition(async () => {
       let result;
       try {
-        result = await answerDashboardQuestion(trimmed);
+        result = await answerDashboardQuestion(trimmed, guestData);
       } catch {
         result = {
           data: null,

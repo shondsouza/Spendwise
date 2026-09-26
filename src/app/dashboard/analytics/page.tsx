@@ -9,9 +9,14 @@ import { toast } from "sonner";
 import { AmountDisplay } from "@/components/shared/amount-display";
 import { format, subMonths } from "date-fns";
 import { useGuestData } from "@/lib/guest-data";
+import {
+  PeriodTotals,
+  type CategoryAmount,
+  type PeriodAmount,
+} from "@/components/dashboard/period-totals";
 
-const AnalyticsLineChart = dynamic(
-  () => import("@/components/dashboard/analytics-chart").then((mod) => mod.AnalyticsLineChart),
+const AnalyticsBarChart = dynamic(
+  () => import("@/components/dashboard/analytics-chart").then((mod) => mod.AnalyticsBarChart),
   {
     ssr: false,
     loading: () => <div className="apple-card h-80 animate-pulse" />,
@@ -26,6 +31,9 @@ interface MonthlyTrendItem {
 
 interface AnalyticsData {
   monthlyTrend: MonthlyTrendItem[];
+  months: PeriodAmount[];
+  years: PeriodAmount[];
+  allTime: Omit<PeriodAmount, "period">;
   stats: {
     dailyAverage: number;
     biggestExpense: number;
@@ -37,9 +45,149 @@ interface AmountRow {
   amount: number | null;
 }
 
+interface DatedAmountRow extends AmountRow {
+  date: string;
+  category: string | null;
+}
+
+interface AggregatedPeriods {
+  months: Map<string, number>;
+  years: Map<string, number>;
+  categoriesByMonth: Map<string, Map<string, number>>;
+  categoriesByYear: Map<string, Map<string, number>>;
+  categoriesAllTime: Map<string, number>;
+  total: number;
+}
+
+async function getAggregatedPeriods(
+  supabase: ReturnType<typeof createClient>,
+  table: "expenses" | "income",
+  userId: string
+) {
+  const pageSize = 1000;
+  let start = 0;
+  const result: AggregatedPeriods = {
+    months: new Map(),
+    years: new Map(),
+    categoriesByMonth: new Map(),
+    categoriesByYear: new Map(),
+    categoriesAllTime: new Map(),
+    total: 0,
+  };
+
+  for (;;) {
+    const { data, error } = await supabase
+      .from(table)
+      .select("amount, date, category")
+      .eq("user_id", userId)
+      .order("date", { ascending: false })
+      .range(start, start + pageSize - 1);
+    if (error) throw error;
+    if (!data?.length) break;
+    for (const row of data as DatedAmountRow[]) {
+      const amount = Number(row.amount) || 0;
+      const month = row.date.slice(0, 7);
+      const year = row.date.slice(0, 4);
+      result.months.set(month, (result.months.get(month) ?? 0) + amount);
+      result.years.set(year, (result.years.get(year) ?? 0) + amount);
+      const category = row.category?.trim() || "Uncategorized";
+      const monthCategories = result.categoriesByMonth.get(month) ?? new Map<string, number>();
+      monthCategories.set(category, (monthCategories.get(category) ?? 0) + amount);
+      result.categoriesByMonth.set(month, monthCategories);
+      const yearCategories = result.categoriesByYear.get(year) ?? new Map<string, number>();
+      yearCategories.set(category, (yearCategories.get(category) ?? 0) + amount);
+      result.categoriesByYear.set(year, yearCategories);
+      result.categoriesAllTime.set(
+        category,
+        (result.categoriesAllTime.get(category) ?? 0) + amount
+      );
+      result.total += amount;
+    }
+    if (data.length < pageSize) break;
+    start += pageSize;
+  }
+
+  return result;
+}
+
+function combinePeriodAmounts(expenses: AggregatedPeriods, income: AggregatedPeriods) {
+  const months = new Set([...expenses.months.keys(), ...income.months.keys()]);
+  const years = new Set([...expenses.years.keys(), ...income.years.keys()]);
+  const categories = (source: Map<string, number> | undefined): CategoryAmount[] =>
+    [...(source ?? new Map())]
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((a, b) => b.amount - a.amount);
+
+  return {
+    months: [...months]
+      .sort((a, b) => b.localeCompare(a))
+      .map((period) => ({
+        period,
+        expenses: expenses.months.get(period) ?? 0,
+        income: income.months.get(period) ?? 0,
+        categories: categories(expenses.categoriesByMonth.get(period)),
+      })),
+    years: [...years]
+      .sort((a, b) => b.localeCompare(a))
+      .map((period) => ({
+        period,
+        expenses: expenses.years.get(period) ?? 0,
+        income: income.years.get(period) ?? 0,
+        categories: categories(expenses.categoriesByYear.get(period)),
+      })),
+    allTime: {
+      expenses: expenses.total,
+      income: income.total,
+      categories: categories(expenses.categoriesAllTime),
+    },
+  };
+}
+
+function aggregateGuestPeriods(
+  expenses: { amount: number; date: string }[],
+  income: { amount: number; date: string }[]
+) {
+  const aggregateRows = (rows: { amount: number; date: string; category?: string }[]) => {
+    const result: AggregatedPeriods = {
+      months: new Map(),
+      years: new Map(),
+      categoriesByMonth: new Map(),
+      categoriesByYear: new Map(),
+      categoriesAllTime: new Map(),
+      total: 0,
+    };
+    for (const row of rows) {
+      const amount = Number(row.amount) || 0;
+      const month = row.date.slice(0, 7);
+      const year = row.date.slice(0, 4);
+      result.months.set(month, (result.months.get(month) ?? 0) + amount);
+      result.years.set(year, (result.years.get(year) ?? 0) + amount);
+      if (row.category) {
+        const monthCategories = result.categoriesByMonth.get(month) ?? new Map<string, number>();
+        monthCategories.set(row.category, (monthCategories.get(row.category) ?? 0) + amount);
+        result.categoriesByMonth.set(month, monthCategories);
+        const yearCategories = result.categoriesByYear.get(year) ?? new Map<string, number>();
+        yearCategories.set(row.category, (yearCategories.get(row.category) ?? 0) + amount);
+        result.categoriesByYear.set(year, yearCategories);
+        result.categoriesAllTime.set(
+          row.category,
+          (result.categoriesAllTime.get(row.category) ?? 0) + amount
+        );
+      }
+      result.total += amount;
+    }
+    return result;
+  };
+
+  return combinePeriodAmounts(aggregateRows(expenses), aggregateRows(income));
+}
+
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData>({
     monthlyTrend: [],
+    months: [],
+    years: [],
+    allTime: { expenses: 0, income: 0, categories: [] },
     stats: {
       dailyAverage: 0,
       biggestExpense: 0,
@@ -69,12 +217,22 @@ export default function AnalyticsPage() {
         });
       }
       const now = new Date();
+      const year = now.getFullYear();
       const currentExpenses = guestData.expenses.filter((item) => {
         const value = new Date(item.date);
         return value.getMonth() === now.getMonth() && value.getFullYear() === now.getFullYear();
       });
       const total = currentExpenses.reduce((sum, item) => sum + Number(item.amount), 0);
-      setData({ monthlyTrend, stats: { dailyAverage: Math.round(total / new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()), biggestExpense: Math.max(0, ...currentExpenses.map((item) => Number(item.amount))), monthOverMonthChange: 0 } });
+      const periodAmounts = aggregateGuestPeriods(guestData.expenses, guestData.income);
+      setData({
+        monthlyTrend,
+        ...periodAmounts,
+        stats: {
+          dailyAverage: Math.round(total / new Date(year, now.getMonth() + 1, 0).getDate()),
+          biggestExpense: Math.max(0, ...currentExpenses.map((item) => Number(item.amount))),
+          monthOverMonthChange: 0,
+        },
+      });
       setLoading(false);
     } else fetchAnalytics();
   }, [guestData.isGuest, guestData.expenses, guestData.income]);
@@ -128,6 +286,10 @@ export default function AnalyticsPage() {
       const today = new Date();
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
       const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      const [expensePeriods, incomePeriods] = await Promise.all([
+        getAggregatedPeriods(supabase, "expenses", user.id),
+        getAggregatedPeriods(supabase, "income", user.id),
+      ]);
 
       const { data: currentExpenseRows } = await supabase
         .from("expenses")
@@ -145,6 +307,7 @@ export default function AnalyticsPage() {
 
       setData({
         monthlyTrend: Object.values(monthlyData),
+        ...combinePeriodAmounts(expensePeriods, incomePeriods),
         stats: {
           dailyAverage,
           biggestExpense,
@@ -179,6 +342,8 @@ export default function AnalyticsPage() {
       <PageHeader title="📊 Analytics" description="Insights into your spending and income patterns" />
 
       <div className="space-y-6">
+        <PeriodTotals months={data.months} years={data.years} allTime={data.allTime} />
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Card>
@@ -222,7 +387,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Monthly Trend Chart */}
-        <AnalyticsLineChart monthlyTrend={data.monthlyTrend} />
+        <AnalyticsBarChart monthlyTrend={data.monthlyTrend} />
       </div>
     </div>
   );

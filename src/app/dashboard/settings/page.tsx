@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 
@@ -21,17 +21,25 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { toast } from "sonner";
 import {
   AlertCircle,
+  BadgeCheck,
+  Bell,
+  ChevronDown,
+  Database,
   Download,
   Eye,
   EyeOff,
+  FileJson,
+  Gauge,
   LockKeyhole,
-  Shield,
-  UserRound,
-  Palette,
-  Database,
-  Moon,
+  LogOut,
   Mail,
-  BadgeCheck,
+  Moon,
+  Palette,
+  RotateCcw,
+  Shield,
+  SlidersHorizontal,
+  UserRound,
+  Vibrate,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -41,6 +49,47 @@ import {
   SUPABASE_STORAGE_WARNING_BYTES,
 } from "@/lib/utils/db-health";
 import { useGuestData } from "@/lib/guest-data";
+import { PAYMENT_METHODS } from "@/lib/constants/config";
+import {
+  BUDGET_ALERT_PERCENTS,
+  CURRENCIES,
+  DATE_FORMATS,
+  DEFAULT_PREFERENCES,
+  getPreferences,
+  normalizePaymentMethod,
+  savePreferences,
+  subscribePreferences,
+  type DateFormatId,
+} from "@/lib/preferences";
+import { formatCurrency } from "@/lib/utils/currency";
+
+function SettingSwitch({
+  checked,
+  label,
+  onCheckedChange,
+}: {
+  checked: boolean;
+  label: string;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onCheckedChange(!checked)}
+      className={`relative h-8 w-[52px] flex-none rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--apple-blue)] ${
+        checked ? "bg-[var(--apple-blue)]" : "bg-[rgba(120,120,128,0.28)]"
+      }`}
+    >
+      <span
+        className="absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.2)] transition-all duration-200"
+        style={{ left: checked ? "calc(100% - 28px)" : "4px" }}
+      />
+    </button>
+  );
+}
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -49,7 +98,9 @@ export default function SettingsPage() {
   // States
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState("INR");
-  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
+  const [dateFormat, setDateFormat] = useState<DateFormatId>("pretty");
+  const prefs = useSyncExternalStore(subscribePreferences, getPreferences, () => DEFAULT_PREFERENCES);
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [databaseSize, setDatabaseSize] = useState<number | null>(null);
@@ -59,8 +110,11 @@ export default function SettingsPage() {
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [exportingJson, setExportingJson] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [clearingData, setClearingData] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDangerZone, setShowDangerZone] = useState(false);
   const guestData = useGuestData();
 
   const router = useRouter();
@@ -79,8 +133,13 @@ export default function SettingsPage() {
             user.email?.split("@")[0] ||
             ""
         );
-        setCurrency(user.user_metadata?.currency || "INR");
-        setPaymentMethod(user.user_metadata?.paymentMethod || "cash");
+        setCurrency(user.user_metadata?.currency || getPreferences().currency || "INR");
+        setPaymentMethod(normalizePaymentMethod(user.user_metadata?.paymentMethod || getPreferences().paymentMethod));
+        setDateFormat(
+          DATE_FORMATS.some((item) => item.value === user.user_metadata?.dateFormat)
+            ? user.user_metadata.dateFormat
+            : getPreferences().dateFormat
+        );
       }
 
       const size = guestData.isGuest ? null : await checkDatabaseSize(supabase);
@@ -120,11 +179,7 @@ export default function SettingsPage() {
     if (!user) return;
     setSavingPrefs(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({
-        data: { currency, paymentMethod },
-      });
-      if (error) throw error;
+      await savePreferences({ currency: currency as (typeof CURRENCIES)[number]["code"], paymentMethod, dateFormat });
       toast.success("Preferences updated successfully");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save preferences");
@@ -194,6 +249,86 @@ export default function SettingsPage() {
       toast.error("Failed to export data");
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleExportJson = async () => {
+    setExportingJson(true);
+    try {
+      const supabase = createClient();
+      let expenses = guestData.expenses;
+      let income = guestData.income;
+      let budgets = guestData.budgets;
+      let categories = guestData.categories;
+      if (!guestData.isGuest) {
+        const [expenseResult, incomeResult, budgetResult, categoryResult] = await Promise.all([
+          supabase.from("expenses").select("*"),
+          supabase.from("income").select("*"),
+          supabase.from("budgets").select("*"),
+          supabase.from("categories").select("*"),
+        ]);
+        const failed = [expenseResult, incomeResult, budgetResult, categoryResult].find((result) => result.error);
+        if (failed?.error) throw failed.error;
+        expenses = expenseResult.data ?? [];
+        income = incomeResult.data ?? [];
+        budgets = budgetResult.data ?? [];
+        categories = categoryResult.data ?? [];
+      }
+
+      const total = expenses.length + income.length + budgets.length + categories.length;
+      if (total === 0) {
+        toast.info("No data to export");
+        return;
+      }
+
+      const payload = {
+        exported_at: new Date().toISOString(),
+        expenses,
+        income,
+        budgets,
+        categories,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `spendwise_backup_${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success("Backup downloaded");
+    } catch (err) {
+      console.error("JSON export error:", err);
+      toast.error("Failed to export backup");
+    } finally {
+      setExportingJson(false);
+    }
+  };
+
+  const handleToggle = async (partial: Parameters<typeof savePreferences>[0]) => {
+    try {
+      await savePreferences(partial);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save setting");
+    }
+  };
+
+  const handleReplayTour = () => {
+    window.localStorage.removeItem("spendwise-guide-shown");
+    window.dispatchEvent(new Event("spendwise-replay-tour"));
+    toast.success("Tour started");
+  };
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push("/auth/login");
+    } catch {
+      toast.error("Failed to sign out");
+      setSigningOut(false);
     }
   };
 
@@ -277,7 +412,10 @@ export default function SettingsPage() {
           <div className="pointer-events-none absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-[rgba(175,82,222,0.08)] blur-3xl" />
           <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-4">
-              <div className="flex h-16 w-16 flex-none items-center justify-center rounded-[22px] bg-[var(--gradient-blue)] text-[25px] font-extrabold text-white shadow-[0_10px_22px_rgba(0,122,255,0.25)]">
+              <div
+                className="flex h-16 w-16 flex-none items-center justify-center rounded-[22px] text-[25px] font-extrabold text-white shadow-[0_10px_22px_rgba(0,122,255,0.25)]"
+                style={{ background: "var(--gradient-blue)" }}
+              >
                 {accountInitial}
               </div>
               <div className="min-w-0">
@@ -353,10 +491,11 @@ export default function SettingsPage() {
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="INR">Indian Rupee (₹)</SelectItem>
-                  <SelectItem value="USD">US Dollar ($)</SelectItem>
-                  <SelectItem value="EUR">Euro (€)</SelectItem>
-                  <SelectItem value="GBP">British Pound (£)</SelectItem>
+                  {CURRENCIES.map((item) => (
+                    <SelectItem key={item.code} value={item.code}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -368,10 +507,27 @@ export default function SettingsPage() {
                   <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
-                  <SelectItem value="upi">UPI</SelectItem>
-                  <SelectItem value="bank">Bank Transfer</SelectItem>
+                  {PAYMENT_METHODS.map((method) => (
+                    <SelectItem key={method.value} value={method.value}>
+                      {method.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="date_format">Date format</Label>
+              <Select value={dateFormat} onValueChange={(value) => setDateFormat(value as DateFormatId)}>
+                <SelectTrigger id="date_format">
+                  <SelectValue placeholder="Select date format" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DATE_FORMATS.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -437,11 +593,18 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-[14px] text-[var(--text-secondary)]">
-              Download a copy of all your expenses and income as a CSV file.
+              Download expenses and income as a spreadsheet, or a JSON backup that also includes budgets and categories.
             </p>
-            <Button variant="outline" onClick={handleExportData} disabled={exporting}>
-              {exporting ? "Exporting..." : "Export to CSV"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={handleExportData} disabled={exporting || exportingJson}>
+                <Download className="mr-2 h-4 w-4" />
+                {exporting ? "Exporting..." : "Export CSV"}
+              </Button>
+              <Button variant="outline" onClick={handleExportJson} disabled={exporting || exportingJson}>
+                <FileJson className="mr-2 h-4 w-4" />
+                {exportingJson ? "Exporting..." : "Export JSON"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
         </div>
@@ -507,48 +670,225 @@ export default function SettingsPage() {
         </Card>
         </div>
 
-        {/* Danger Zone */}
-        <Card className="settings-card border-[rgba(255,59,48,0.2)]">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card className="settings-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(255,149,0,0.12)]">
+                  <SlidersHorizontal className="h-4 w-4 text-[var(--apple-orange)]" />
+                </span>
+                Display
+              </CardTitle>
+              <CardDescription>How amounts show up across SpendWise</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[15px] font-medium text-[var(--text-primary)]">Hide amounts</p>
+                  <p className="text-[13px] text-[var(--text-secondary)]">Mask balances when someone is nearby</p>
+                </div>
+                <SettingSwitch
+                  label="Hide amounts"
+                  checked={prefs.hideAmounts}
+                  onCheckedChange={(checked) => handleToggle({ hideAmounts: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[15px] font-medium text-[var(--text-primary)]">Show decimals</p>
+                  <p className="text-[13px] text-[var(--text-secondary)]">Keep paise and cents visible</p>
+                </div>
+                <SettingSwitch
+                  label="Show decimals"
+                  checked={prefs.showDecimals}
+                  onCheckedChange={(checked) => handleToggle({ showDecimals: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[15px] font-medium text-[var(--text-primary)]">Compact numbers</p>
+                  <p className="text-[13px] text-[var(--text-secondary)]">Shorten large amounts, like ₹1.2L</p>
+                </div>
+                <SettingSwitch
+                  label="Compact numbers"
+                  checked={prefs.compactNumbers}
+                  onCheckedChange={(checked) => handleToggle({ compactNumbers: checked })}
+                />
+              </div>
+              <div className="rounded-2xl border border-[var(--separator)] bg-[rgba(120,120,128,0.05)] px-3 py-2.5">
+                <p className="text-[11px] font-bold uppercase tracking-[0.4px] text-[var(--text-tertiary)]">Preview</p>
+                <p className="mt-1 font-mono text-[18px] font-bold text-[var(--text-primary)]">
+                  {formatCurrency(125430.5, {
+                    currency: currency as (typeof CURRENCIES)[number]["code"],
+                    hideAmounts: prefs.hideAmounts,
+                    showDecimals: prefs.showDecimals,
+                    compactNumbers: prefs.compactNumbers,
+                  })}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="settings-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(255,59,48,0.1)]">
+                  <Bell className="h-4 w-4 text-[var(--apple-red)]" />
+                </span>
+                Budget alerts
+              </CardTitle>
+              <CardDescription>Highlight a category as it approaches its limit</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[15px] font-medium text-[var(--text-primary)]">Warn before overspending</p>
+                  <p className="text-[13px] text-[var(--text-secondary)]">Budgets turn amber at your chosen threshold</p>
+                </div>
+                <SettingSwitch
+                  label="Warn before overspending"
+                  checked={prefs.budgetAlerts}
+                  onCheckedChange={(checked) => handleToggle({ budgetAlerts: checked })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="budget_alert">Alert when spending reaches</Label>
+                <Select
+                  value={String(prefs.budgetAlertPercent)}
+                  onValueChange={(value) => handleToggle({ budgetAlertPercent: Number(value) })}
+                  disabled={!prefs.budgetAlerts}
+                >
+                  <SelectTrigger id="budget_alert">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BUDGET_ALERT_PERCENTS.map((percent) => (
+                      <SelectItem key={percent} value={String(percent)}>
+                        {percent}% of the budget
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="settings-card">
           <CardHeader>
-            <CardTitle className="text-[var(--apple-red)]">🚨 Danger Zone</CardTitle>
-            <CardDescription>Irreversible actions</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[rgba(52,199,89,0.12)]">
+                <Gauge className="h-4 w-4 text-[var(--apple-green)]" />
+              </span>
+              App behavior
+            </CardTitle>
+            <CardDescription>Feedback, safety checks, and this session</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            
-            <div className="space-y-3">
-              <h4 className="text-[15px] font-semibold text-[var(--text-primary)]">Clear All Data</h4>
-              <p className="text-[13px] text-[var(--text-secondary)]">
-                Permanently delete all your transactions, categories, and budgets. Your account will remain active.
-              </p>
-              <Button
-                variant="outline"
-                onClick={handleClearData}
-                disabled={clearingData}
-                className="w-full text-[var(--apple-orange)] border-[rgba(255,149,0,0.3)] hover:bg-[rgba(255,149,0,0.1)]"
-              >
-                {clearingData ? "Clearing..." : "Soft Reset (Clear Data)"}
+          <CardContent className="space-y-5">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[15px] font-medium text-[var(--text-primary)]">Ask before deleting</p>
+                <p className="text-[13px] text-[var(--text-secondary)]">Confirm when you remove a transaction, budget, or loan</p>
+              </div>
+              <SettingSwitch
+                label="Ask before deleting"
+                checked={prefs.confirmBeforeDelete}
+                onCheckedChange={(checked) => handleToggle({ confirmBeforeDelete: checked })}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-start gap-2">
+                <Vibrate className="mt-0.5 h-4 w-4 flex-none text-[var(--text-tertiary)]" />
+                <div>
+                  <p className="text-[15px] font-medium text-[var(--text-primary)]">Haptic feedback</p>
+                  <p className="text-[13px] text-[var(--text-secondary)]">Vibrate on supported phones</p>
+                </div>
+              </div>
+              <SettingSwitch
+                label="Haptic feedback"
+                checked={prefs.haptics}
+                onCheckedChange={(checked) => handleToggle({ haptics: checked })}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[15px] font-medium text-[var(--text-primary)]">Reduce motion</p>
+                <p className="text-[13px] text-[var(--text-secondary)]">Turn off page and card animations</p>
+              </div>
+              <SettingSwitch
+                label="Reduce motion"
+                checked={prefs.reduceMotion}
+                onCheckedChange={(checked) => handleToggle({ reduceMotion: checked })}
+              />
+            </div>
+            <div className="flex flex-col gap-3 border-t border-[var(--separator)] pt-4 sm:flex-row">
+              <Button variant="outline" onClick={handleReplayTour} className="flex-1">
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Replay welcome tour
+              </Button>
+              <Button variant="outline" onClick={handleSignOut} disabled={signingOut} className="flex-1">
+                <LogOut className="mr-2 h-4 w-4" />
+                {signingOut ? "Signing out..." : "Sign out"}
               </Button>
             </div>
-
-            <div className="h-px bg-[var(--separator)] w-full" />
-
-            <div className="space-y-3">
-              <h4 className="text-[15px] font-semibold text-[var(--apple-red)]">Delete Account</h4>
-              <p className="text-[13px] text-[var(--text-secondary)]">
-                Permanently delete your account and all associated data. This action cannot be undone.
-              </p>
-              <Button
-                variant="destructive"
-                onClick={handleDeleteAccount}
-                disabled={deleting}
-                className="w-full"
-              >
-                {deleting ? "Deleting..." : "Delete Account"}
-              </Button>
-            </div>
-
           </CardContent>
         </Card>
+
+        <Button
+          variant="outline"
+          aria-expanded={showDangerZone}
+          aria-controls="settings-danger-zone"
+          onClick={() => setShowDangerZone((visible) => !visible)}
+          className="w-full justify-between text-[var(--apple-red)]"
+        >
+          {showDangerZone ? "Hide Danger Zone" : "Show Danger Zone"}
+          <ChevronDown
+            aria-hidden="true"
+            className={`h-4 w-4 transition-transform ${showDangerZone ? "rotate-180" : ""}`}
+          />
+        </Button>
+
+        {showDangerZone && (
+          <Card id="settings-danger-zone" className="settings-card border-[rgba(255,59,48,0.2)]">
+            <CardHeader>
+              <CardTitle className="text-[var(--apple-red)]">🚨 Danger Zone</CardTitle>
+              <CardDescription>Irreversible actions</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <h4 className="text-[15px] font-semibold text-[var(--text-primary)]">Clear All Data</h4>
+                <p className="text-[13px] text-[var(--text-secondary)]">
+                  Permanently delete all your transactions, categories, and budgets. Your account will remain active.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={handleClearData}
+                  disabled={clearingData}
+                  className="w-full text-[var(--apple-orange)] border-[rgba(255,149,0,0.3)] hover:bg-[rgba(255,149,0,0.1)]"
+                >
+                  {clearingData ? "Clearing..." : "Soft Reset (Clear Data)"}
+                </Button>
+              </div>
+
+              <div className="h-px bg-[var(--separator)] w-full" />
+
+              <div className="space-y-3">
+                <h4 className="text-[15px] font-semibold text-[var(--apple-red)]">Delete Account</h4>
+                <p className="text-[13px] text-[var(--text-secondary)]">
+                  Permanently delete your account and all associated data. This action cannot be undone.
+                </p>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                  className="w-full"
+                >
+                  {deleting ? "Deleting..." : "Delete Account"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

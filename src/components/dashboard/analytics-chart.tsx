@@ -2,8 +2,9 @@
 
 import React from "react";
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
+  CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
@@ -32,7 +33,7 @@ const tooltipStyle = {
   fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 };
 
-export function AnalyticsLineChart({ monthlyTrend }: AnalyticsLineChartProps) {
+export function AnalyticsBarChart({ monthlyTrend }: AnalyticsLineChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -40,30 +41,29 @@ export function AnalyticsLineChart({ monthlyTrend }: AnalyticsLineChartProps) {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={monthlyTrend}>
+          <BarChart data={monthlyTrend}>
+            <CartesianGrid vertical={false} stroke="var(--separator)" />
             <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="var(--text-tertiary)" />
             <YAxis axisLine={false} tickLine={false} stroke="var(--text-tertiary)" />
-            <Tooltip contentStyle={tooltipStyle} />
+            <Tooltip shared={false} contentStyle={tooltipStyle} />
             <Legend wrapperStyle={{ color: "var(--text-secondary)", fontSize: 13 }} />
-            <Line
-              type="monotone"
+            <Bar
               dataKey="income"
-              stroke="#34c759"
+              stroke="#1d4ed8"
+              fill="#3b82f6"
               name="Income"
-              strokeWidth={2.5}
-              dot={false}
-              activeDot={{ r: 6, fill: "#34c759" }}
+              radius={[5, 5, 0, 0]}
+              activeBar={{ stroke: "#1e40af", strokeWidth: 2 }}
             />
-            <Line
-              type="monotone"
+            <Bar
               dataKey="expenses"
-              stroke="#ff3b30"
+              stroke="#b91c1c"
+              fill="#ef4444"
               name="Expenses"
-              strokeWidth={2.5}
-              dot={false}
-              activeDot={{ r: 6, fill: "#ff3b30" }}
+              radius={[5, 5, 0, 0]}
+              activeBar={{ stroke: "#991b1b", strokeWidth: 2 }}
             />
-          </LineChart>
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
